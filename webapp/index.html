@@ -18,6 +18,34 @@
       </label>
       <span id="uploadStatus"></span>
     </div>
+    
+    <!-- ========================================== -->
+    <!-- ПОИСК И СОРТИРОВКА -->
+    <!-- ========================================== -->
+    
+    <div class="search-section">
+      <!-- Поле поиска -->
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input 
+          type="text" 
+          id="searchInput" 
+          placeholder="Найти трек..."
+          autocomplete="off"
+        >
+        <button id="clearSearch" class="clear-btn" style="display: none;">✕</button>
+      </div>
+
+      <!-- Кнопки сортировки -->
+      <div class="sort-buttons">
+        <button id="sortByName" class="sort-btn" title="Сортировать по имени">
+          🅰️ По имени
+        </button>
+        <button id="sortByDate" class="sort-btn active" title="Сортировать по дате">
+          📅 По дате
+        </button>
+      </div>
+    </div>
 
     <div class="player">
       <div class="track-info">
