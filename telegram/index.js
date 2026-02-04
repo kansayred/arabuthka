@@ -1,4 +1,7 @@
-require('dotenv').config(); // ← Эта строка загружает .env файл
+// Загружаем .env только для локальной разработки (не на Railway)
+if (!process.env.RAILWAY_ENVIRONMENT) {
+  require('dotenv').config();
+}
 
 const TelegramBot = require('node-telegram-bot-api');
 const token = process.env.TELEGRAM_BOT_TOKEN; // ← Берём из .env
