@@ -1,50 +1,66 @@
-ДИРЕКТОРИЯ ОСНОВНОГО КОДА ПРОЕКТА АРАБУТКА:
+# 📂 Структура проекта Arabuthka
 
+Этот документ описывает организацию файлов и папок в проекте Arabuthka. Проект состоит из трёх основных компонентов: **bot** (Telegram-бот), **telegram** (API-сервер), **webapp** (веб-приложение).
 
+---
 
-├─ assets
+## 🗂️ Общая структура
 
-├─ bot
+```
+arabuthka/
+├── bot/                  # Telegram-бот для загрузки треков
+├── telegram/            # API-сервер (Railway)
+├── webapp/              # Веб-приложение (Next.js + Vercel)
+├── docs/                # Документация
+├── .gitignore
+└── README.md
+```
 
-│   ├─ node_modules/
+---
 
-│   ├─ package-lock.json
+## 🤖 `bot/` - Telegram-бот
 
-│   ├─ package.json
+Компонент для загрузки и управления музыкальными файлами через Telegram.
 
-│   ├─ server.js
+### Структура:
 
-│   └─ .env
+```
+bot/
+├── node_modules/        # Зависимости npm
+├── package-lock.json    # Фиксация версий зависимостей
+├── package.json         # Конфигурация проекта и зависимости
+├── server.js            # Основной файл бота
+└── .env                 # Переменные окружения (не в Git)
+```
 
-├─ dosc
+### Описание файлов:
 
-│   ├─ about.md
+#### `server.js`
+- **Назначение**: Главный файл бота
+- **Функционал**:
+  - Инициализация Grammy (библиотека для Telegram Bot API)
+  - Обработка входящих сообщений
+  - Загрузка MP3-файлов от пользователей
+  - Отправка файлов в Cloudinary
+  - Сохранение метаданных в базу через API
+- **Технологии**: Node.js, Grammy, Axios, FormData
 
-│   └─ directory.md
+#### `package.json`
+- **Зависимости**:
+  - `grammy` - Библиотека для Telegram Bot API
+  - `axios` - HTTP-клиент
+  - `form-data` - Работа с multipart/form-data
+  - `dotenv` - Загрузка переменных окружения
+- **Скрипты**:
+  - `start`: Запуск бота (`node server.js`)
 
-├─ telegram
-
-│   ├─ node_modules/
-
-│   ├─ package-lock.json
-
-│   ├─ package.json
-
-│   └─ index.js
-
-├─ webapp
-
-│   ├─ .vercel/
-
-│   ├─ .gitignore
-
-│   ├─ app.js
-
-│   ├─ index.html
-
-│   └─ style.css
-
-└─ .gitignore
-
-
-
+#### `.env`
+Конфиденциальные переменные (не коммитятся в Git):
+```env
+BOT_TOKEN=your_telegram_bot_token
+RAILWAY_API_URL=https://arabuthka-production.up.railway.app
+CLOUDINARY_URL=cloudinary://...
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+```
