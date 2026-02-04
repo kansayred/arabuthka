@@ -53,7 +53,7 @@ if (MediaSessionManager.isSupported()) {
 
 let tracks = [];
 let currentIndex = 0;
-letisShuffled = false;
+let isShuffled = false;
 let repeatMode = 'none';
 let shuffledIndices = [];
 let previousVolume = 1;
@@ -396,3 +396,15 @@ sortByDateBtn.addEventListener('click', sortByDate);
 // =============================================
 
 loadTracks();
+
+// =============================================
+// ЭКСПОРТ ФУНКЦИЙ В WINDOW ДЛЯ ONCLICK
+// =============================================
+window.playTrack = playTrack;
+window.togglePlay = togglePlay;
+window.prevTrack = prevTrack;
+window.nextTrack = nextTrack;
+window.toggleShuffle = toggleShuffle;
+window.toggleRepeat = toggleRepeat;
+window.toggleMute = toggleMute;
+window.deleteTrack = deleteTrack;
