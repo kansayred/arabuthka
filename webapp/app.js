@@ -18,19 +18,30 @@ const authHeaders = {
   'X-Telegram-Init-Data': initData
 };
 
+// DOM элементы
 const audio = document.getElementById('audio');
 const trackName = document.getElementById('trackName');
 const trackList = document.getElementById('trackList');
 const fileInput = document.getElementById('fileInput');
 const uploadStatus = document.getElementById('uploadStatus');
+const progressBar = document.getElementById('progressBar');
+const currentTimeEl = document.getElementById('currentTime');
+const durationEl = document.getElementById('duration');
+const volumeBar = document.getElementById('volumeBar');
+const playBtn = document.getElementById('playBtn');
+const muteBtn = document.getElementById('muteBtn');
 
 let tracks = [];
 let currentIndex = 0;
 let isShuffled = false;
-let repeatMode = 'none'; // 'none', 'one', 'all'
+let repeatMode = 'none';
 let shuffledIndices = [];
+let previousVolume = 1;
 
-// Загрузка трека
+// =============================================
+// ЗАГРУЗКА ТРЕКОВ
+// =============================================
+
 fileInput.addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -49,6 +60,7 @@ fileInput.addEventListener('change', async (e) => {
     if (data.success) {
       uploadStatus.textContent = 'Загружено!';
       loadTracks();
+      setTimeout(() => uploadStatus.textContent = '', 2000);
     } else {
       uploadStatus.textContent = 'Ошибка: ' + (data.error || 'Unknown');
     }
@@ -58,7 +70,6 @@ fileInput.addEventListener('change', async (e) => {
   fileInput.value = '';
 });
 
-// Загрузка списка треков
 async function loadTracks() {
   try {
     const res = await fetch(`${API_URL}/tracks`, {
@@ -74,6 +85,10 @@ async function loadTracks() {
 
 function renderTracks() {
   trackList.innerHTML = '';
+  if (tracks.length === 0) {
+    trackList.innerHTML = '<p>Нет треков. Загрузи первый!</p>';
+    return;
+  }
   tracks.forEach((track, index) => {
     const div = document.createElement('div');
     div.className = 'track-item' + (index === currentIndex ? ' active' : '');
@@ -85,6 +100,10 @@ function renderTracks() {
   });
 }
 
+// =============================================
+// ВОСПРОИЗВЕДЕНИЕ
+// =============================================
+
 function playTrack(index) {
   if (tracks.length === 0) return;
   currentIndex = index;
@@ -92,7 +111,18 @@ function playTrack(index) {
   audio.src = track.url;
   audio.play();
   trackName.textContent = track.name;
+  playBtn.textContent = '⏸️';
   renderTracks();
+}
+
+function togglePlay() {
+  if (audio.paused) {
+    audio.play();
+    playBtn.textContent = '⏸️';
+  } else {
+    audio.pause();
+    playBtn.textContent = '▶️';
+  }
 }
 
 async function deleteTrack(id) {
@@ -108,7 +138,10 @@ async function deleteTrack(id) {
   }
 }
 
-// Навигация
+// =============================================
+// НАВИГАЦИЯ
+// =============================================
+
 function prevTrack() {
   if (tracks.length === 0) return;
   if (isShuffled) {
@@ -131,7 +164,10 @@ function nextTrack() {
   }
 }
 
-// Shuffle
+// =============================================
+// SHUFFLE & REPEAT
+// =============================================
+
 function generateShuffledIndices() {
   shuffledIndices = [...Array(tracks.length).keys()];
   for (let i = shuffledIndices.length - 1; i > 0; i--) {
@@ -147,7 +183,6 @@ function toggleShuffle() {
   if (isShuffled) generateShuffledIndices();
 }
 
-// Repeat
 function toggleRepeat() {
   const modes = ['none', 'one', 'all'];
   const idx = modes.indexOf(repeatMode);
@@ -157,15 +192,92 @@ function toggleRepeat() {
   btn.classList.toggle('active', repeatMode !== 'none');
 }
 
-// Обработка окончания трека
+// =============================================
+// ПРОГРЕСС-БАР И ВРЕМЯ
+// =============================================
+
+function formatTime(seconds) {
+  if (isNaN(seconds)) return '0:00';
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+audio.addEventListener('timeupdate', () => {
+  if (audio.duration) {
+    const percent = (audio.currentTime / audio.duration) * 100;
+    progressBar.value = percent;
+    currentTimeEl.textContent = formatTime(audio.currentTime);
+  }
+});
+
+audio.addEventListener('loadedmetadata', () => {
+  durationEl.textContent = formatTime(audio.duration);
+  progressBar.value = 0;
+});
+
+progressBar.addEventListener('input', () => {
+  if (audio.duration) {
+    audio.currentTime = (progressBar.value / 100) * audio.duration;
+  }
+});
+
+// =============================================
+// ГРОМКОСТЬ
+// =============================================
+
+volumeBar.addEventListener('input', () => {
+  audio.volume = volumeBar.value / 100;
+  updateMuteIcon();
+});
+
+function toggleMute() {
+  if (audio.volume > 0) {
+    previousVolume = audio.volume;
+    audio.volume = 0;
+    volumeBar.value = 0;
+  } else {
+    audio.volume = previousVolume;
+    volumeBar.value = previousVolume * 100;
+  }
+  updateMuteIcon();
+}
+
+function updateMuteIcon() {
+  if (audio.volume === 0) {
+    muteBtn.textContent = '🔇';
+  } else if (audio.volume < 0.5) {
+    muteBtn.textContent = '🔉';
+  } else {
+    muteBtn.textContent = '🔊';
+  }
+}
+
+// =============================================
+// СОБЫТИЯ AUDIO
+// =============================================
+
 audio.addEventListener('ended', () => {
   if (repeatMode === 'one') {
     audio.currentTime = 0;
     audio.play();
   } else if (repeatMode === 'all' || currentIndex < tracks.length - 1) {
     nextTrack();
+  } else {
+    playBtn.textContent = '▶️';
   }
 });
 
-// Инициализация
+audio.addEventListener('play', () => {
+  playBtn.textContent = '⏸️';
+});
+
+audio.addEventListener('pause', () => {
+  playBtn.textContent = '▶️';
+});
+
+// =============================================
+// ИНИЦИАЛИЗАЦИЯ
+// =============================================
+
 loadTracks();
