@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Arabuthka</title>
   <link rel="stylesheet" href="style.css">
+      <link rel="manifest" href="manifest.json">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
@@ -82,5 +83,22 @@
   </div>
 
   <script src="app.js"></script>
+
+      <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then((registration) => {
+                        console.log('✅ Service Worker зарегистрирован:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.error('❌ Ошибка регистрации Service Worker:', error);
+                    });
+            });
+        } else {
+            console.warn('⚠️ Service Worker не поддерживается этим браузером');
+        }
+    </script>
 </body>
 </html>
