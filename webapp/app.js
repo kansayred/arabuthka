@@ -81,6 +81,7 @@ async function loadTracks() {
       headers: authHeaders
     });
     tracks = await res.json();
+        allTracks = tracks; // Сохраняем полный список для поиска
     renderTracks();
     if (isShuffled) generateShuffledIndices();
   } catch (err) {
