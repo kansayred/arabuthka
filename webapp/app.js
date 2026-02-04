@@ -2,6 +2,9 @@ const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
 
+// Media Session API
+import { MediaSessionManager } from './mediaSession.js';
+
 const API_URL = 'https://arabuthka-production.up.railway.app';
 
 // Получаем initData для авторизации
@@ -29,6 +32,23 @@ const currentTimeEl = document.getElementById('currentTime');
 const durationEl = document.getElementById('duration');
 const volumeBar = document.getElementById('volumeBar');
 const playBtn = document.getElementById('playBtn');
+const muteBtn = document.getElementById('muteBtn');
+
+// Media Session Manager
+let mediaSessionManager = null;
+
+// Инициализация Media Session
+if (MediaSessionManager.isSupported()) {
+  mediaSessionManager = new MediaSessionManager(audio);
+  
+  // Установка callback для previous/next
+  mediaSessionManager.onPrevious(prevTrack);
+  mediaSessionManager.onNext(nextTrack);
+  
+  console.log('✅ Media Session initialized');
+} else {
+  console.warn('❌ Media Session API not supported');
+}
 const muteBtn = document.getElementById('muteBtn');
 
 let tracks = [];
@@ -119,16 +139,35 @@ function playTrack(index) {
   trackName.textContent = track.name;
   playBtn.textContent = '⏸️';
   renderTracks();
+      
+    // Обновление Media Session метаданных
+    if (mediaSessionManager) {
+        mediaSessionManager.updateMetadata(track);
+    }
 }
 
 function togglePlay() {
   if (audio.paused) {
     audio.play();
     playBtn.textContent = '⏸️';
+            if (mediaSessionManager) mediaSessionManager.updatePlaybackState('playing');
   } else {
     audio.pause();
     playBtn.textContent = '▶️';
+            if (mediaSessionManager) mediaSessionManager.updatePlaybackState('paused');
   }
+}
+
+function nextTrack() {
+    if (tracks.length === 0) return;
+    currentIndex = (currentIndex + 1) % tracks.length;
+    playTrack(currentIndex);
+}
+
+function prevTrack() {
+    if (tracks.length === 0) return;
+    currentIndex = (currentIndex - 1 + tracks.length) % tracks.length;
+    playTrack(currentIndex);
 }
 
 async function deleteTrack(id) {
