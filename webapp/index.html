@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Арабутка</title>
+  <title>Arabuthka</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
   <div class="container">
-    <h1>🎵 Арабутка</h1>
+    <h1>🎵 Arabuthka</h1>
 
     <div class="upload-section">
       <label class="upload-btn">
         📁 Загрузить трек
-        <input type="file" id="fileInput" accept=".mp3" hidden>
+        <input type="file" id="fileInput" accept=".mp3,.wav,.ogg,.m4a" hidden>
       </label>
       <span id="uploadStatus"></span>
     </div>
@@ -23,20 +23,36 @@
       <div class="track-info">
         <span id="trackName">Выбери трек</span>
       </div>
-      <div class="controls">
-        <button id="shuffleBtn" onclick="toggleShuffle()">🔀</button>
-        <button onclick="prevTrack()">⏮</button>
-        <button onclick="document.getElementById('audio').paused ? document.getElementById('audio').play() : document.getElementById('audio').pause()">▶️</button>
-        <button onclick="nextTrack()">⏭</button>
-        <button id="repeatBtn" onclick="toggleRepeat()">🔁</button>
+
+      <!-- Прогресс-бар -->
+      <div class="progress-container">
+        <span id="currentTime">0:00</span>
+        <input type="range" id="progressBar" class="progress-bar" value="0" min="0" max="100">
+        <span id="duration">0:00</span>
       </div>
-      <audio id="audio" controls></audio>
+
+      <div class="controls">
+        <button id="shuffleBtn" onclick="toggleShuffle()" title="Перемешать">🔀</button>
+        <button onclick="prevTrack()" title="Предыдущий">⏮</button>
+        <button id="playBtn" onclick="togglePlay()" title="Воспроизведение">▶️</button>
+        <button onclick="nextTrack()" title="Следующий">⏭</button>
+        <button id="repeatBtn" onclick="toggleRepeat()" title="Повтор">🔁</button>
+      </div>
+
+      <!-- Громкость -->
+      <div class="volume-container">
+        <button id="muteBtn" onclick="toggleMute()">🔊</button>
+        <input type="range" id="volumeBar" class="volume-bar" value="100" min="0" max="100">
+      </div>
+
+      <audio id="audio"></audio>
     </div>
 
     <div class="track-list" id="trackList">
       <p>Загрузка...</p>
     </div>
   </div>
+
   <script src="app.js"></script>
 </body>
 </html>
