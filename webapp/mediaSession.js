@@ -167,7 +167,5 @@ class MediaSessionManager {
 
     console.log('🧹 Media Session cleaned up');
   }
-// 
 // Export for ES modules
 export { MediaSessionManager };
-}
