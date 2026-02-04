@@ -1,4 +1,5 @@
 const tg = window.Telegram.WebApp;
+// Force Vercel redeploy - cache invalidation
 tg.ready();
 tg.expand();
 
