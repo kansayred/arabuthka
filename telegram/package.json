@@ -1,0 +1,12 @@
+{
+  "name": "arabutka-bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "node-telegram-bot-api": "^0.64.0"
+  }
+}

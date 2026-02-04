@@ -1,0 +1,13 @@
+# Секреты
+.env
+.env.*
+
+# Зависимости
+node_modules/
+
+# Vercel
+.vercel/
+
+# Системные
+.DS_Store
+*.log
