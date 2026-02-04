@@ -24,18 +24,19 @@
         <span id="trackName">Выбери трек</span>
       </div>
       <div class="controls">
-        <button id="prevBtn">⏮️</button>
-        <audio id="audio" controls></audio>
-        <button id="nextBtn">⏭️</button>
+        <button id="shuffleBtn" onclick="toggleShuffle()">🔀</button>
+        <button onclick="prevTrack()">⏮</button>
+        <button onclick="document.getElementById('audio').paused ? document.getElementById('audio').play() : document.getElementById('audio').pause()">▶️</button>
+        <button onclick="nextTrack()">⏭</button>
+        <button id="repeatBtn" onclick="toggleRepeat()">🔁</button>
       </div>
+      <audio id="audio" controls></audio>
     </div>
 
-    <div class="playlist">
-      <h2>Плейлист</h2>
-      <div id="trackList"></div>
+    <div class="track-list" id="trackList">
+      <p>Загрузка...</p>
     </div>
   </div>
-
   <script src="app.js"></script>
 </body>
 </html>
