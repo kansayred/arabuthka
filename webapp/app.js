@@ -38,6 +38,11 @@ let repeatMode = 'none';
 let shuffledIndices = [];
 let previousVolume = 1;
 
+// Переменные для поиска и сортировки
+let searchQuery = ''; // Текущий запрос поиска
+let sortMode = 'date'; // Режим сортировки: 'date' или 'name'
+let allTracks = []; // Полный список треков (для поиска)
+
 // =============================================
 // ЗАГРУЗКА ТРЕКОВ
 // =============================================
@@ -277,6 +282,78 @@ audio.addEventListener('pause', () => {
 });
 
 // =============================================
+
+// =============================================
+// ПОИСК И СОРТИРОВКА
+// =============================================
+
+// Получаем DOM элементы поиска и сортировки
+const searchInput = document.getElementById('searchInput');
+const clearSearchBtn = document.getElementById('clearSearch');
+const sortByNameBtn = document.getElementById('sortByName');
+const sortByDateBtn = document.getElementById('sortByDate');
+
+// Функция поиска треков по названию
+function searchTracks(query) {
+  searchQuery = query.toLowerCase().trim();
+  
+  // Если поиск пустой - показываем все треки
+  if (!searchQuery) {
+    tracks = [...allTracks];
+    clearSearchBtn.style.display = 'none';
+  } else {
+    // Фильтруем треки по имени
+    tracks = allTracks.filter(track => 
+      track.name.toLowerCase().includes(searchQuery)
+    );
+    clearSearchBtn.style.display = 'block';
+  }
+  
+  // Применяем текущую сортировку
+  applySorting();
+  renderTracks();
+}
+
+// Функция сортировки треков
+function applySorting() {
+  if (sortMode === 'name') {
+    // Сортируем по алфавиту (А-Я)
+    tracks.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+  } else {
+    // Сортируем по дате (новые сверху)
+    tracks.sort((a, b) => b.id - a.id);
+  }
+}
+
+// Очистка поиска
+function clearSearch() {
+  searchInput.value = '';
+  searchTracks('');
+}
+
+// Переключение сортировки по имени
+function sortByName() {
+  sortMode = 'name';
+  sortByNameBtn.classList.add('active');
+  sortByDateBtn.classList.remove('active');
+  applySorting();
+  renderTracks();
+}
+
+// Переключение сортировки по дате
+function sortByDate() {
+  sortMode = 'date';
+  sortByDateBtn.classList.add('active');
+  sortByNameBtn.classList.remove('active');
+  applySorting();
+  renderTracks();
+}
+
+// Слушатели событий поиска и сортировки
+searchInput.addEventListener('input', (e) => searchTracks(e.target.value));
+clearSearchBtn.addEventListener('click', clearSearch);
+sortByNameBtn.addEventListener('click', sortByName);
+sortByDateBtn.addEventListener('click', sortByDate);
 // ИНИЦИАЛИЗАЦИЯ
 // =============================================
 
