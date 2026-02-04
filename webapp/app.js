@@ -49,11 +49,10 @@ if (MediaSessionManager.isSupported()) {
 } else {
   console.warn('❌ Media Session API not supported');
 }
-const muteBtn = document.getElementById('muteBtn');
 
 let tracks = [];
 let currentIndex = 0;
-let isShuffled = false;
+letisShuffled = false;
 let repeatMode = 'none';
 let shuffledIndices = [];
 let previousVolume = 1;
@@ -96,20 +95,29 @@ fileInput.addEventListener('change', async (e) => {
 });
 
 async function loadTracks() {
-  try {
-    const res = await fetch(`${API_URL}/tracks`, {
-      headers: authHeaders
-    });
-    tracks = await res.json();
+    try {
+        const res = await fetch(`${API_URL}/tracks`, {
+            headers: authHeaders
+        });
+        
+        if (!res.ok) {
+            if (res.status === 401) {
+                trackList.innerHTML = '<p>⚠️ Откройте приложение через Telegram Mini App для загрузки треков</p>';
+                console.error('401 Unauthorized: Требуется авторизация через Telegram');
+                return;
+            }
+            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        
+        tracks = await res.json();
         allTracks = tracks; // Сохраняем полный список для поиска
-    renderTracks();
-    if (isShuffled) generateShuffledIndices();
-  } catch (err) {
-    console.error('Ошибка загрузки треков:', err);
-  }
-}
-
-function renderTracks() {
+        renderTracks();
+        if (isShuffled) generateShuffledIndices();
+    } catch (err) {
+        console.error('Ошибка загрузки треков:', err);
+        trackList.innerHTML = `<p>❌ Ошибка: ${err.message}</p>`;
+    }
+}function renderTracks() {
   trackList.innerHTML = '';
   if (tracks.length === 0) {
     trackList.innerHTML = '<p>Нет треков. Загрузи первый!</p>';
@@ -158,17 +166,6 @@ function togglePlay() {
   }
 }
 
-function nextTrack() {
-    if (tracks.length === 0) return;
-    currentIndex = (currentIndex + 1) % tracks.length;
-    playTrack(currentIndex);
-}
-
-function prevTrack() {
-    if (tracks.length === 0) return;
-    currentIndex = (currentIndex - 1 + tracks.length) % tracks.length;
-    playTrack(currentIndex);
-}
 
 async function deleteTrack(id) {
   if (!confirm('Удалить трек?')) return;
