@@ -166,6 +166,7 @@ class MediaSessionManager {
     navigator.mediaSession.setActionHandler('seekto', null);
 
     console.log('🧹 Media Session cleaned up');
+}
   }
 // Export for ES modules
 export { MediaSessionManager };
