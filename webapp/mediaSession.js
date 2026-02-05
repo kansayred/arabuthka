@@ -1,7 +1,7 @@
 /**
- * Media Session API Manager for Arabuthka
- * Provides lock screen and notification controls for audio playback
- * 
+ * Media Session API Manager для Arabuthka
+ * Управление воспроизведением с экрана блокировки и шторки уведомлений
+ *
  * @author Arabuthka Team
  * @date 2026-02-04
  */
@@ -12,69 +12,68 @@ class MediaSessionManager {
     this.currentTrack = null;
     this.onPreviousCallback = null;
     this.onNextCallback = null;
-    
+
     this.init();
   }
 
-  /**
-   * Initialize Media Session API
-   */
+  // Запуск Media Session API
   init() {
     if (!('mediaSession' in navigator)) {
-      console.warn('❌ Media Session API not supported in this browser');
+      console.warn('❌ Media Session API не поддерживается');
       return;
     }
 
-    console.log('✅ Media Session API initialized');
+    console.log('✅ Media Session API запущен');
 
-    // Set up action handlers
+    // Кнопка «играть»
     navigator.mediaSession.setActionHandler('play', () => {
       this.audio.play();
     });
 
+    // Кнопка «пауза»
     navigator.mediaSession.setActionHandler('pause', () => {
       this.audio.pause();
     });
 
+    // Кнопка «предыдущий трек»
     navigator.mediaSession.setActionHandler('previoustrack', () => {
       if (this.onPreviousCallback) {
         this.onPreviousCallback();
       }
     });
 
+    // Кнопка «следующий трек»
     navigator.mediaSession.setActionHandler('nexttrack', () => {
       if (this.onNextCallback) {
         this.onNextCallback();
       }
     });
 
+    // Перемотка на конкретный момент
     navigator.mediaSession.setActionHandler('seekto', (details) => {
       if (details.seekTime && this.audio.duration) {
         this.audio.currentTime = details.seekTime;
       }
     });
 
-    // Update position on timeupdate
+    // Обновляем позицию при воспроизведении
     this.audio.addEventListener('timeupdate', () => {
       this.updatePositionState();
     });
   }
 
-  /**
-   * Update track metadata for lock screen display
-   * @param {Object} track - Track object with title, artist, album, coverUrl, duration
-   */
+  // Обновить метаданные трека для экрана блокировки
   updateMetadata(track) {
     if (!('mediaSession' in navigator)) return;
 
     this.currentTrack = track;
 
-    // Get absolute URL for cover image
+    // Берём обложку трека или заглушку
     const coverUrl = this.getAbsoluteUrl(track.coverUrl || '/default-cover.jpg');
 
     navigator.mediaSession.metadata = new MediaMetadata({
-      title: track.name || 'Unknown Track',
-      artist: track.artist || 'Unknown Artist',
+      title: track.name || 'Неизвестный трек',
+      artist: track.artist || 'Неизвестный исполнитель',
       album: track.album || 'Arabuthka',
       artwork: [
         { src: coverUrl, sizes: '96x96', type: 'image/jpeg' },
@@ -86,13 +85,11 @@ class MediaSessionManager {
       ],
     });
 
-    console.log('🎵 Updated media metadata:', track.name);
+    console.log('🎵 Метаданные обновлены:', track.name);
     this.updatePositionState();
   }
 
-  /**
-   * Update playback position state
-   */
+  // Обновить позицию воспроизведения (для прогресс-бара на локскрине)
   updatePositionState() {
     if (!('mediaSession' in navigator) || !this.currentTrack) return;
 
@@ -105,57 +102,36 @@ class MediaSessionManager {
     }
   }
 
-  /**
-   * Update playback state (playing/paused)
-   * @param {string} state - 'playing' or 'paused'
-   */
+  // Обновить состояние — играет или на паузе
   updatePlaybackState(state) {
     if (!('mediaSession' in navigator)) return;
     navigator.mediaSession.playbackState = state;
   }
 
-  /**
-   * Set callback for previous track action
-   * @param {Function} callback
-   */
+  // Колбэк на кнопку «предыдущий трек»
   onPrevious(callback) {
     this.onPreviousCallback = callback;
   }
 
-  /**
-   * Set callback for next track action
-   * @param {Function} callback
-   */
+  // Колбэк на кнопку «следующий трек»
   onNext(callback) {
     this.onNextCallback = callback;
   }
 
-  /**
-   * Convert relative URL to absolute URL
-   * @param {string} url
-   * @returns {string}
-   */
+  // Превращаем относительный URL в абсолютный
   getAbsoluteUrl(url) {
-    // If already absolute URL (starts with http/https)
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
-
-    // Convert relative to absolute
     return window.location.origin + url;
   }
 
-  /**
-   * Check if Media Session API is supported
-   * @returns {boolean}
-   */
+  // Проверяем, поддерживает ли браузер Media Session
   static isSupported() {
     return 'mediaSession' in navigator;
   }
 
-  /**
-   * Cleanup and remove all action handlers
-   */
+  // Очистить все обработчики при уничтожении
   destroy() {
     if (!('mediaSession' in navigator)) return;
 
@@ -165,8 +141,9 @@ class MediaSessionManager {
     navigator.mediaSession.setActionHandler('nexttrack', null);
     navigator.mediaSession.setActionHandler('seekto', null);
 
-    console.log('🧹 Media Session cleaned up');
-}
+    console.log('🧹 Media Session очищен');
   }
-// Export for ES modules
+}
+
+// Экспорт для ES-модулей
 export { MediaSessionManager };
