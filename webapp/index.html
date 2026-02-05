@@ -4,25 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Арабутка</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-    <div class="container fade-in">
-        <h1>🎵 Арабутка</h1>
+    <!-- Декоративные элементы -->
+    <div class="brush-decoration brush-top"></div>
+    <div class="brush-decoration brush-bottom"></div>
+
+    <div class="container">
+        <!-- Заголовок -->
+        <header class="header fade-in">
+            <h1 class="logo">
+                <span class="logo-icon">🎵</span>Арабутка
+            </h1>
+        </header>
 
         <!-- Загрузка -->
-        <div class="upload-section">
+        <div class="upload-section fade-in">
             <label class="upload-btn">
-                📁 Загрузить трек
+                <span>📁</span>
+                Загрузить трек
                 <input type="file" id="fileInput" accept=".mp3,.wav,.ogg,.m4a" hidden>
             </label>
             <span id="uploadStatus"></span>
         </div>
 
         <!-- Поиск и сортировка -->
-        <div class="search-section">
+        <div class="search-section fade-in">
             <div class="search-box">
                 <span class="search-icon">🔍</span>
                 <input type="text" id="searchInput" placeholder="Найти трек..." autocomplete="off">
@@ -34,25 +47,21 @@
             </div>
         </div>
 
-        <!-- Главный плеер -->
-        <section class="player-section">
+        <!-- Плеер -->
+        <section class="player-section fade-in-up">
             <div id="coverArt" class="cover-art cover-spinning paused no-cover"></div>
             
             <div class="track-info">
-                <div class="marquee-container">
-                    <span id="trackTitle" class="track-title marquee-text">Выбери трек</span>
-                </div>
-                <span id="trackArtist" class="track-artist">Арабутка</span>
+                <div id="trackTitle" class="track-title">Выбери трек</div>
+                <div id="trackArtist" class="track-artist">Арабутка</div>
             </div>
 
-            <!-- Прогресс-бар -->
             <div class="progress-container">
                 <span id="currentTime" class="time">0:00</span>
                 <input type="range" id="progressBar" class="progress-bar" value="0" min="0" max="100">
                 <span id="duration" class="time">0:00</span>
             </div>
 
-            <!-- Управление -->
             <div class="controls">
                 <button id="shuffleBtn" class="control-btn" onclick="toggleShuffle()" title="Перемешать">🔀</button>
                 <button id="prevBtn" class="control-btn" onclick="prevTrack()" title="Назад">⏮️</button>
@@ -61,7 +70,6 @@
                 <button id="repeatBtn" class="control-btn" onclick="toggleRepeat()" title="Повтор">🔁</button>
             </div>
 
-            <!-- Громкость -->
             <div class="volume-container">
                 <button id="muteBtn" onclick="toggleMute()">🔊</button>
                 <input type="range" id="volumeBar" class="volume-bar" value="100" min="0" max="100">
@@ -69,7 +77,7 @@
         </section>
 
         <!-- Список треков -->
-        <section class="track-list" id="trackList">
+        <section class="track-list fade-in" id="trackList">
             <p>Загрузка...</p>
         </section>
 
@@ -87,6 +95,31 @@
             <button class="mini-btn" id="miniPlayBtn">▶️</button>
         </div>
     </div>
+
+    <!-- Волнистый Nav-bar -->
+    <nav class="wave-nav">
+        <svg class="wave-svg" viewBox="0 0 1440 50" preserveAspectRatio="none">
+            <path d="M0,50 C360,0 1080,0 1440,50 L1440,50 L0,50 Z"></path>
+        </svg>
+        <div class="nav-content">
+            <button class="nav-item active" id="navHome">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Главная</span>
+            </button>
+            <button class="nav-item" id="navLibrary">
+                <span class="nav-icon">🎵</span>
+                <span class="nav-label">Библиотека</span>
+            </button>
+            <button class="nav-item" id="navSearch">
+                <span class="nav-icon">🔍</span>
+                <span class="nav-label">Поиск</span>
+            </button>
+            <button class="nav-item" id="navProfile">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">Профиль</span>
+            </button>
+        </div>
+    </nav>
 
     <script type="module" src="app.js"></script>
     
