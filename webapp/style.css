@@ -1,447 +1,733 @@
+/* ========================================== */
+/* ПЕРЕМЕННЫЕ */
+/* ========================================== */
+:root {
+    --primary: #667eea;
+    --primary-dark: #764ba2;
+    --bg-dark: #1a1a2e;
+    --bg-darker: #16213e;
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.6);
+    --border: rgba(255, 255, 255, 0.1);
+}
+
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  color: #fff;
-  min-height: 100vh;
-  padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-darker) 100%);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 20px;
+    padding-bottom: 100px;
 }
 
 .container {
-  max-width: 600px;
-  margin: 0 auto;
+    max-width: 600px;
+    margin: 0 auto;
 }
 
 h1 {
-  text-align: center;
-  font-size: 28px;
-  margin-bottom: 30px;
-  text-shadow: 0 0 20px rgba(255,255,255,0.3);
+    text-align: center;
+    font-size: 28px;
+    margin-bottom: 25px;
+    text-shadow: 0 0 20px rgba(255,255,255,0.3);
 }
 
 /* ========================================== */
 /* ЗАГРУЗКА */
 /* ========================================== */
-
 .upload-section {
-  background: rgba(255,255,255,0.05);
-  padding: 20px;
-  border-radius: 15px;
-  margin-bottom: 25px;
-  text-align: center;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
 }
 
 .upload-btn {
-  display: inline-block;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 15px 30px;
-  border-radius: 25px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: all 0.3s ease;
-  border: none;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    display: inline-block;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    padding: 15px 30px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
 .upload-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
 }
 
 #uploadStatus {
-  display: block;
-  margin-top: 15px;
-  font-size: 14px;
-  color: #a0d8ff;
+    display: block;
+    margin-top: 15px;
+    font-size: 14px;
+    color: #a0d8ff;
+}
+
+/* ========================================== */
+/* ПОИСК И СОРТИРОВКА */
+/* ========================================== */
+.search-section {
+    background: rgba(255,255,255,0.05);
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+}
+
+.search-box {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    opacity: 0.6;
+}
+
+#searchInput {
+    width: 100%;
+    padding: 12px 45px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 25px;
+    color: white;
+    font-size: 15px;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+#searchInput::placeholder {
+    color: var(--text-secondary);
+}
+
+#searchInput:focus {
+    background: rgba(255,255,255,0.15);
+    border-color: var(--primary);
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+}
+
+.clear-btn {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,100,100,0.2);
+    border: none;
+    color: white;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.clear-btn:hover {
+    background: rgba(255,100,100,0.4);
+}
+
+.sort-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.sort-btn {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.sort-btn:hover {
+    background: rgba(255,255,255,0.15);
+}
+
+.sort-btn.active {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border-color: var(--primary);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
 /* ========================================== */
 /* ПЛЕЕР */
 /* ========================================== */
-
-.player {
-  background: rgba(255,255,255,0.08);
-  padding: 25px;
-  border-radius: 20px;
-  margin-bottom: 25px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.15);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+.player-section {
+    background: rgba(255,255,255,0.08);
+    padding: 30px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    text-align: center;
 }
 
+/* Обложка с вращением */
+.cover-art {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin: 0 auto 20px;
+    display: block;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    border: 3px solid rgba(255,255,255,0.1);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+}
+
+/* Заглушка, когда нет картинки */
+.cover-art.no-cover {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 64px;
+}
+
+.cover-art.no-cover::after {
+    content: '🎵';
+}
+
+.cover-spinning {
+    animation: spin 8s linear infinite;
+}
+
+.cover-spinning.paused {
+    animation-play-state: paused;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Информация о треке */
 .track-info {
-  text-align: center;
-  margin-bottom: 20px;
+    margin-bottom: 20px;
 }
 
-#trackName {
-  font-size: 18px;
-  font-weight: 600;
-  color: #e0e0e0;
+.marquee-container {
+    overflow: hidden;
+    white-space: nowrap;
+    max-width: 100%;
 }
 
-/* ПРОГРЕСС-БАР */
+.track-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: inline-block;
+}
 
+.track-artist {
+    font-size: 14px;
+    color: var(--text-secondary);
+    display: block;
+    margin-top: 5px;
+}
+
+@keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+/* Прогресс-бар */
 .progress-container {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
 }
 
-#currentTime, #duration {
-  font-size: 12px;
-  color: #a0a0a0;
-  min-width: 40px;
+.time {
+    font-size: 12px;
+    color: var(--text-secondary);
+    min-width: 40px;
 }
 
 .progress-bar {
-  flex: 1;
-  height: 6px;
-  -webkit-appearance: none;
-  appearance: none;
-  background: rgba(255,255,255,0.1);
-  border-radius: 10px;
-  outline: none;
-  cursor: pointer;
+    flex: 1;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    outline: none;
+    cursor: pointer;
 }
 
 .progress-bar::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 14px;
-  height: 14px;
-  background: #667eea;
-  border-radius: 50%;
-  cursor: pointer;
-  box-shadow: 0 0 10px rgba(102, 126, 234, 0.8);
-  transition: all 0.2s ease;
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    background: var(--primary);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(102, 126, 234, 0.8);
+    transition: all 0.2s ease;
 }
 
 .progress-bar::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-  box-shadow: 0 0 15px rgba(102, 126, 234, 1);
+    transform: scale(1.2);
 }
 
 .progress-bar::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
-  background: #667eea;
-  border-radius: 50%;
-  cursor: pointer;
-  border: none;
-  box-shadow: 0 0 10px rgba(102, 126, 234, 0.8);
+    width: 14px;
+    height: 14px;
+    background: var(--primary);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
 }
 
-/* КНОПКИ УПРАВЛЕНИЯ */
-
+/* Кнопки управления */
 .controls {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin: 20px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin: 25px 0;
 }
 
-.controls button {
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.2);
-  color: white;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 20px;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(5px);
+.control-btn {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+    transition: all 0.3s ease;
 }
 
-.controls button:hover {
-  background: rgba(255,255,255,0.2);
-  transform: scale(1.1);
+.control-btn:hover {
+    background: rgba(255,255,255,0.2);
+    transform: scale(1.1);
 }
 
-.controls button:active {
-  transform: scale(0.95);
+.control-btn:active {
+    transform: scale(0.95);
 }
 
-.controls button.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  box-shadow: 0 0 20px rgba(102, 126, 234, 0.6);
+.control-btn.active {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.6);
 }
 
+/* Кнопка Play - увеличенная */
 #playBtn {
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    width: 70px;
+    height: 70px;
+    font-size: 28px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border: none;
+    color: white;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s ease;
 }
 
 #playBtn:hover {
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    transform: scale(1.05);
+    box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
 }
 
-/* ГРОМКОСТЬ */
+#playBtn:active {
+    transform: scale(0.95);
+}
 
+/* Громкость */
 .volume-container {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 15px;
 }
 
 #muteBtn {
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.2);
-  color: white;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 18px;
-  transition: all 0.3s ease;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.3s ease;
 }
 
 #muteBtn:hover {
-  background: rgba(255,255,255,0.2);
-  transform: scale(1.1);
+    background: rgba(255,255,255,0.2);
+    transform: scale(1.1);
 }
 
 .volume-bar {
-  flex: 1;
-  height: 6px;
-  -webkit-appearance: none;
-  appearance: none;
-  background: rgba(255,255,255,0.1);
-  border-radius: 10px;
-  outline: none;
-  cursor: pointer;
+    flex: 1;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+    outline: none;
+    cursor: pointer;
 }
 
 .volume-bar::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 12px;
-  height: 12px;
-  background: #667eea;
-  border-radius: 50%;
-  cursor: pointer;
-  box-shadow: 0 0 8px rgba(102, 126, 234, 0.6);
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    background: var(--primary);
+    border-radius: 50%;
+    cursor: pointer;
 }
 
 .volume-bar::-moz-range-thumb {
-  width: 12px;
-  height: 12px;
-  background: #667eea;
-  border-radius: 50%;
-  cursor: pointer;
-  border: none;
-  box-shadow: 0 0 8px rgba(102, 126, 234, 0.6);
+    width: 12px;
+    height: 12px;
+    background: var(--primary);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
 }
 
 audio {
-  display: none;
+    display: none;
 }
 
 /* ========================================== */
-
-/* ========================================== */
-/* ПОИСК И СОРТИРОВКА */
-/* ========================================== */
-
-.search-section {
-  background: rgba(255,255,255,0.05);
-  padding: 20px;
-  border-radius: 15px;
-  margin-bottom: 25px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.1);
-}
-
-/* Поле поиска */
-
-.search-box {
-  position: relative;
-  margin-bottom: 15px;
-}
-
-.search-icon {
-  position: absolute;
-  left: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 18px;
-  pointer-events: none;
-  opacity: 0.6;
-}
-
-#searchInput {
-  width: 100%;
-  padding: 12px 45px 12px 45px;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 25px;
-  color: white;
-  font-size: 15px;
-  outline: none;
-  transition: all 0.3s ease;
-}
-
-#searchInput::placeholder {
-  color: rgba(255,255,255,0.5);
-}
-
-#searchInput:focus {
-  background: rgba(255,255,255,0.15);
-  border-color: #667eea;
-  box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
-}
-
-/* Кнопка очистки поиска */
-
-.clear-btn {
-  position: absolute;
-  right: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(255,100,100,0.2);
-  border: none;
-  color: white;
-  width: 25px;
-  height: 25px;
-  border-radius: 50%;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.clear-btn:hover {
-  background: rgba(255,100,100,0.4);
-  transform: translateY(-50%) scale(1.1);
-}
-
-/* Кнопки сортировки */
-
-.sort-buttons {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-}
-
-.sort-btn {
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.2);
-  color: white;
-  padding: 10px 20px;
-  border-radius: 20px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(5px);
-}
-
-.sort-btn:hover {
-  background: rgba(255,255,255,0.15);
-  transform: translateY(-2px);
-}
-
-.sort-btn.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-color: #667eea;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-}
-
 /* СПИСОК ТРЕКОВ */
 /* ========================================== */
-
 .track-list {
-  background: rgba(255,255,255,0.05);
-  padding: 20px;
-  border-radius: 15px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.1);
-  max-height: 400px;
-  overflow-y: auto;
+    background: rgba(255,255,255,0.05);
+    padding: 15px;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    max-height: 400px;
+    overflow-y: auto;
 }
 
 .track-list p {
-  text-align: center;
-  color: #a0a0a0;
-  padding: 20px;
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 20px;
 }
 
 .track-item {
-  background: rgba(255,255,255,0.05);
-  padding: 15px;
-  margin-bottom: 10px;
-  border-radius: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: all 0.3s ease;
-  border: 1px solid transparent;
+    background: rgba(255,255,255,0.05);
+    padding: 12px 15px;
+    margin-bottom: 8px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.track-item:last-child {
+    margin-bottom: 0;
 }
 
 .track-item:hover {
-  background: rgba(255,255,255,0.1);
-  border-color: rgba(102, 126, 234, 0.3);
-  transform: translateX(5px);
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(102, 126, 234, 0.3);
 }
 
 .track-item.active {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
-  border-color: rgba(102, 126, 234, 0.5);
-  box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+    border-color: rgba(102, 126, 234, 0.5);
+    box-shadow: 0 0 15px rgba(102, 126, 234, 0.2);
 }
 
-.track-item span {
-  cursor: pointer;
-  flex: 1;
-  user-select: none;
+.track-number {
+    width: 24px;
+    height: 24px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
 }
 
-.track-item button {
-  background: rgba(255,100,100,0.2);
-  border: 1px solid rgba(255,100,100,0.3);
-  color: white;
-  padding: 8px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.3s ease;
+.track-item.active .track-number {
+    background: var(--primary);
+    color: white;
 }
 
-.track-item button:hover {
-  background: rgba(255,100,100,0.4);
-  transform: scale(1.05);
+.track-cover {
+    width: 45px;
+    height: 45px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
 }
 
-/* СКРОЛЛБАР */
+.track-cover.no-cover {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
 
+.track-cover.no-cover::after {
+    content: '🎵';
+}
+
+.track-info-item {
+    flex: 1;
+    min-width: 0;
+    cursor: pointer;
+}
+
+.track-name {
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.track-artist-small {
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.track-delete {
+    background: rgba(255,100,100,0.2);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.track-delete:hover {
+    background: rgba(255,100,100,0.4);
+}
+
+/* Эквалайзер для активного трека */
+.equalizer {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 20px;
+    margin-left: auto;
+    padding-right: 10px;
+}
+
+.equalizer-bar {
+    width: 3px;
+    background: var(--primary);
+    border-radius: 2px;
+    animation: equalize 0.5s ease-in-out infinite alternate;
+}
+
+.equalizer-bar:nth-child(1) { animation-delay: 0s; height: 8px; }
+.equalizer-bar:nth-child(2) { animation-delay: 0.1s; height: 14px; }
+.equalizer-bar:nth-child(3) { animation-delay: 0.2s; height: 6px; }
+.equalizer-bar:nth-child(4) { animation-delay: 0.3s; height: 18px; }
+
+@keyframes equalize {
+    to { height: 20px; }
+}
+
+/* Скроллбар */
 .track-list::-webkit-scrollbar {
-  width: 8px;
+    width: 6px;
 }
 
 .track-list::-webkit-scrollbar-track {
-  background: rgba(255,255,255,0.05);
-  border-radius: 10px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
 }
 
 .track-list::-webkit-scrollbar-thumb {
-  background: rgba(102, 126, 234, 0.5);
-  border-radius: 10px;
+    background: rgba(102, 126, 234, 0.5);
+    border-radius: 10px;
 }
 
-.track-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(102, 126, 234, 0.7);
+/* ========================================== */
+/* STICKY PLAYER */
+/* ========================================== */
+.sticky-player {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(180deg, transparent 0%, var(--bg-dark) 30%);
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    z-index: 100;
+    backdrop-filter: blur(15px);
+    transition: transform 0.3s ease;
+}
+
+.sticky-player.hidden {
+    transform: translateY(100%);
+}
+
+.mini-cover {
+    width: 45px;
+    height: 45px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+}
+
+.mini-cover.no-cover {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.mini-cover.no-cover::after {
+    content: '🎵';
+}
+
+.mini-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.mini-title {
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mini-artist {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.mini-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.mini-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: var(--primary);
+    color: white;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.3s ease;
+}
+
+.mini-btn:hover {
+    transform: scale(1.1);
+}
+
+/* ========================================== */
+/* АНИМАЦИИ */
+/* ========================================== */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* ========================================== */
+/* МОБИЛЬНАЯ АДАПТАЦИЯ */
+/* ========================================== */
+@media (max-width: 480px) {
+    body {
+        padding: 15px;
+        padding-bottom: 90px;
+    }
+    
+    h1 {
+        font-size: 24px;
+    }
+    
+    .player-section {
+        padding: 20px;
+    }
+    
+    .cover-art {
+        width: 160px;
+        height: 160px;
+    }
+    
+    .track-title {
+        font-size: 18px;
+    }
+    
+    #playBtn {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+    }
+    
+    .control-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 18px;
+    }
+    
+    .controls {
+        gap: 10px;
+    }
+    
+    .track-item {
+        padding: 10px 12px;
+    }
+    
+    .track-cover {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .upload-btn {
+        padding: 12px 24px;
+        font-size: 14px;
+    }
 }

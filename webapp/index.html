@@ -1,104 +1,103 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-      <!-- Force Vercel redeploy -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Arabuthka</title>
-  <link rel="stylesheet" href="style.css">
-      <link rel="manifest" href="manifest.json">
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Арабутка</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-  <div class="container">
-    <h1>🎵 Arabuthka</h1>
+    <div class="container fade-in">
+        <h1>🎵 Арабутка</h1>
 
-    <div class="upload-section">
-      <label class="upload-btn">
-        📁 Загрузить трек
-        <input type="file" id="fileInput" accept=".mp3,.wav,.ogg,.m4a" hidden>
-      </label>
-      <span id="uploadStatus"></span>
+        <!-- Загрузка -->
+        <div class="upload-section">
+            <label class="upload-btn">
+                📁 Загрузить трек
+                <input type="file" id="fileInput" accept=".mp3,.wav,.ogg,.m4a" hidden>
+            </label>
+            <span id="uploadStatus"></span>
+        </div>
+
+        <!-- Поиск и сортировка -->
+        <div class="search-section">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="Найти трек..." autocomplete="off">
+                <button id="clearSearch" class="clear-btn" style="display: none;">✕</button>
+            </div>
+            <div class="sort-buttons">
+                <button id="sortByName" class="sort-btn">🅰️ По имени</button>
+                <button id="sortByDate" class="sort-btn active">📅 По дате</button>
+            </div>
+        </div>
+
+        <!-- Главный плеер -->
+        <section class="player-section">
+            <div id="coverArt" class="cover-art cover-spinning paused no-cover"></div>
+            
+            <div class="track-info">
+                <div class="marquee-container">
+                    <span id="trackTitle" class="track-title marquee-text">Выбери трек</span>
+                </div>
+                <span id="trackArtist" class="track-artist">Арабутка</span>
+            </div>
+
+            <!-- Прогресс-бар -->
+            <div class="progress-container">
+                <span id="currentTime" class="time">0:00</span>
+                <input type="range" id="progressBar" class="progress-bar" value="0" min="0" max="100">
+                <span id="duration" class="time">0:00</span>
+            </div>
+
+            <!-- Управление -->
+            <div class="controls">
+                <button id="shuffleBtn" class="control-btn" onclick="toggleShuffle()" title="Перемешать">🔀</button>
+                <button id="prevBtn" class="control-btn" onclick="prevTrack()" title="Назад">⏮️</button>
+                <button id="playBtn" onclick="togglePlay()" title="Воспроизвести">▶️</button>
+                <button id="nextBtn" class="control-btn" onclick="nextTrack()" title="Вперёд">⏭️</button>
+                <button id="repeatBtn" class="control-btn" onclick="toggleRepeat()" title="Повтор">🔁</button>
+            </div>
+
+            <!-- Громкость -->
+            <div class="volume-container">
+                <button id="muteBtn" onclick="toggleMute()">🔊</button>
+                <input type="range" id="volumeBar" class="volume-bar" value="100" min="0" max="100">
+            </div>
+        </section>
+
+        <!-- Список треков -->
+        <section class="track-list" id="trackList">
+            <p>Загрузка...</p>
+        </section>
+
+        <audio id="audioPlayer"></audio>
     </div>
+
+    <!-- Sticky-плеер -->
+    <div class="sticky-player hidden" id="stickyPlayer">
+        <div class="mini-cover no-cover" id="miniCover"></div>
+        <div class="mini-info">
+            <div class="mini-title" id="miniTitle"></div>
+            <div class="mini-artist" id="miniArtist"></div>
+        </div>
+        <div class="mini-controls">
+            <button class="mini-btn" id="miniPlayBtn">▶️</button>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
     
-    <!-- ========================================== -->
-    <!-- ПОИСК И СОРТИРОВКА -->
-    <!-- ========================================== -->
-    
-    <div class="search-section">
-      <!-- Поле поиска -->
-      <div class="search-box">
-        <span class="search-icon">🔍</span>
-        <input 
-          type="text" 
-          id="searchInput" 
-          placeholder="Найти трек..."
-          autocomplete="off"
-        >
-        <button id="clearSearch" class="clear-btn" style="display: none;">✕</button>
-      </div>
-
-      <!-- Кнопки сортировки -->
-      <div class="sort-buttons">
-        <button id="sortByName" class="sort-btn" title="Сортировать по имени">
-          🅰️ По имени
-        </button>
-        <button id="sortByDate" class="sort-btn active" title="Сортировать по дате">
-          📅 По дате
-        </button>
-      </div>
-    </div>
-
-    <div class="player">
-      <div class="track-info">
-        <span id="trackName">Выбери трек</span>
-      </div>
-
-      <!-- Прогресс-бар -->
-      <div class="progress-container">
-        <span id="currentTime">0:00</span>
-        <input type="range" id="progressBar" class="progress-bar" value="0" min="0" max="100">
-        <span id="duration">0:00</span>
-      </div>
-
-      <div class="controls">
-        <button id="shuffleBtn" onclick="toggleShuffle()" title="Перемешать">🔀</button>
-        <button onclick="prevTrack()" title="Предыдущий">⏮</button>
-        <button id="playBtn" onclick="togglePlay()" title="Воспроизведение">▶️</button>
-        <button onclick="nextTrack()" title="Следующий">⏭</button>
-        <button id="repeatBtn" onclick="toggleRepeat()" title="Повтор">🔁</button>
-      </div>
-
-      <!-- Громкость -->
-      <div class="volume-container">
-        <button id="muteBtn" onclick="toggleMute()">🔊</button>
-        <input type="range" id="volumeBar" class="volume-bar" value="100" min="0" max="100">
-      </div>
-
-      <audio id="audio"></audio>
-    </div>
-
-    <div class="track-list" id="trackList">
-      <p>Загрузка...</p>
-    </div>
-  </div>
-
-      <script type="module" src="app.js"></script>
-
-      <!-- Service Worker Registration -->
+    <!-- Service Worker -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/service-worker.js')
-                    .then((registration) => {
-                        console.log('✅ Service Worker зарегистрирован:', registration.scope);
-                    })
-                    .catch((error) => {
-                        console.error('❌ Ошибка регистрации Service Worker:', error);
-                    });
+                    .then(reg => console.log('✅ SW:', reg.scope))
+                    .catch(err => console.error('❌ SW:', err));
             });
-        } else {
-            console.warn('⚠️ Service Worker не поддерживается этим браузером');
         }
     </script>
 </body>
