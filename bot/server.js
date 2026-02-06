@@ -32,10 +32,6 @@ const express = require('express');
 // =============================================
 // МОНИТОРИНГ И АНАЛИТИКА
 // =============================================
-const sentry = require('./monitoring/sentry');
-
-// Инициализация Sentry для отслеживания ошибок
-sentry.init(app);
 
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
@@ -45,6 +41,10 @@ const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 
 const app = express();
+
+// Инициализация Sentry для отслеживания ошибок
+const sentry = require('./monitoring/sentry');
+sentry.init(app);
 
 // =============================================
 // TRUST PROXY
