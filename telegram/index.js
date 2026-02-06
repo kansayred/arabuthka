@@ -119,3 +119,33 @@ MP3, WAV, OGG, M4A
 // =============================================
 
 console.log('🎵 Arabuthka бот запущен...');
+
+// =============================================
+// ОБРАБОТКА ОШИБОК POLLING
+// =============================================
+// Если polling обрывается (сеть/Telegram API недоступен),
+// логируем ошибку, но не роняем процесс.
+bot.on('polling_error', (error) => {
+  console.error('❌ Ошибка polling:', error.message);
+  // Можно добавить логику переподключения или уведомление
+});
+
+// =============================================
+// GRACEFUL SHUTDOWN
+// =============================================
+// При завершении процесса (SIGTERM/SIGINT) корректно останавливаем polling,
+// чтобы избежать "двойных" инстансов бота при рестарте.
+const shutdown = async () => {
+  console.log('\n🛑 Получен сигнал завершения, останавливаем бот...');
+  try {
+    await bot.stopPolling();
+    console.log('✅ Polling остановлен корректно');
+    process.exit(0);
+  } catch (err) {
+    console.error('❌ Ошибка при остановке polling:', err.message);
+    process.exit(1);
+  }
+};
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
