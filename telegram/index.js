@@ -3,6 +3,20 @@ if (!process.env.RAILWAY_ENVIRONMENT) {
   require('dotenv').config();
 }
 
+// =============================================
+// ВАЛИДАЦИЯ ПЕРЕМЕННЫХ ОКРУЖЕНИЯ
+// =============================================
+const REQUIRED_ENV = ['TELEGRAM_BOT_TOKEN', 'WEBAPP_URL'];
+
+for (const key of REQUIRED_ENV) {
+  if (!process.env[key]) {
+    console.error(`❌ КРИТИЧЕСКАЯ ОШИБКА: Переменная ${key} не задана!`);
+    process.exit(1);
+  }
+}
+
+console.log('✅ Telegram-бот: все переменные окружения присутствуют');
+
 const TelegramBot = require('node-telegram-bot-api');
 const express = require('express');
 
