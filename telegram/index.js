@@ -24,7 +24,7 @@ const express = require('express');
 // ИМПОРТ ОБРАБОТЧИКОВ СКАЧИВАНИЯ МУЗЫКИ
 // =============================================
 const { handleDownload, handleSearch, handleDownloadCallback } = require('./handlers/downloadHandler');
-const { handleSearchCommand, handleDownloadCommand } = require('./handlers/musicHandler');
+// const { handleSearchCommand, handleDownloadCommand } = require('./handlers/musicHandler');
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const webAppUrl = process.env.WEBAPP_URL;
@@ -125,7 +125,7 @@ bot.onText(/\/player/, (msg) => {
 bot.onText(/\/download/, (msg) => handleDownloadCommand(msg));
 
            // /music - Альтернативная команда для скачивания музыки
-bot.onText(/\/music/, (msg) => handleDownloadCommand(msg));
+// bot.onText(/\/music/, (msg) => handleDownloadCommand(msg));
 
 // /search - Поиск музыки с результатами
-bot.onText(/\/search/, (msg) => handleSearchCommand(msg));
+// bot.onText(/\/search/, (msg) => handleSearchCommand(msg));
