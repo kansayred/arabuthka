@@ -1,5 +1,4 @@
-const ytdl = require('ytdl-core');
-const ytsr = require('ytsr');
+const ytdl = require('@distube/ytdl-core');const ytsr = require('ytsr');
 const stream = require('stream');
 
 /**
