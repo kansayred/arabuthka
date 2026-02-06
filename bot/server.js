@@ -460,6 +460,42 @@ app.get('/', (req, res) => res.send('Arabutka API работает 🎵'));
 
 const PORT = process.env.PORT || 3000;
 // Запускаем сервер и сохраняем ссылку для graceful shutdown
+// =============================================
+// ГЛОБАЛЬНЫЙ ОБРАБОТЧИК ОШИБОК
+// Перехватывает все необработанные ошибки в маршрутах.
+// Возвращает понятный JSON-ответ вместо HTML-страницы ошибки.
+// =============================================
+app.use((err, req, res, next) => {
+  // Логируем ошибку для отладки
+  console.error('❌ Ошибка в маршруте:', err.message);
+  console.error(err.stack);
+
+  // Определяем статус-код
+  const statusCode = err.status || err.statusCode || 500;
+
+  // Формируем ответ
+  const response = {
+    error: err.message || 'Внутренняя ошибка сервера',
+    status: statusCode
+  };
+
+  // В development-режиме добавляем stack trace
+  if (!process.env.RAILWAY_ENVIRONMENT) {
+    response.stack = err.stack;
+  }
+
+  res.status(statusCode).json(response);
+});
+
+// Обработка 404 — маршрут не найден
+app.use((req, res) => {
+  res.status(404).json({
+    error: 'Маршрут не найден',
+    path: req.path,
+    method: req.method
+  });
+});
+
 const server = app.listen(PORT, () => {
   console.log(`🚀 Сервер запущен на порту ${PORT}`);
 });
