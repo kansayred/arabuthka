@@ -100,7 +100,6 @@ if (!process.env.RAILWAY_ENVIRONMENT) {
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Telegram-Init-Data']
   }));
 }
-}
 
 app.use(express.json());
 
