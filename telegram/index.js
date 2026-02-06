@@ -122,4 +122,4 @@ bot.onText(/\/player/, (msg) => {
 });
 
 // /download - Скачивание музыки по запросу
-bot.onText(/\/download/, (msg) => handleDownloadCommand(msg);
+bot.onText(/\/download/, (msg) => handleDownloadCommand(msg));
