@@ -7,8 +7,7 @@ const Sentry = require('@sentry/node');
 const { ProfilingIntegration } = require('@sentry/profiling-node');
 
 // Инициализация Sentry
-function initSentry() {
-  if (!process.env.SENTRY_DSN) {
+function init(app) {  if (!process.env.SENTRY_DSN) {
     console.log('⚠️  Sentry DSN не настроен. Мониторинг отключен.');
     return null;
   }
@@ -52,6 +51,12 @@ function initSentry() {
   });
 
   console.log('✅ Sentry инициализирован');
+                    
+  // Интеграция middleware с Express (если передан app)
+  if (app) {
+    app.use(Sentry.Handlers.requestHandler());
+    app.use(Sentry.Handlers.tracingHandler());
+  }
   return Sentry;
 }
 
@@ -115,7 +120,7 @@ function addBreadcrumb(category, message, data = {}) {
 }
 
 module.exports = {
-  initSentry,
+  init,
   sentryRequestHandler,
   sentryTracingHandler,
   sentryErrorHandler,
