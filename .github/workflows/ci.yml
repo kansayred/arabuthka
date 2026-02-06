@@ -1,0 +1,87 @@
+# ==============================================
+# CI/CD ПАЙПЛАЙН ДЛЯ ARABUTHKA BOT
+# Автоматическая проверка кода при каждом пуше
+# ==============================================
+
+name: CI - Проверка кода
+
+# Когда запускается пайплайн
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ============================================
+  # ПРОВЕРКА СИНТАКСИСА И ЗАВИСИМОСТЕЙ
+  # ============================================
+  lint-and-test:
+    name: Линтинг и проверка
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Получаем код из репозитория
+      - name: Клонирование репозитория
+        uses: actions/checkout@v4
+      
+      # Настраиваем Node.js окружение
+      - name: Настройка Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: bot/package-lock.json
+      
+      # Устанавливаем зависимости бота
+      - name: Установка зависимостей бота
+        working-directory: ./bot
+        run: npm ci
+      
+      # Проверяем синтаксис JavaScript
+      - name: Проверка синтаксиса JS
+        working-directory: ./bot
+        run: |
+          echo "Проверка синтаксиса JavaScript файлов..."
+          node --check server.js || exit 1
+          echo "Синтаксис в порядке!"
+      
+      # Проверяем наличие критичных переменных в коде
+      - name: Проверка безопасности
+        working-directory: ./bot
+        run: |
+          echo "Проверка на утечку секретов..."
+          if grep -r "sk-" --include="*.js" . 2>/dev/null | grep -v "process.env"; then
+            echo "ВНИМАНИЕ: Найдены потенциальные API ключи в коде!"
+            exit 1
+          fi
+          echo "Проверка безопасности пройдена!"
+
+  # ============================================
+  # ПРОВЕРКА СТРУКТУРЫ ПРОЕКТА
+  # ============================================
+  structure-check:
+    name: Проверка структуры
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Клонирование репозитория
+        uses: actions/checkout@v4
+      
+      # Проверяем наличие обязательных файлов
+      - name: Проверка обязательных файлов
+        run: |
+          echo "Проверка структуры проекта..."
+          
+          # Список обязательных файлов
+          files=("bot/server.js" "bot/package.json")
+          
+          for file in "${files[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "ОШИБКА: Отсутствует файл $file"
+              exit 1
+            fi
+            echo "OK: $file существует"
+          done
+          
+          echo "Структура проекта в порядке!"
