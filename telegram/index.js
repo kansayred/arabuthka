@@ -123,3 +123,9 @@ bot.onText(/\/player/, (msg) => {
 
 // /download - Скачивание музыки по запросу
 bot.onText(/\/download/, (msg) => handleDownloadCommand(msg));
+
+           // /music - Альтернативная команда для скачивания музыки
+bot.onText(/\/music/, (msg) => handleDownloadCommand(msg));
+
+// /search - Поиск музыки с результатами
+bot.onText(/\/search/, (msg) => handleSearchCommand(msg));
