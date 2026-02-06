@@ -8,7 +8,6 @@ const router = express.Router();
 const { Pool } = require('pg');
 const cloudinary = require('cloudinary').v2;
 const musicSearch = require('../services/musicSearch');
-const analytics = require('../analytics');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
