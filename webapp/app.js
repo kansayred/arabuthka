@@ -164,7 +164,8 @@ async function loadTracks() {
         applySorting();
         renderTracks();
         if (isShuffled) generateShuffledIndices();
-t.innerHTML = `<p>❌ ${err.message}</p>`;
+    } catch (err) {
+        trackList.innerHTML = `<p>❌ ${err.message}</p>`;
     }
 }
 
