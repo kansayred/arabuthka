@@ -3,6 +3,30 @@ if (!process.env.RAILWAY_ENVIRONMENT) {
   require('dotenv').config();
 }
 
+// =============================================
+// ВАЛИДАЦИЯ ПЕРЕМЕННЫХ ОКРУЖЕНИЯ
+// Проверяем наличие критичных переменных при старте.
+// Если чего-то нет — падаем сразу с понятной ошибкой,
+// а не крэшимся при первом запросе к БД.
+// =============================================
+const REQUIRED_ENV = [
+  'DATABASE_URL',
+  'TELEGRAM_BOT_TOKEN',
+  'CLOUDINARY_CLOUD_NAME',
+  'CLOUDINARY_API_KEY',
+  'CLOUDINARY_API_SECRET'
+];
+
+for (const key of REQUIRED_ENV) {
+  if (!process.env[key]) {
+    console.error(`❌ КРИТИЧЕСКАЯ ОШИБКА: Переменная окружения ${key} не задана!`);
+    console.error('Установите все необходимые переменные в .env (локально) или в Railway.');
+    process.exit(1);
+  }
+}
+
+console.log('✅ Все необходимые переменные окружения присутствуют');
+
 const express = require('express');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
