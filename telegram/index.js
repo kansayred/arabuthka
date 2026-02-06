@@ -135,14 +135,15 @@ bot.onText(/\/search/, (msg) => handleSearch(bot, msg));
 bot.on('callback_query', (query) => {
   const chatId = query.message.chat.id;
 
-  switch (query.data) {
-    case 'help':
-      sendHelpMessage(chatId);
-      break;
   // Проверяем, является ли это запрос на скачивание
   if (query.data.startsWith('download_')) {
     handleDownloadCallback(bot, query);
     return;
+  }
+
+  switch (query.data) {    case 'help':
+      sendHelpMessage(chatId);
+      break;
   }
 
     case 'open_player':
