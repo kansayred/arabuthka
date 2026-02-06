@@ -107,6 +107,26 @@ app.use(express.json());
 // ЗАЩИТА ОТ СПАМА (RATE LIMIT)
 
 // =============================================
+// SECURITY HEADERS
+// Защитные HTTP-заголовки для безопасности.
+// Защищают от XSS, clickjacking, MIME-sniffing и др.
+// =============================================
+app.use((req, res, next) => {
+  // Защита от XSS-атак
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  // Защита от clickjacking
+  res.setHeader('X-Frame-Options', 'DENY');
+  // Включаем XSS-фильтр браузера
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  // Запрещаем кэширование чувствительных данных
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  // Убираем заголовок с информацией о сервере
+  res.removeHeader('X-Powered-By');
+  next();
+});
+
+// =============================================
 // ЛОГИРОВАНИЕ ЗАПРОСОВ
 // Простой логгер для отладки и мониторинга.
 // Логирует метод, URL, статус и время ответа.
