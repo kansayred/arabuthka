@@ -433,4 +433,45 @@ app.delete('/tracks/:id', authMiddleware, async (req, res) => {
 app.get('/', (req, res) => res.send('Arabutka API работает 🎵'));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Сервер запущен на порту ${PORT}`));
+// Запускаем сервер и сохраняем ссылку для graceful shutdown
+const server = app.listen(PORT, () => {
+  console.log(`🚀 Сервер запущен на порту ${PORT}`);
+});
+
+// =============================================
+// GRACEFUL SHUTDOWN
+// Корректно завершаем работу при получении сигналов завершения:
+// - SIGTERM: Railway/Heroku отправляют при деплое/рестарте
+// - SIGINT: Ctrl+C в терминале
+// Это даёт время завершить активные запросы и закрыть
+// соединения с БД вместо мгновенного обрыва.
+// =============================================
+function gracefulShutdown(signal) {
+  console.log(`\n⚠️ Получен ${signal}. Начинаем корректное завершение...`);
+
+  // Прекращаем принимать новые соединения
+  server.close(async () => {
+    console.log('🔒 HTTP-сервер закрыт');
+
+    try {
+      // Закрываем пул соединений с PostgreSQL
+      await pool.end();
+      console.log('🗄️ Соединения с PostgreSQL закрыты');
+    } catch (err) {
+      console.error('❌ Ошибка при закрытии БД:', err.message);
+    }
+
+    console.log('✅ Сервер успешно завершил работу');
+    process.exit(0);
+  });
+
+  // Если за 10 секунд не завершились — принудительный выход
+  setTimeout(() => {
+    console.error('🚨 Таймаут завершения. Принудительный выход.');
+    process.exit(1);
+  }, 10000);
+}
+
+// Подписываемся на сигналы завершения
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
