@@ -1,4 +1,9 @@
-const CACHE_NAME = 'arabuthka-v1';
+// Версия кэша — при обновлении кода меняем это значение,
+// чтобы Service Worker вычистил устаревший кэш у пользователей.
+// Формат: arabuthka-v{мажор}.{минор}.{дата}
+const CACHE_VERSION = '2.0.20260206';
+const CACHE_NAME = `arabuthka-${CACHE_VERSION}`;
+
 const urlsToCache = [
   '/',
   '/index.html',
@@ -10,41 +15,47 @@ const urlsToCache = [
 
 // Установка Service Worker и кэширование файлов
 self.addEventListener('install', (event) => {
+  console.log(`[SW] Установка версии ${CACHE_VERSION}`);
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('Кэширование файлов приложения');
+        console.log('[SW] Кэширование файлов приложения');
         return cache.addAll(urlsToCache);
       })
       .catch((error) => {
-        console.error('Ошибка кэширования:', error);
+        console.error('[SW] Ошибка кэширования:', error);
       })
   );
-  self.skipWaiting(); // Активировать новый SW сразу
+  // Активировать новый SW сразу, не ждать закрытия вкладок
+  self.skipWaiting();
 });
 
-// Активация Service Worker и очистка старых кэшей
+// Активация — удаляем все кэши от предыдущих версий
 self.addEventListener('activate', (event) => {
+  console.log(`[SW] Активация версии ${CACHE_VERSION}`);
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('Удаление старого кэша:', cacheName);
-            return caches.delete(cacheName);
+        cacheNames.map((name) => {
+          if (name !== CACHE_NAME) {
+            console.log('[SW] Удаление устаревшего кэша:', name);
+            return caches.delete(name);
           }
         })
       );
     })
   );
-  self.clients.claim(); // Взять под контроль все вкладки
+  // Берём под контроль все открытые вкладки
+  self.clients.claim();
 });
 
 // Обработка запросов: сеть с fallback на кэш
+// API-запросы и запросы к другим доменам не кэшируем
 self.addEventListener('fetch', (event) => {
-  // Не кэшируем API запросы и динамический контент
-  if (event.request.url.includes('/api/') || 
-      event.request.url.includes('/tracks/') ||
+  const url = new URL(event.request.url);
+
+  // Не трогаем запросы к API (Railway), к другим доменам и не-GET запросы
+  if (url.origin !== self.location.origin ||
       event.request.method !== 'GET') {
     return;
   }
@@ -52,17 +63,20 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Клонируем ответ перед кэшированием
+        // Проверяем что ответ валидный перед кэшированием
+        if (!response || response.status !== 200 || response.type !== 'basic') {
+          return response;
+        }
+
         const responseToCache = response.clone();
-        
         caches.open(CACHE_NAME).then((cache) => {
           cache.put(event.request, responseToCache);
         });
-        
+
         return response;
       })
       .catch(() => {
-        // Если сеть недоступна, используем кэш
+        // Сеть недоступна — отдаём из кэша
         return caches.match(event.request);
       })
   );
