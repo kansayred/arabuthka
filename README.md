@@ -157,6 +157,28 @@ This project is proprietary. All rights reserved.
 
 **Arabuthka Team**
 
+
+## Backend Модули
+
+### Middleware
+
+| Модуль | Описание |
+|--------|----------|
+| `auth.js` | Авторизация Telegram через InitData |
+| `errorHandler.js` | Централизованная обработка ошибок |
+| `rateLimit.js` | Защита от спама и DDoS |
+
+### Utils
+
+| Модуль | Описание |
+|--------|----------|
+| `logger.js` | Система логирования с уровнями |
+| `validators.js` | Валидация входящих данных |
+
+## См. также
+
+- [CONTRIBUTING.md](CONTRIBUTING.md) — гайд по внесению изменений
+- [bot/.env.example](bot/.env.example) — шаблон переменных окружения
 ---
 
 *Built with care in Samara, Russia*
