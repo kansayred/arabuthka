@@ -176,18 +176,45 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-pool.query(`
-  CREATE TABLE IF NOT EXISTS tracks (
-    id SERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    url TEXT NOT NULL,
-    cloudinary_id TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )
-`).then(() => pool.query(`CREATE INDEX IF NOT EXISTS idx_tracks_user_id ON tracks(user_id)`))
-  .then(() => console.log('✅ Таблица tracks готова'))
-  .catch(err => console.log('Ошибка создания таблицы:', err));
+// ---------------------------------------------
+// ИНИЦИАЛИЗАЦИЯ БД С ПОВТОРНЫМИ ПОПЫТКАМИ
+// На Railway PostgreSQL может быть не сразу доступен при старте.
+// Даём 5 попыток с нарастающей задержкой (2с, 4с, 8с, 16с, 32с),
+// чтобы сервис успел подняться.
+// ---------------------------------------------
+async function initDatabase(retries = 5, delay = 2000) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS tracks (
+          id SERIAL PRIMARY KEY,
+          user_id BIGINT NOT NULL,
+          name VARCHAR(255) NOT NULL,
+          url TEXT NOT NULL,
+          cloudinary_id TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      await pool.query('CREATE INDEX IF NOT EXISTS idx_tracks_user_id ON tracks(user_id)');
+      console.log('✅ Таблица tracks готова (попытка ' + attempt + ')');
+      return; // Успех — выходим
+    } catch (err) {
+      console.error(`❌ Попытка ${attempt}/${retries} — не удалось подключиться к БД:`, err.message);
+      if (attempt === retries) {
+        console.error('🚨 Все попытки исчерпаны. БД недоступна, но сервер продолжит работу.');
+        console.error('Эндпоинты, зависящие от БД, будут возвращать ошибку 503.');
+        return;
+      }
+      // Ждём перед следующей попыткой (экспоненциальная задержка)
+      const waitTime = delay * Math.pow(2, attempt - 1);
+      console.log(`⏳ Следующая попытка через ${waitTime / 1000} секунд...`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
+  }
+}
+
+// Запускаем инициализацию БД
+initDatabase();
 
 // =============================================
 // CLOUDINARY
