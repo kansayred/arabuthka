@@ -281,16 +281,48 @@ app.post('/upload', uploadLimiter, authMiddleware, upload.single('track'), async
 
 app.get('/tracks', authMiddleware, async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT * FROM tracks WHERE user_id = $1 ORDER BY created_at DESC',
+    // Параметры пагинации с дефолтными значениями
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = (page - 1) * limit;
+
+    // Проверка корректности параметров
+    if (page < 1 || limit < 1 || limit > 100) {
+      return res.status(400).json({ 
+        error: 'Неверные параметры: page >= 1, limit должен быть от 1 до 100' 
+      });
+    }
+
+    // Получаем общее количество треков для пагинации
+    const countResult = await pool.query(
+      'SELECT COUNT(*) FROM tracks WHERE user_id = $1',
       [req.userId]
     );
-    res.json(result.rows);
+    const total = parseInt(countResult.rows[0].count);
+
+    // Получаем треки с лимитом и смещением
+    const result = await pool.query(
+      'SELECT * FROM tracks WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3',
+      [req.userId, limit, offset]
+    );
+
+    // Возвращаем треки с метаданными пагинации
+    res.json({
+      tracks: result.rows,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasNext: offset + limit < total,
+        hasPrev: page > 1
+      }
+    });
   } catch (error) {
+    console.error('Ошибка получения треков:', error.message);
     res.status(500).json({ error: 'Не удалось получить треки' });
   }
 });
-
 app.delete('/tracks/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
