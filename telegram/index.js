@@ -4,9 +4,55 @@ if (!process.env.RAILWAY_ENVIRONMENT) {
 }
 
 const TelegramBot = require('node-telegram-bot-api');
+const express = require('express');
+
 const token = process.env.TELEGRAM_BOT_TOKEN;
-const bot = new TelegramBot(token, { polling: true });
 const webAppUrl = process.env.WEBAPP_URL;
+const PORT = process.env.PORT || 3000;
+
+// =============================================
+// ОПРЕДЕЛЯЕМ РЕЖИМ РАБОТЫ
+// На Railway — webhook, локально — polling.
+// Webhook экономит ресурсы: бот не опрашивает Telegram,
+// а получает обновления push-уведомлениями.
+// =============================================
+const isProduction = !!process.env.RAILWAY_ENVIRONMENT;
+
+let bot;
+if (isProduction) {
+  // Продакшн: webhook-режим — бот не запускает polling,
+  // а ждёт POST-запросы от Telegram на наш сервер
+  bot = new TelegramBot(token, { webHook: false });
+} else {
+  // Локально: polling — удобнее для разработки,
+  // не нужен публичный URL
+  bot = new TelegramBot(token, { polling: true });
+}
+
+// =============================================
+// EXPRESS-СЕРВЕР ДЛЯ WEBHOOK
+// =============================================
+const app = express();
+
+// Telegram отправляет обновления в формате JSON
+app.use(express.json());
+
+// Health-check — Railway проверяет, жив ли сервис
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', mode: isProduction ? 'webhook' : 'polling' });
+});
+
+// Эндпоинт для Telegram webhook — сюда приходят все обновления.
+// Секретный путь на основе токена защищает от подделки запросов.
+const webhookPath = `/webhook/${token}`;
+app.post(webhookPath, (req, res) => {
+  bot.processUpdate(req.body);
+  res.sendStatus(200);
+});
+
+app.get('/', (req, res) => {
+  res.send('Arabuthka Telegram Bot работает');
+});
 
 // =============================================
 // КОМАНДЫ БОТА
@@ -16,7 +62,7 @@ const webAppUrl = process.env.WEBAPP_URL;
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   const firstName = msg.from.first_name || 'друг';
-  
+
   const welcomeMessage = `🎵 *Добро пожаловать в Arabuthka, ${firstName}!*
 
 Это твоя личная музыкальная библиотека в Telegram.
@@ -58,10 +104,9 @@ bot.onText(/\/player/, (msg) => {
 // =============================================
 // ОБРАБОТКА CALLBACK ЗАПРОСОВ
 // =============================================
-
 bot.on('callback_query', (query) => {
   const chatId = query.message.chat.id;
-  
+
   switch (query.data) {
     case 'help':
       sendHelpMessage(chatId);
@@ -76,14 +121,13 @@ bot.on('callback_query', (query) => {
       });
       break;
   }
-  
+
   bot.answerCallbackQuery(query.id);
 });
 
 // =============================================
 // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 // =============================================
-
 function sendHelpMessage(chatId) {
   const helpMessage = `📖 *Справка по Arabuthka*
 
@@ -115,34 +159,62 @@ MP3, WAV, OGG, M4A
 }
 
 // =============================================
-// ЗАПУСК БОТА
+// ЗАПУСК СЕРВЕРА И НАСТРОЙКА WEBHOOK
 // =============================================
+app.listen(PORT, async () => {
+  console.log(`🚀 Сервер бота запущен на порту ${PORT}`);
 
-console.log('🎵 Arabuthka бот запущен...');
+  if (isProduction) {
+    // На продакшне устанавливаем webhook — Telegram будет
+    // отправлять обновления на наш HTTPS-адрес.
+    // WEBHOOK_URL должен быть вида https://your-service.up.railway.app
+    const webhookUrl = process.env.WEBHOOK_URL;
+    if (webhookUrl) {
+      try {
+        await bot.setWebHook(`${webhookUrl}${webhookPath}`);
+        console.log(`✅ Webhook установлен: ${webhookUrl}${webhookPath}`);
+      } catch (err) {
+        console.error('❌ Не удалось установить webhook:', err.message);
+      }
+    } else {
+      console.warn('⚠️ WEBHOOK_URL не задан — webhook не установлен');
+    }
+  } else {
+    console.log('📡 Режим polling (локальная разработка)');
+  }
+});
 
 // =============================================
-// ОБРАБОТКА ОШИБОК POLLING
+// ОБРАБОТКА ОШИБОК
 // =============================================
-// Если polling обрывается (сеть/Telegram API недоступен),
-// логируем ошибку, но не роняем процесс.
+// Ошибки polling (только в локальном режиме)
 bot.on('polling_error', (error) => {
   console.error('❌ Ошибка polling:', error.message);
-  // Можно добавить логику переподключения или уведомление
+});
+
+// Ошибки webhook (продакшн)
+bot.on('webhook_error', (error) => {
+  console.error('❌ Ошибка webhook:', error.message);
 });
 
 // =============================================
 // GRACEFUL SHUTDOWN
 // =============================================
-// При завершении процесса (SIGTERM/SIGINT) корректно останавливаем polling,
-// чтобы избежать "двойных" инстансов бота при рестарте.
+// При завершении процесса корректно останавливаем бота
+// и убираем webhook, чтобы Telegram не слал запросы в пустоту.
 const shutdown = async () => {
   console.log('\n🛑 Получен сигнал завершения, останавливаем бот...');
   try {
-    await bot.stopPolling();
-    console.log('✅ Polling остановлен корректно');
+    if (isProduction) {
+      await bot.deleteWebHook();
+      console.log('✅ Webhook удалён');
+    } else {
+      await bot.stopPolling();
+      console.log('✅ Polling остановлен');
+    }
     process.exit(0);
   } catch (err) {
-    console.error('❌ Ошибка при остановке polling:', err.message);
+    console.error('❌ Ошибка при остановке:', err.message);
     process.exit(1);
   }
 };
