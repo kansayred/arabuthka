@@ -22,7 +22,7 @@ COPY package*.json ./
 RUN npm install --only=production && npm cache clean --force
 
 # Копируем исходный код
-COPY server.js ./
+COPY . ./
 
 # Создаём не-root пользователя для безопасности
 RUN addgroup -g 1001 -S nodejs && \
