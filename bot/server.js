@@ -28,6 +28,18 @@ for (const key of REQUIRED_ENV) {
 console.log('✅ Все необходимые переменные окружения присутствуют');
 
 const express = require('express');
+
+// =============================================
+// МОНИТОРИНГ И АНАЛИТИКА
+// =============================================
+const sentry = require('./monitoring/sentry');
+const analytics = require('./analytics');
+
+// Инициализация Sentry для отслеживания ошибок
+sentry.init(app);
+
+// Инициализация аналитики
+analytics.init();
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const cors = require('cors');
@@ -373,6 +385,12 @@ app.get('/health', async (req, res) => {
 
 app.post('/upload', uploadLimiter, authMiddleware, upload.single('track'), async (req, res) => {
   try {
+        // Аналитика: трек из user_agent
+    analytics.trackEvent(req.userId, 'track_uploaded', {
+      filename: req.file.originalname,
+      size: req.file.size,
+      mimetype: req.file.mimetype
+    });
     // Если файл не пришёл
     if (!req.file) {
       return res.status(400).json({ error: 'Файл не прикреплён' });
@@ -409,6 +427,8 @@ app.post('/upload', uploadLimiter, authMiddleware, upload.single('track'), async
 
 app.get('/tracks', authMiddleware, async (req, res) => {
   try {
+        // Аналитика: пользователь запросил список треков
+    analytics.trackEvent(req.userId, 'tracks_viewed', { page, limit });
     // Параметры пагинации с дефолтными значениями
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 50;
@@ -453,6 +473,8 @@ app.get('/tracks', authMiddleware, async (req, res) => {
 });
 app.delete('/tracks/:id', authMiddleware, async (req, res) => {
   try {
+        // Аналитика: трек удален
+    analytics.trackEvent(req.userId, 'track_deleted', { trackId: id });
     const { id } = req.params;
     const track = await pool.query(
       'SELECT * FROM tracks WHERE id = $1 AND user_id = $2',
