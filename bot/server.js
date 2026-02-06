@@ -106,6 +106,32 @@ app.use(express.json());
 
 // =============================================
 // ЗАЩИТА ОТ СПАМА (RATE LIMIT)
+
+// =============================================
+// ЛОГИРОВАНИЕ ЗАПРОСОВ
+// Простой логгер для отладки и мониторинга.
+// Логирует метод, URL, статус и время ответа.
+// В production можно заменить на morgan или pino.
+// =============================================
+app.use((req, res, next) => {
+  const start = Date.now();
+  const { method, url } = req;
+
+  // Логируем после завершения запроса
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    const { statusCode } = res;
+
+    // Цветной вывод в зависимости от статуса
+    let statusIcon = '✅';
+    if (statusCode >= 400 && statusCode < 500) statusIcon = '⚠️';
+    if (statusCode >= 500) statusIcon = '❌';
+
+    console.log(`${statusIcon} ${method} ${url} ${statusCode} - ${duration}ms`);
+  });
+
+  next();
+});
 // =============================================
 
 // Общий лимит — 100 запросов за 15 минут с одного IP
