@@ -33,13 +33,10 @@ const express = require('express');
 // МОНИТОРИНГ И АНАЛИТИКА
 // =============================================
 const sentry = require('./monitoring/sentry');
-const analytics = require('./analytics');
 
 // Инициализация Sentry для отслеживания ошибок
 sentry.init(app);
 
-// Инициализация аналитики
-analytics.init();
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const cors = require('cors');
