@@ -20,6 +20,11 @@ console.log('✅ Telegram-бот: все переменные окружения
 const TelegramBot = require('node-telegram-bot-api');
 const express = require('express');
 
+// =============================================
+// ИМПОРТ ОБРАБОТЧИКОВ СКАЧИВАНИЯ МУЗЫКИ
+// =============================================
+const { handleDownload, handleSearch, handleDownloadCallback } = require('./handlers/downloadHandler');
+
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const webAppUrl = process.env.WEBAPP_URL;
 const PORT = process.env.PORT || 3000;
@@ -115,6 +120,15 @@ bot.onText(/\/player/, (msg) => {
   });
 });
 
+// /download - Скачивание музыки по запросу
+bot.onText(/\/download/, (msg) => handleDownload(bot, msg));
+
+// /music - Альтернативная команда для скачивания
+bot.onText(/\/music/, (msg) => handleDownload(bot, msg));
+
+// /search - Поиск музыки с кнопками для скачивания
+bot.onText(/\/search/, (msg) => handleSearch(bot, msg));
+
 // =============================================
 // ОБРАБОТКА CALLBACK ЗАПРОСОВ
 // =============================================
@@ -125,6 +139,12 @@ bot.on('callback_query', (query) => {
     case 'help':
       sendHelpMessage(chatId);
       break;
+  // Проверяем, является ли это запрос на скачивание
+  if (query.data.startsWith('download_')) {
+    handleDownloadCallback(bot, query);
+    return;
+  }
+
     case 'open_player':
       bot.sendMessage(chatId, '🎧 Открой плеер:', {
         reply_markup: {
