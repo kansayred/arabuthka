@@ -46,13 +46,41 @@ const app = express();
 app.set('trust proxy', 1);
 
 // =============================================
-// CORS — только наш фронтенд
+// CORS — безопасный доступ для фронтенда
+// Поддерживаются:
+// - Production-домены Vercel (arabutka/arabuthka)
+// - Preview-деплои Vercel (*-vercel.app)
+// - Railway-домен (если задан)
+// - Telegram WebView (запросы без origin)
 // =============================================
 
+// Список точных разрешённых доменов
 const allowedOrigins = [
   'https://arabutka-webapp.vercel.app',
   'https://arabuthka-webapp.vercel.app'
 ];
+
+// Добавляем Railway-домен, если он задан в переменных
+if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+  allowedOrigins.push(`https://${process.env.RAILWAY_PUBLIC_DOMAIN}`);
+}
+
+// Проверяет, является ли origin Vercel preview-деплоем
+function isVercelPreview(origin) {
+  // Паттерн: https://<project>-<random>.vercel.app
+  return origin && /^https:\/\/[\w-]+-[\w]+\.vercel\.app$/.test(origin);
+}
+
+// Определяем, разрешён ли origin
+function isOriginAllowed(origin) {
+  // Telegram WebView отправляет запросы без origin
+  if (!origin) return true;
+  // Проверяем точное совпадение
+  if (allowedOrigins.includes(origin)) return true;
+  // Проверяем Vercel preview-деплои
+  if (isVercelPreview(origin)) return true;
+  return false;
+}
 
 // Локально разрешаем всё для удобства разработки
 if (!process.env.RAILWAY_ENVIRONMENT) {
@@ -60,14 +88,18 @@ if (!process.env.RAILWAY_ENVIRONMENT) {
 } else {
   app.use(cors({
     origin: function (origin, callback) {
-      // Разрешаем запросы без origin (Telegram WebView)
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (isOriginAllowed(origin)) {
         callback(null, true);
       } else {
+        console.warn(`⚠️ CORS заблокирован: ${origin}`);
         callback(new Error('Запрещено CORS'));
       }
-    }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Telegram-Init-Data']
   }));
+}
 }
 
 app.use(express.json());
