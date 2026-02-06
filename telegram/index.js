@@ -141,10 +141,9 @@ bot.on('callback_query', (query) => {
     return;
   }
 
-  switch (query.data) {    case 'help':
-      sendHelpMessage(chatId);
+  switch (query.data) {
+    case 'help':      sendHelpMessage(chatId);
       break;
-  }
 
     case 'open_player':
       bot.sendMessage(chatId, '🎧 Открой плеер:', {
