@@ -14,6 +14,14 @@ const rateLimit = require('express-rate-limit');
 const app = express();
 
 // =============================================
+// TRUST PROXY
+// Railway работает за прокси, без этой настройки
+// rate limiter видит IP прокси вместо клиента —
+// все пользователи делят один лимит на всех.
+// =============================================
+app.set('trust proxy', 1);
+
+// =============================================
 // CORS — только наш фронтенд
 // =============================================
 
@@ -66,6 +74,11 @@ app.use(generalLimiter);
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
+// Максимальный возраст initData в секундах (24 часа).
+// Защищает от replay-атак: если кто-то перехватит initData,
+// его нельзя будет использовать спустя сутки.
+const MAX_AUTH_AGE_SECONDS = 86400;
+
 function validateInitData(initData) {
   if (!initData || !BOT_TOKEN) return null;
 
@@ -73,6 +86,17 @@ function validateInitData(initData) {
     const params = new URLSearchParams(initData);
     const hash = params.get('hash');
     params.delete('hash');
+
+    // Проверка свежести auth_date — защита от replay-атак
+    const authDate = params.get('auth_date');
+    if (authDate) {
+      const authTimestamp = parseInt(authDate, 10);
+      const now = Math.floor(Date.now() / 1000);
+      if (now - authTimestamp > MAX_AUTH_AGE_SECONDS) {
+        console.log('⚠️ initData устарела (старше 24 часов)');
+        return null;
+      }
+    }
 
     const sortedParams = Array.from(params.entries())
       .sort(([a], [b]) => a.localeCompare(b))
@@ -97,7 +121,7 @@ function validateInitData(initData) {
     const userStr = params.get('user');
     if (userStr) {
       const user = JSON.parse(decodeURIComponent(userStr));
-      return { user, authDate: params.get('auth_date') };
+      return { user, authDate };
     }
     return null;
   } catch (err) {
@@ -189,6 +213,29 @@ const upload = multer({
     } else {
       cb(new Error('Неподдерживаемый формат. Разрешены: MP3, WAV, OGG, M4A, AAC'));
     }
+  }
+});
+
+// =============================================
+// HEALTH-CHECK ЭНДПОИНТ
+// Railway использует его для мониторинга состояния сервиса.
+// Проверяет соединение с PostgreSQL — если БД недоступна,
+// возвращает 503 (Service Unavailable).
+// =============================================
+app.get('/health', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT NOW()');
+    res.json({
+      status: 'ok',
+      timestamp: result.rows[0].now,
+      uptime: process.uptime()
+    });
+  } catch (err) {
+    console.error('❌ Health-check: БД недоступна:', err.message);
+    res.status(503).json({
+      status: 'error',
+      error: 'База данных недоступна'
+    });
   }
 });
 
