@@ -156,13 +156,15 @@ async function loadTracks() {
             }
             throw new Error(`HTTP ${res.status}`);
         }
-        tracks = await res.json();
+                // API теперь возвращает {tracks: [...], pagination: {...}}
+        const data = await res.json();
+        // Обратная совместимость: если вернулся массив — используем как есть
+        tracks = Array.isArray(data) ? data : data.tracks;
         allTracks = [...tracks];
         applySorting();
         renderTracks();
         if (isShuffled) generateShuffledIndices();
-    } catch (err) {
-        trackList.innerHTML = `<p>❌ ${err.message}</p>`;
+t.innerHTML = `<p>❌ ${err.message}</p>`;
     }
 }
 
@@ -543,5 +545,42 @@ window.deleteTrack = deleteTrack;
 // ===========================================
 // ИНИЦИАЛИЗАЦИЯ
 // ===========================================
+// Nav-bar — плавный скролл к секциям
+const navHome = document.getElementById('navHome');
+const navLibrary = document.getElementById('navLibrary');
+const navSearch = document.getElementById('navSearch');
+const navProfile = document.getElementById('navProfile');
+
+function setActiveNav(activeBtn) {
+    document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
+    if (activeBtn) activeBtn.classList.add('active');
+}
+
+if (navHome) navHome.addEventListener('click', () => {
+    setActiveNav(navHome);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+if (navLibrary) navLibrary.addEventListener('click', () => {
+    setActiveNav(navLibrary);
+    const trackSection = document.getElementById('trackList');
+    if (trackSection) trackSection.scrollIntoView({ behavior: 'smooth' });
+});
+if (navSearch) navSearch.addEventListener('click', () => {
+    setActiveNav(navSearch);
+    const searchBox = document.getElementById('searchInput');
+    if (searchBox) {
+        searchBox.scrollIntoView({ behavior: 'smooth' });
+        setTimeout(() => searchBox.focus(), 400);
+    }
+});
+if (navProfile) navProfile.addEventListener('click', () => {
+    setActiveNav(navProfile);
+    // Пока показываем информацию о пользователе из Telegram
+    const user = tg.initDataUnsafe?.user;
+    if (user) {
+        alert(`👤 ${user.first_name || ''} ${user.last_name || ''}\n🆔 ID: ${user.id}\n📊 Треков: ${tracks.length}`);
+    }
+});
+
 initStickyPlayer();
 loadTracks();
