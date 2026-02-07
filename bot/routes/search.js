@@ -5,25 +5,33 @@
 
 const express = require('express');
 const router = express.Router();
-
 const cloudinary = require('cloudinary').v2;
 const musicSearch = require('../services/musicSearch');
 const cobaltDownloader = require('../services/cobaltDownloader');
-
-// Используем единый пул БД из общего модуля
 const pool = require('../db/pool');
 const { createAuthMiddleware } = require('../middleware/auth');
 
+// =============================================
+// КОНФИГУРАЦИЯ
+// =============================================
 
-// Auth middleware из общего модуля
+const CACHE_TTL = 5 * 60 * 1000; // 5 минут
+const MAX_CACHE_SIZE = 1000; // максимум 1000 запросов в кеше
+const MAX_QUERY_LENGTH = 200; // максимальная длина поискового запроса
+const MAX_LIMIT = 50; // максимальное количество результатов
+const DEFAULT_LIMIT = 20; // количество результатов по умолчанию
+
+// =============================================
+// MIDDLEWARE
+// =============================================
+
 const authMiddleware = createAuthMiddleware(process.env.TELEGRAM_BOT_TOKEN);
 
 // =============================================
 // КЕШИРОВАНИЕ РЕЗУЛЬТАТОВ ПОИСКА
-// In-memory кеш для уменьшения нагрузки на внешние API
 // =============================================
+
 const searchCache = new Map();
-const CACHE_TTL = 5 * 60 * 1000; // 5 минут
 
 function getCacheKey(query, limit) {
   return `${query.toLowerCase().trim()}_${limit}`;
@@ -48,52 +56,100 @@ function setCache(key, data) {
     timestamp: Date.now()
   });
   
-  // Очистка старых записей (макс 1000 запросов)
-  if (searchCache.size > 1000) {
+  if (searchCache.size > MAX_CACHE_SIZE) {
     const firstKey = searchCache.keys().next().value;
     searchCache.delete(firstKey);
   }
 }
 
-// ---------------------------------------------
-// Утилита: экранирование спецсимволов LIKE
-// Защита от SQL-инъекции через символы % и _
-// ---------------------------------------------
+// =============================================
+// ВАЛИДАЦИЯ
+// =============================================
+
+function validateSearchQuery(q) {
+  if (!q || typeof q !== 'string') {
+    return { valid: false, error: 'Параметр q обязателен и должен быть строкой' };
+  }
+  
+  const trimmed = q.trim();
+  if (trimmed.length === 0) {
+    return { valid: false, error: 'Поисковый запрос не может быть пустым' };
+  }
+  
+  if (trimmed.length > MAX_QUERY_LENGTH) {
+    return { valid: false, error: `Запрос слишком длинный (максимум ${MAX_QUERY_LENGTH} символов)` };
+  }
+  
+  return { valid: true, query: trimmed };
+}
+
+function validateLimit(limit) {
+  const num = parseInt(limit, 10);
+  if (isNaN(num) || num < 1) {
+    return DEFAULT_LIMIT;
+  }
+  return Math.min(num, MAX_LIMIT);
+}
+
+// =============================================
+// УТИЛИТЫ
+// =============================================
+
 function escapeLike(str) {
   return str.replace(/[%_\\]/g, '\\$&');
 }
+
+function logInfo(message, data = {}) {
+  console.log(`ℹ️ [Search] ${message}`, JSON.stringify(data));
+}
+
+function logError(message, error) {
+  console.error(`❌ [Search] ${message}:`, error.message);
+  if (error.stack) {
+    console.error(error.stack);
+  }
+}
+
+// =============================================
+// РОУТЫ
+// =============================================
 
 // ---------------------------------------------
 // Поиск по всем трекам (скачанные + доступные)
 // ---------------------------------------------
 router.get('/search/all', authMiddleware, async (req, res) => {
   try {
-    const { q, limit = 20 } = req.query;
+    const { q, limit = DEFAULT_LIMIT } = req.query;
     const userId = req.userId;
-
-    if (!q || q.trim().length === 0) {
-      return res.status(400).json({ error: 'Параметр q (запрос) обязателен' });
+    
+    // Валидация
+    const validation = validateSearchQuery(q);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.error });
     }
-
-    // 1. Ищем в скачанных треках пользователя (с экранированием LIKE)
-    const escapedQ = escapeLike(q);
+    
+    const validatedLimit = validateLimit(limit);
+    logInfo('Поиск по всем трекам', { userId, query: validation.query, limit: validatedLimit });
+    
+    // 1. Ищем в скачанных треках пользователя
+    const escapedQ = escapeLike(validation.query);
     const myTracksResult = await pool.query(
       `SELECT id, name as title, url, created_at, 'my_library' as source, true as is_downloaded
        FROM tracks 
        WHERE user_id = $1 AND LOWER(name) LIKE LOWER($2)
        ORDER BY created_at DESC
        LIMIT $3`,
-      [userId, `%${escapedQ}%`, limit]
+      [userId, `%${escapedQ}%`, validatedLimit]
     );
-
+    
     const myTracks = myTracksResult.rows.map(track => ({
       ...track,
       artist: 'Моя библиотека',
       isDownloaded: true
     }));
-
+    
     // 2. Ищем во внешних источниках
-    const externalResult = await musicSearch.searchAllSources(q, limit);
+    const externalResult = await musicSearch.searchAllSources(validation.query, validatedLimit);
     
     const externalTracks = externalResult.success 
       ? externalResult.tracks.map(track => ({
@@ -101,16 +157,18 @@ router.get('/search/all', authMiddleware, async (req, res) => {
           isDownloaded: false
         }))
       : [];
-
+    
     // 3. Объединяем результаты
     const allTracks = [
       ...myTracks,
       ...externalTracks
-    ].slice(0, limit);
-
+    ].slice(0, validatedLimit);
+    
+    logInfo('Поиск завершен', { found: allTracks.length, myLibrary: myTracks.length, external: externalTracks.length });
+    
     res.json({
       success: true,
-      query: q,
+      query: validation.query,
       count: allTracks.length,
       tracks: allTracks,
       stats: {
@@ -119,9 +177,10 @@ router.get('/search/all', authMiddleware, async (req, res) => {
         sources: externalResult.sources || {}
       }
     });
+    
   } catch (error) {
-    console.error('❌ Ошибка поиска:', error.message);
-    res.status(500).json({ error: 'Ошибка поиска' });
+    logError('Ошибка поиска по всем трекам', error);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
@@ -130,27 +189,40 @@ router.get('/search/all', authMiddleware, async (req, res) => {
 // ---------------------------------------------
 router.get('/search/external', authMiddleware, async (req, res) => {
   try {
-    const { q, limit = 20 } = req.query;
-
-    if (!q || q.trim().length === 0) {
-      return res.status(400).json({ error: 'Параметр q обязателен' });
-    }
-
-        // Проверяем кеш
-    const cacheKey = getCacheKey(q, limit);
-    const cachedResult = getFromCache(cacheKey);
+    const { q, limit = DEFAULT_LIMIT } = req.query;
     
+    // Валидация
+    const validation = validateSearchQuery(q);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.error });
+    }
+    
+    const validatedLimit = validateLimit(limit);
+    const cacheKey = getCacheKey(validation.query, validatedLimit);
+    
+    // Проверяем кеш
+    const cachedResult = getFromCache(cacheKey);
     if (cachedResult) {
+      logInfo('Результат из кеша', { query: validation.query });
       return res.json({ ...cachedResult, cached: true });
     }
-
-    const result = await musicSearch.searchAllSources(q, limit);
+    
+    logInfo('Поиск во внешних источниках', { query: validation.query, limit: validatedLimit });
+    
+    const result = await musicSearch.searchAllSources(validation.query, validatedLimit);
+    
+    if (result.success) {
+      setCache(cacheKey, result);
+      logInfo('Внешний поиск завершен', { found: result.count });
+    } else {
+      logError('Внешний поиск не удался', new Error(result.error || 'Unknown error'));
+    }
+    
     res.json(result);
-        // Сохраняем в кеш
-    setCache(cacheKey, result);
+    
   } catch (error) {
-    console.error('❌ Ошибка внешнего поиска:', error.message);
-    res.status(500).json({ error: 'Ошибка поиска' });
+    logError('Ошибка внешнего поиска', error);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
@@ -159,49 +231,89 @@ router.get('/search/external', authMiddleware, async (req, res) => {
 // ---------------------------------------------
 router.post('/search/download', authMiddleware, async (req, res) => {
   try {
-    const { previewUrl, title, artist } = req.body;
+    const { title, artist } = req.body;
     const userId = req.userId;
-
-    if (!title) {
-      return res.status(400).json({ error: 'Не указан title' });
+    
+    // Валидация
+    if (!title || typeof title !== 'string' || title.trim().length === 0) {
+      return res.status(400).json({ error: 'Параметр title обязателен и не может быть пустым' });
     }
-
-    // Скачиваем полный трек через YouTube + Cobalt
-    const searchQuery = artist ? `${artist} - ${title}` : title;
+    
+    const sanitizedTitle = title.trim();
+    const sanitizedArtist = artist && typeof artist === 'string' ? artist.trim() : '';
+    
+    if (sanitizedTitle.length > MAX_QUERY_LENGTH) {
+      return res.status(400).json({ error: `Название трека слишком длинное (максимум ${MAX_QUERY_LENGTH} символов)` });
+    }
+    
+    logInfo('Запрос на скачивание трека', { userId, title: sanitizedTitle, artist: sanitizedArtist });
+    
+    // Проверяем, не скачан ли уже этот трек
+    const searchQuery = sanitizedArtist ? `${sanitizedArtist} - ${sanitizedTitle}` : sanitizedTitle;
+    const existingTrack = await pool.query(
+      'SELECT id, name, url FROM tracks WHERE user_id = $1 AND LOWER(name) = LOWER($2) LIMIT 1',
+      [userId, searchQuery]
+    );
+    
+    if (existingTrack.rows.length > 0) {
+      logInfo('Трек уже существует в библиотеке', { trackId: existingTrack.rows[0].id });
+      return res.json({
+        success: true,
+        message: 'Этот трек уже есть в вашей библиотеке',
+        track: existingTrack.rows[0],
+        alreadyExists: true
+      });
+    }
+    
+    // Скачиваем полный трек через YouTube + Cobalt/yt-dlp
+    logInfo('Начинаем скачивание через Cobalt/yt-dlp', { query: searchQuery });
     const downloadResult = await cobaltDownloader.searchAndDownload(searchQuery);
-
+    
     if (!downloadResult.success) {
-      return res.status(500).json({ error: downloadResult.error || 'Не удалось скачать трек' });
+      logError('Скачивание не удалось', new Error(downloadResult.error || 'Unknown error'));
+      return res.status(500).json({ 
+        error: downloadResult.error || 'Не удалось скачать трек',
+        details: 'Попробуйте позже или выберите другой трек'
+      });
     }
-
+    
+    logInfo('Трек скачан, загружаем в Cloudinary', { bufferSize: downloadResult.buffer.length });
+    
     // Загружаем в Cloudinary
     const uploadResult = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         { 
           resource_type: 'video', 
           folder: `arabutka/${userId}`,
-          public_id: `${title.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`
+          public_id: `${sanitizedTitle.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`
         },
         (error, result) => error ? reject(error) : resolve(result)
       );
       stream.end(downloadResult.buffer);
     });
-
+    
+    logInfo('Файл загружен в Cloudinary', { publicId: uploadResult.public_id });
+    
     // Сохраняем в БД
-    const trackName = artist ? `${artist} - ${title}` : title;
     const dbResult = await pool.query(
       'INSERT INTO tracks (user_id, name, url, cloudinary_id) VALUES ($1, $2, $3, $4) RETURNING *',
-      [userId, trackName, uploadResult.secure_url, uploadResult.public_id]
+      [userId, searchQuery, uploadResult.secure_url, uploadResult.public_id]
     );
-
+    
+    logInfo('Трек сохранен в БД', { trackId: dbResult.rows[0].id });
+    
     res.json({
       success: true,
       message: 'Трек успешно добавлен в вашу библиотеку',
       track: dbResult.rows[0]
     });
+    
   } catch (error) {
-    console.error('❌ Ошибка скачивания:', error.message);
-    res.status(500).json({ error: 'Ошибка скачивания трека' });
+    logError('Критическая ошибка при скачивании трека', error);
+    res.status(500).json({ 
+      error: 'Внутренняя ошибка сервера',
+      details: 'Пожалуйста, попробуйте позже'
+    });
   }
 });
 
