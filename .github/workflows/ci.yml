@@ -19,25 +19,26 @@ jobs:
   lint-and-test:
     name: Линтинг и проверка
     runs-on: ubuntu-latest
-    
+
     steps:
       # Получаем код из репозитория
       - name: Клонирование репозитория
         uses: actions/checkout@v4
-      
+
       # Настраиваем Node.js окружение
+      # Кэширование отключено — package-lock.json пока не в репозитории.
+      # Когда закоммитим lock-файл, можно вернуть cache: 'npm'.
       - name: Настройка Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: bot/package-lock.json
-      
+
       # Устанавливаем зависимости бота
+      # npm install вместо npm ci, потому что lock-файла нет в репозитории
       - name: Установка зависимостей бота
         working-directory: ./bot
-        run: npm ci
-      
+        run: npm install
+
       # Проверяем синтаксис JavaScript
       - name: Проверка синтаксиса JS
         working-directory: ./bot
@@ -45,7 +46,7 @@ jobs:
           echo "Проверка синтаксиса JavaScript файлов..."
           node --check server.js || exit 1
           echo "Синтаксис в порядке!"
-      
+
       # Проверяем наличие критичных переменных в коде
       - name: Проверка безопасности
         working-directory: ./bot
@@ -63,19 +64,19 @@ jobs:
   structure-check:
     name: Проверка структуры
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Клонирование репозитория
         uses: actions/checkout@v4
-      
+
       # Проверяем наличие обязательных файлов
       - name: Проверка обязательных файлов
         run: |
           echo "Проверка структуры проекта..."
-          
+
           # Список обязательных файлов
           files=("bot/server.js" "bot/package.json")
-          
+
           for file in "${files[@]}"; do
             if [ ! -f "$file" ]; then
               echo "ОШИБКА: Отсутствует файл $file"
@@ -83,5 +84,5 @@ jobs:
             fi
             echo "OK: $file существует"
           done
-          
+
           echo "Структура проекта в порядке!"
