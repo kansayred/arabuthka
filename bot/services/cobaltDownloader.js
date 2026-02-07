@@ -4,18 +4,19 @@
 const axios = require('axios');
 const { searchYouTube } = require('./ytsr');
 
-// ---------------------------------------------
+// -----------------------------------------------
 // Конфигурация
-// ---------------------------------------------
+// -----------------------------------------------
 
 // Список Cobalt-инстансов с поддержкой YouTube (по приоритету)
 const COBALT_INSTANCES = [
-  'https://api.cobalt.tools/api/json',
-  'https://cobalt-api.meowing.de/api/json',
-  'https://capi.3kh0.net/api/json'
+  'https://cobalt-api.meowing.de/',
+  'https://cobalt-backend.canine.tools/',
+  'https://capi.3kh0.net/'
 ];
 
-const DOWNLOAD_TIMEOUT = 10000; // 10 секунд на каждый инстанс Cobaltconst MAX_AUDIO_SIZE = 50 * 1024 * 1024; // 50 МБ лимит буфера
+const DOWNLOAD_TIMEOUT = 10000; // 10 секунд на каждый инстанс Cobalt
+const MAX_AUDIO_SIZE = 50 * 1024 * 1024; // 50 МБ лимит буфера
 
 /**
  * Получает URL для скачивания аудио через Cobalt API с фоллбэком
@@ -25,49 +26,58 @@ const DOWNLOAD_TIMEOUT = 10000; // 10 секунд на каждый инста�
 async function getDownloadUrl(videoUrl) {
   let lastError = 'Все Cobalt-инстансы недоступны';
 
-  for (const apiUrl of COBALT_INSTANCES) {
+  for (const instance of COBALT_INSTANCES) {
     try {
-      const response = await axios.post(apiUrl, {
-        url: videoUrl,
-        vCodec: 'h264',
-        vQuality: '720',
-        aFormat: 'mp3',
-        isAudioOnly: true,
-        isNoTTWatermark: true,
-        isTTFullAudio: true
-      }, {
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
+      const response = await axios.post(
+        instance,
+        {
+          url: videoUrl,
+          downloadMode: 'audio',
+          audioFormat: 'mp3'
         },
-        timeout: DOWNLOAD_TIMEOUT
-      });
+        {
+          timeout: DOWNLOAD_TIMEOUT,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
-      if (response.data && response.data.url) {
+      if (response.data && (response.data.status === 'tunnel' || response.data.status === 'redirect') && response.data.url) {
+        console.log(`Cobalt: получен URL через ${instance}`);
         return { success: true, url: response.data.url };
       }
+
+      if (response.data && response.data.status === 'error') {
+        const errorCode = response.data.error?.code || 'unknown';
+        lastError = `Cobalt ошибка (${instance}): ${errorCode}`;
+        console.warn(lastError);
+        continue;
+      }
+
+      lastError = `Cobalt: неожиданный ответ от ${instance}`;
+      console.warn(lastError);
     } catch (error) {
-      lastError = error.message;
-      console.warn(`Cobalt инстанс ${apiUrl} недоступен:`, error.message);
-      // Пробуем следующий инстанс
+      lastError = `Cobalt (${instance}): ${error.message}`;
+      console.warn(lastError);
     }
   }
 
-  return { success: false, error: `Не удалось получить ссылку: ${lastError}` };
+  return { success: false, error: lastError };
 }
 
 /**
- * Скачивает аудио файл по URL с проверкой размера
- * @param {string} url - URL аудио файла
+ * Скачивает аудиофайл по URL
+ * @param {string} url - URL для скачивания
  * @returns {Promise<{success: boolean, buffer?: Buffer, error?: string}>}
  */
 async function downloadAudio(url) {
   try {
     const response = await axios.get(url, {
       responseType: 'arraybuffer',
-      timeout: DOWNLOAD_TIMEOUT,
+      timeout: 30000,
       maxContentLength: MAX_AUDIO_SIZE,
-      maxBodyLength: MAX_AUDIO_SIZE,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       }
@@ -75,9 +85,8 @@ async function downloadAudio(url) {
 
     const buffer = Buffer.from(response.data);
 
-    // Дополнительная проверка размера
-    if (buffer.length > MAX_AUDIO_SIZE) {
-      return { success: false, error: `Файл слишком большой (${Math.round(buffer.length / 1024 / 1024)} МБ, максимум 50 МБ)` };
+    if (buffer.length === 0) {
+      return { success: false, error: 'Получен пустой файл' };
     }
 
     return { success: true, buffer };
@@ -91,50 +100,97 @@ async function downloadAudio(url) {
 }
 
 /**
- * Поиск и скачивание трека
+ * Fallback: скачивание через yt-dlp (youtube-dl-exec)
+ * @param {string} videoUrl - URL видео YouTube
+ * @returns {Promise<{success: boolean, buffer?: Buffer, error?: string}>}
+ */
+async function downloadViaYtDlp(videoUrl) {
+  try {
+    const ytDlp = require('youtube-dl-exec');
+
+    // Получаем прямую ссылку на аудио
+    const result = await ytDlp(videoUrl, {
+      extractAudio: true,
+      audioFormat: 'mp3',
+      audioQuality: '128K',
+      getUrl: true,
+      noCheckCertificates: true,
+      noWarnings: true,
+      preferFreeFormats: true
+    });
+
+    // result содержит URL
+    const audioUrl = typeof result === 'string' ? result.trim() : null;
+    if (!audioUrl) {
+      return { success: false, error: 'yt-dlp не вернул URL' };
+    }
+
+    // Скачиваем аудио по полученному URL
+    const downloadResult = await downloadAudio(audioUrl);
+    return downloadResult;
+  } catch (error) {
+    console.error('yt-dlp fallback ошибка:', error.message);
+    return { success: false, error: `yt-dlp: ${error.message}` };
+  }
+}
+
+/**
+ * Ищет трек и скачивает аудио
  * @param {string} query - Поисковый запрос
  * @returns {Promise<{success: boolean, buffer?: Buffer, track?: object, error?: string}>}
  */
 async function searchAndDownload(query) {
   try {
-    // Поиск через ytsr
+    // Поиск трека на YouTube
     const searchResult = await searchYouTube(query);
-    
-    if (!searchResult.success || !searchResult.videos.length) {
-      return { success: false, error: 'Трек не найден' };
+    if (!searchResult.success || !searchResult.tracks.length) {
+      return { success: false, error: 'Ничего не найдено по запросу' };
     }
 
-    const track = searchResult.videos[0];
-    
-    // Получение ссылки через Cobalt (с фоллбэком)
+    const track = searchResult.tracks[0];
+
+    // === Попытка 1: Cobalt API ===
     const downloadUrlResult = await getDownloadUrl(track.url);
-    
-    if (!downloadUrlResult.success) {
-      // Фоллбэк: используем ytsr для прямого получения аудио
-      console.warn('Cobalt недоступен, используем ytsr fallback');
-      
-      // Используем ytdl-core или прямую ссылку из ytsr (если доступна)
-      // Для упрощения возвращаем ошибку с указанием на fallback
-      return { success: false, error: 'Сервис загрузки временно недоступен. Попробуйте позже.' };
-    }
 
-    // Скачивание файла (с лимитом размера)
-    const downloadResult = await downloadAudio(downloadUrlResult.url);
-    
-    if (!downloadResult.success) {
-      return downloadResult;
-    }
-
-    return {
-      success: true,
-      buffer: downloadResult.buffer,
-      track: {
-        title: track.title,
-        artist: track.artist,
-        duration: track.duration,
-        thumbnail: track.thumbnail,
-        url: track.url
+    if (downloadUrlResult.success) {
+      const downloadResult = await downloadAudio(downloadUrlResult.url);
+      if (downloadResult.success) {
+        return {
+          success: true,
+          buffer: downloadResult.buffer,
+          track: {
+            title: track.title,
+            artist: track.artist,
+            duration: track.duration,
+            thumbnail: track.thumbnail,
+            url: track.url
+          }
+        };
       }
+    }
+
+    // === Попытка 2: yt-dlp fallback ===
+    console.warn('Cobalt недоступен, пробуем yt-dlp fallback...');
+    const ytDlpResult = await downloadViaYtDlp(track.url);
+
+    if (ytDlpResult.success) {
+      return {
+        success: true,
+        buffer: ytDlpResult.buffer,
+        track: {
+          title: track.title,
+          artist: track.artist,
+          duration: track.duration,
+          thumbnail: track.thumbnail,
+          url: track.url
+        }
+      };
+    }
+
+    // Оба способа не сработали
+    return {
+      success: false,
+      error: 'Сервис загрузки временно недоступен. Все методы скачивания исчерпаны.'
     };
   } catch (error) {
     console.error('Ошибка searchAndDownload:', error.message);
@@ -145,5 +201,6 @@ async function searchAndDownload(query) {
 module.exports = {
   getDownloadUrl,
   downloadAudio,
+  downloadViaYtDlp,
   searchAndDownload
 };
