@@ -81,22 +81,6 @@
             <p>Загрузка...</p>
         </section>
 
-                <!-- Глобальный поиск музыки -->
-        <section class="global-search-section fade-in" id="globalSearchSection" style="display: none;">
-            <div class="global-search-header">
-                <h2>Поиск музыки</h2>
-                <p>Поиск в iTunes и других источниках</p>
-            </div>
-            <div class="global-search-box">
-                <span class="search-icon">🔍</span>
-                <input type="text" id="globalSearchInput" placeholder="Введите название трека или исполнителя..." autocomplete="off">
-                <button id="globalSearchBtn" class="search-submit-btn">Найти</button>
-            </div>
-            <div class="search-results" id="searchResults">
-                <p class="search-hint">Введите запрос для поиска музыки</p>
-            </div>
-        </section>
-
         <audio id="audioPlayer"></audio>
     </div>
 
@@ -137,14 +121,7 @@
         </div>
     </nav>
 
-    <!-- Модули приложения -->
-    <script src="config.js"></script>
-    <script src="utils.js"></script>
-    <script src="audioPlayer.js"></script>
-    <script src="playerUI.js"></script>
-    <script src="searchMusic.js"></script>
-    
-        <script type="module" src="app.js"></script>
+    <script type="module" src="app.js"></script>
     
     <!-- Service Worker -->
     <script>
