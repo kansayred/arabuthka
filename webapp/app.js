@@ -568,10 +568,12 @@ if (navLibrary) navLibrary.addEventListener('click', () => {
 });
 if (navSearch) navSearch.addEventListener('click', () => {
     setActiveNav(navSearch);
-    const searchBox = document.getElementById('searchInput');
-    if (searchBox) {
-        searchBox.scrollIntoView({ behavior: 'smooth' });
-        setTimeout(() => searchBox.focus(), 400);
+    const globalSection = document.getElementById('globalSearchSection');
+    if (globalSection) {
+        globalSection.style.display = globalSection.style.display === 'none' ? 'block' : 'block';
+        globalSection.scrollIntoView({ behavior: 'smooth' });
+        const input = document.getElementById('globalSearchInput');
+        if (input) setTimeout(() => input.focus(), 400);
     }
 });
 if (navProfile) navProfile.addEventListener('click', () => {
@@ -585,3 +587,99 @@ if (navProfile) navProfile.addEventListener('click', () => {
 
 initStickyPlayer();
 loadTracks();
+
+// ===========================================
+// ГЛОБАЛЬНЫЙ ПОИСК МУЗЫКИ
+// ===========================================
+(function initGlobalSearch() {
+    const searchInput = document.getElementById('globalSearchInput');
+    const searchBtn = document.getElementById('globalSearchBtn');
+    const resultsContainer = document.getElementById('globalSearchResults');
+
+    if (!searchInput || !searchBtn || !resultsContainer) return;
+
+    let searchTimeout = null;
+
+    async function performSearch(query) {
+        if (!query || query.trim().length < 2) {
+            resultsContainer.innerHTML = '<p class="search-placeholder">Введите запрос для поиска</p>';
+            return;
+        }
+
+        resultsContainer.innerHTML = '<div class="search-loading"></div>';
+
+        try {
+            const res = await fetch(`${API_URL}/search?q=${encodeURIComponent(query.trim())}`, {
+                headers: authHeaders
+            });
+            const data = await res.json();
+            const results = data.results || data.tracks || data || [];
+
+            if (!Array.isArray(results) || results.length === 0) {
+                resultsContainer.innerHTML = '<p class="search-placeholder">Ничего не найдено</p>';
+                return;
+            }
+
+            resultsContainer.innerHTML = results.map((track, i) => {
+                const title = escapeHtml(track.name || track.title || 'Без названия');
+                const artist = escapeHtml(track.artist || 'Неизвестный');
+                const cover = track.cover || '';
+                const coverHtml = cover
+                    ? `<img class="search-result-cover" src="${cover}" alt="">`
+                    : `<div class="search-result-cover"></div>`;
+                return `<div class="search-result-item">
+                    ${coverHtml}
+                    <div class="search-result-info">
+                        <div class="search-result-title">${title}</div>
+                        <div class="search-result-artist">${artist}</div>
+                    </div>
+                    <div class="search-result-actions">
+                        <button class="search-result-btn play-btn" onclick="playSearchResult(${i})" title="Воспроизвести">▶️</button>
+                    </div>
+                </div>`;
+            }).join('');
+
+            // Сохраняем результаты для воспроизведения
+            window._searchResults = results;
+
+        } catch (err) {
+            resultsContainer.innerHTML = `<p class="search-placeholder">Ошибка поиска: ${escapeHtml(err.message)}</p>`;
+        }
+    }
+
+    searchBtn.addEventListener('click', () => {
+        performSearch(searchInput.value);
+    });
+
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            performSearch(searchInput.value);
+        }
+    });
+
+    // Автопоиск с задержкой
+    searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            performSearch(searchInput.value);
+        }, 600);
+    });
+})();
+
+// Воспроизведение трека из результатов поиска
+function playSearchResult(index) {
+    const results = window._searchResults;
+    if (!results || !results[index]) return;
+    const track = results[index];
+    if (track.url) {
+        audio.src = track.url;
+        audio.play().catch(err => console.log('Ошибка:', err));
+        if (trackTitle) trackTitle.textContent = track.name || track.title || 'Без названия';
+        if (trackArtist) trackArtist.textContent = track.artist || 'Неизвестный';
+        updatePlayButton(true);
+        updateCoverAnimation(true);
+        updateStickyPlayer(track);
+    }
+}
+window.playSearchResult = playSearchResult;
