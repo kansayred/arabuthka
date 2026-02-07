@@ -84,7 +84,6 @@ async function downloadAudio(url) {
     });
 
     const buffer = Buffer.from(response.data);
-
     if (buffer.length === 0) {
       return { success: false, error: 'Получен пустой файл' };
     }
@@ -143,11 +142,13 @@ async function searchAndDownload(query) {
   try {
     // Поиск трека на YouTube
     const searchResult = await searchYouTube(query);
-    if (!searchResult.success || !searchResult.tracks.length) {
+
+    // ytsr.js возвращает { success, videos }, НЕ tracks
+    if (!searchResult.success || !searchResult.videos || !searchResult.videos.length) {
       return { success: false, error: 'Ничего не найдено по запросу' };
     }
 
-    const track = searchResult.tracks[0];
+    const track = searchResult.videos[0];
 
     // === Попытка 1: Cobalt API ===
     const downloadUrlResult = await getDownloadUrl(track.url);
