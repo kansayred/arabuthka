@@ -182,7 +182,26 @@ This project is proprietary. All rights reserved.
 | `ytsr.js` | Поиск видео на YouTube |
 | `musicSearch.js` | Поиск через iTunes и Deezer API |
 | `youtubeDownloader.js` | Fallback для скачивания аудио |
+| `libraryService.js` | Управление персональной библиотекой пользователя |
 | `validators.js` | Валидация входящих данных |
+
+## Telegram Bot Модули
+
+### Handlers
+
+| Модуль | Описание |
+|--------|------------|
+| `index.js` | Централизованная регистрация обработчиков |
+| `musicHandler.js` | Обработка поиска и пагинации музыки |
+| `downloadHandler.js` | Обработка скачивания треков |
+
+### Services
+
+| Модуль | Описание |
+|--------|------------|
+| `index.js` | Экспорт всех сервисов |
+| `musicService.js` | API для поиска музыки |
+| `libraryService.js` | Управление библиотекой пользователя |
 
 ## См. также
 
