@@ -1,11 +1,13 @@
+// downloadHandler.js
+// Обработчик команды /download с поддержкой Cobalt API
+
+const { searchAndDownload } = require('../services/cobaltDownloader');
 const { searchYouTube, downloadAudio } = require('../services/youtubeDownloader');
-const fs = require('fs').promises;
-const path = require('path');
 
 // --------------------------------------------
 // Обработчик команды /download
+// Использует Cobalt API с fallback на youtubeDownloader
 // --------------------------------------------
-
 async function handleDownload(bot, msg) {
   const chatId = msg.chat.id;
   const query = msg.text.replace('/download', '').trim();
@@ -19,31 +21,24 @@ async function handleDownload(bot, msg) {
     // Уведомляем пользователя о начале поиска
     const searchMsg = await bot.sendMessage(chatId, `🔍 Ищу трек: "${query}"...`);
 
-    // Ищем трек на YouTube
-    const searchResults = await searchYouTube(query);
+    // Пытаемся скачать через Cobalt API (основной метод)
+    let downloadResult = await searchAndDownload(query);
 
-    if (!searchResults || searchResults.length === 0) {
+    // Если Cobalt не сработал, пробуем fallback
+    if (!downloadResult.success) {
+      console.log(`⚠️ Cobalt не сработал, пробуем youtubeDownloader: ${downloadResult.error}`);
+      
       await bot.editMessageText(
-        `❌ Ничего не найдено по запросу: "${query}"`,
+        `🔄 Переключаюсь на альтернативный метод...`,
         { chat_id: chatId, message_id: searchMsg.message_id }
       );
-      return;
+
+      downloadResult = await fallbackDownload(query);
     }
-
-    const firstResult = searchResults[0];
-    
-    // Уведомляем о начале скачивания
-    await bot.editMessageText(
-      `✅ Найдено: ${firstResult.title}\n📥 Скачиваю аудио...`,
-      { chat_id: chatId, message_id: searchMsg.message_id }
-    );
-
-    // Скачиваем аудио
-    const downloadResult = await downloadAudio(firstResult.url);
 
     if (!downloadResult.success) {
       await bot.editMessageText(
-        `❌ Ошибка при скачивании: ${downloadResult.error?.message || 'Неизвестная ошибка'}`,
+        `❌ Не удалось скачать трек: ${downloadResult.error || 'Неизвестная ошибка'}`,
         { chat_id: chatId, message_id: searchMsg.message_id }
       );
       return;
@@ -53,16 +48,16 @@ async function handleDownload(bot, msg) {
     await bot.deleteMessage(chatId, searchMsg.message_id);
 
     // Отправляем аудио файл пользователю
+    const track = downloadResult.track;
     await bot.sendAudio(chatId, downloadResult.buffer, {
-      title: downloadResult.videoInfo.title,
-      performer: downloadResult.videoInfo.author,
-      duration: downloadResult.videoInfo.duration,
-      thumb: downloadResult.videoInfo.thumbnail
+      title: track.title,
+      performer: track.artist,
+      duration: track.durationSeconds || track.duration
     }, {
-      caption: `🎵 ${downloadResult.videoInfo.title}\n👤 ${downloadResult.videoInfo.author}`
+      caption: `🎵 ${track.title}\n👤 ${track.artist}`
     });
 
-    console.log(`✅ Трек успешно отправлен: ${downloadResult.videoInfo.title}`);
+    console.log(`✅ Трек успешно отправлен: ${track.title}`);
 
   } catch (error) {
     console.error('❌ Ошибка в handleDownload:', error);
@@ -70,6 +65,38 @@ async function handleDownload(bot, msg) {
       chatId,
       `❌ Произошла ошибка при обработке запроса. Попробуйте позже.`
     );
+  }
+}
+
+// --------------------------------------------
+// Fallback метод через youtubeDownloader
+// --------------------------------------------
+async function fallbackDownload(query) {
+  try {
+    const searchResults = await searchYouTube(query);
+    
+    if (!searchResults || searchResults.length === 0) {
+      return { success: false, error: 'Трек не найден' };
+    }
+
+    const firstResult = searchResults[0];
+    const downloadResult = await downloadAudio(firstResult.url);
+
+    if (!downloadResult.success) {
+      return { success: false, error: downloadResult.error?.message || 'Ошибка скачивания' };
+    }
+
+    return {
+      success: true,
+      buffer: downloadResult.buffer,
+      track: {
+        title: downloadResult.videoInfo.title,
+        artist: downloadResult.videoInfo.author,
+        duration: downloadResult.videoInfo.duration
+      }
+    };
+  } catch (error) {
+    return { success: false, error: error.message };
   }
 }
 
