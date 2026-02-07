@@ -8,6 +8,7 @@ const router = express.Router();
 const { Pool } = require('pg');
 const cloudinary = require('cloudinary').v2;
 const musicSearch = require('../services/musicSearch');
+const crypto = require('crypto');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -15,10 +16,70 @@ const pool = new Pool({
 });
 
 // ---------------------------------------------
+// Auth Middleware для проверки Telegram InitData
+// ---------------------------------------------
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const MAX_AUTH_AGE_SECONDS = 86400;
+
+function validateInitData(initData) {
+  if (!initData || !BOT_TOKEN) return null;
+  try {
+    const params = new URLSearchParams(initData);
+    const hash = params.get('hash');
+    params.delete('hash');
+
+    const authDate = params.get('auth_date');
+    if (authDate) {
+      const authTimestamp = parseInt(authDate, 10);
+      const now = Math.floor(Date.now() / 1000);
+      if (now - authTimestamp > MAX_AUTH_AGE_SECONDS) {
+        return null;
+      }
+    }
+
+    const sortedParams = Array.from(params.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, value]) => `${key}=${value}`)
+      .join('\n');
+
+    const secretKey = crypto
+      .createHmac('sha256', 'WebAppData')
+      .update(BOT_TOKEN)
+      .digest();
+
+    const calculatedHash = crypto
+      .createHmac('sha256', secretKey)
+      .update(sortedParams)
+      .digest('hex');
+
+    if (calculatedHash !== hash) return null;
+
+    const userStr = params.get('user');
+    if (userStr) {
+      const user = JSON.parse(decodeURIComponent(userStr));
+      return { user };
+    }
+    return null;
+  } catch (err) {
+    return null;
+  }
+}
+
+function authMiddleware(req, res, next) {
+  const initData = req.headers['x-telegram-init-data'] || req.query.initData;
+  const validated = validateInitData(initData);
+  if (!validated) {
+    return res.status(401).json({ error: 'Нет доступа' });
+  }
+  req.telegramUser = validated.user;
+  req.userId = validated.user.id;
+  next();
+}
+
+// ---------------------------------------------
 // Поиск по всем трекам (скачанные + доступные)
 // ---------------------------------------------
-
-router.get('/all', async (req, res) => {
+router.get('/search/all', authMiddleware, async (req, res) => {
   try {
     const { q, limit = 20 } = req.query;
     const userId = req.userId;
@@ -26,9 +87,6 @@ router.get('/all', async (req, res) => {
     if (!q || q.trim().length === 0) {
       return res.status(400).json({ error: 'Параметр q (запрос) обязателен' });
     }
-
-    // Трекинг аналитики
-    analytics.trackEvent(userId, 'music_search', { query: q });
 
     // 1. Ищем в скачанных треках пользователя
     const myTracksResult = await pool.query(
@@ -56,7 +114,7 @@ router.get('/all', async (req, res) => {
         }))
       : [];
 
-    // 3. Объединяем результаты (сначала скачанные)
+    // 3. Объединяем результаты
     const allTracks = [
       ...myTracks,
       ...externalTracks
@@ -82,20 +140,15 @@ router.get('/all', async (req, res) => {
 // ---------------------------------------------
 // Поиск только во внешних источниках
 // ---------------------------------------------
-
-router.get('/external', async (req, res) => {
+router.get('/search/external', authMiddleware, async (req, res) => {
   try {
     const { q, limit = 20 } = req.query;
-    const userId = req.userId;
 
     if (!q || q.trim().length === 0) {
       return res.status(400).json({ error: 'Параметр q обязателен' });
     }
 
-    analytics.trackEvent(userId, 'external_search', { query: q });
-
     const result = await musicSearch.searchAllSources(q, limit);
-
     res.json(result);
   } catch (error) {
     console.error('❌ Ошибка внешнего поиска:', error.message);
@@ -106,8 +159,7 @@ router.get('/external', async (req, res) => {
 // ---------------------------------------------
 // Скачивание трека из внешнего источника
 // ---------------------------------------------
-
-router.post('/download', async (req, res) => {
+router.post('/search/download', authMiddleware, async (req, res) => {
   try {
     const { previewUrl, title, artist } = req.body;
     const userId = req.userId;
@@ -118,7 +170,6 @@ router.post('/download', async (req, res) => {
 
     // Скачиваем превью
     const downloadResult = await musicSearch.downloadPreview(previewUrl);
-
     if (!downloadResult.success) {
       return res.status(500).json({ error: 'Не удалось скачать трек' });
     }
@@ -136,19 +187,12 @@ router.post('/download', async (req, res) => {
       stream.end(downloadResult.buffer);
     });
 
-    // Сохраняем в базу данных
+    // Сохраняем в БД
     const trackName = artist ? `${artist} - ${title}` : title;
     const dbResult = await pool.query(
       'INSERT INTO tracks (user_id, name, url, cloudinary_id) VALUES ($1, $2, $3, $4) RETURNING *',
       [userId, trackName, uploadResult.secure_url, uploadResult.public_id]
     );
-
-    // Аналитика
-    analytics.trackEvent(userId, 'track_downloaded_from_search', {
-      title,
-      artist,
-      source: 'external'
-    });
 
     res.json({
       success: true,
