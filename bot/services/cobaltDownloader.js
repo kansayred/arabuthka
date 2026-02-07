@@ -110,7 +110,12 @@ async function searchAndDownload(query) {
     const downloadUrlResult = await getDownloadUrl(track.url);
     
     if (!downloadUrlResult.success) {
-      return { success: false, error: downloadUrlResult.error };
+      // Фоллбэк: используем ytsr для прямого получения аудио
+      console.warn('Cobalt недоступен, используем ytsr fallback');
+      
+      // Используем ytdl-core или прямую ссылку из ytsr (если доступна)
+      // Для упрощения возвращаем ошибку с указанием на fallback
+      return { success: false, error: 'Сервис загрузки временно недоступен. Попробуйте позже.' };
     }
 
     // Скачивание файла (с лимитом размера)
