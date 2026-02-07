@@ -10,6 +10,7 @@ const musicSearch = require('../services/musicSearch');
 const cobaltDownloader = require('../services/cobaltDownloader');
 const pool = require('../db/pool');
 const { createAuthMiddleware } = require('../middleware/auth');
+const { createRateLimiter } = require('../middleware/rateLimit');
 
 // =============================================
 // КОНФИГУРАЦИЯ
@@ -26,6 +27,20 @@ const DEFAULT_LIMIT = 20; // количество результатов по у
 // =============================================
 
 const authMiddleware = createAuthMiddleware(process.env.TELEGRAM_BOT_TOKEN);
+
+// Rate limiting: 20 запросов в минуту на поиск
+const searchRateLimiter = createRateLimiter({
+  windowMs: 60 * 1000, // 1 минута
+  maxRequests: 20,
+  message: 'Слишком много запросов. Попробуйте позже'
+});
+
+// Rate limiting для скачивания: 5 запросов в минуту
+const downloadRateLimiter = createRateLimiter({
+  windowMs: 60 * 1000,
+  maxRequests: 5,
+  message: 'Слишком много запросов на скачивание. Попробуйте позже'
+});
 
 // =============================================
 // КЕШИРОВАНИЕ РЕЗУЛЬТАТОВ ПОИСКА
@@ -117,7 +132,7 @@ function logError(message, error) {
 // ---------------------------------------------
 // Поиск по всем трекам (скачанные + доступные)
 // ---------------------------------------------
-router.get('/search/all', authMiddleware, async (req, res) => {
+router.get('/search/all', authMiddleware, searchRateLimiter, async (req, res) => {
   try {
     const { q, limit = DEFAULT_LIMIT } = req.query;
     const userId = req.userId;
@@ -191,7 +206,7 @@ router.get('/search/external', authMiddleware, async (req, res) => {
   try {
     const { q, limit = DEFAULT_LIMIT } = req.query;
     
-    // Валидация
+    // Валидация, searchRateLimiter
     const validation = validateSearchQuery(q);
     if (!validation.valid) {
       return res.status(400).json({ error: validation.error });
@@ -233,7 +248,7 @@ router.post('/search/download', authMiddleware, async (req, res) => {
   try {
     const { title, artist } = req.body;
     const userId = req.userId;
-    
+    , downloadRateLimiter
     // Валидация
     if (!title || typeof title !== 'string' || title.trim().length === 0) {
       return res.status(400).json({ error: 'Параметр title обязателен и не может быть пустым' });
