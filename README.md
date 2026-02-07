@@ -98,6 +98,37 @@ node index.js
 # Frontend — serve the webapp/ folder or deploy to Vercel
 ```
 
+
+### Deployment
+
+#### Railway (Backend API)
+
+1. Create a new project on [Railway](https://railway.app)
+2. Connect your GitHub repository
+3. Add PostgreSQL plugin
+4. Set environment variables:
+   - `DATABASE_URL` (auto-set by Railway PostgreSQL plugin)
+   - `TELEGRAM_BOT_TOKEN`
+   - `CLOUDINARY_CLOUD_NAME`
+   - `CLOUDINARY_API_KEY`
+   - `CLOUDINARY_API_SECRET`
+5. Set root directory to `bot/`
+6. Set start command: `node server.js`
+7. Deploy
+
+#### Vercel (Frontend)
+
+1. Import the repository on [Vercel](https://vercel.com)
+2. Set root directory to `webapp/`
+3. Deploy as static site
+4. Update `API_URL` in `webapp/app.js` to your Railway domain
+
+#### Telegram Bot Setup
+
+1. Create a bot via [@BotFather](https://t.me/BotFather)
+2. Set the Web App URL to your Vercel deployment
+3. Configure webhook or use polling mode
+
 ## Project Structure
 
 ```
