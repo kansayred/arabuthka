@@ -14,20 +14,9 @@ async function searchYouTube(query, limit = 5) {
     // Добавляем "audio" для лучшего поиска музыки
     const searchQuery = query.includes('audio') ? query : `${query} audio`;
     
-    const filters = await ytsr.getFilters(searchQuery);
-    const videoFilter = filters.get('Type').get('Video');
-        
-    if (!videoFilter || !videoFilter.url) {
-      console.error('Ошибка: не удалось получить фильтр видео');
-      return { 
-        success: false, 
-        error: 'YouTube API: не удалось получить фильтр видео',
-        videos: []
-      };
-    }
-    
-    const searchResults = await ytsr(videoFilter.url, { 
-      limit: limit,
+    // Прямой поиск без фильтров (более надёжно)
+    const searchResults = await ytsr(searchQuery, { 
+      limit: limit * 2, // Берём в 2 раза больше, т.к. будем фильтровать
       requestOptions: {
         headers: {
           'Accept-Language': 'ru-RU,ru;q=0.9,en;q=0.8'
@@ -35,8 +24,17 @@ async function searchYouTube(query, limit = 5) {
       }
     });
 
+    if (!searchResults || !searchResults.items) {
+      return {
+        success: false,
+        error: 'YouTube не вернул результаты',
+        videos: []
+      };
+    }
+    
     const videos = searchResults.items
-      .filter(item => item.type === 'video') && item.url
+      .filter(item => item.type === 'video' && item.url && item.title) // Только видео с URL и заголовком
+      .slice(0, limit) // Ограничиваем до нужного количества
       .map(video => ({
         id: video.id,
         url: video.url,
@@ -54,6 +52,7 @@ async function searchYouTube(query, limit = 5) {
       videos: videos,
       count: videos.length
     };
+    
   } catch (error) {
     console.error('Ошибка поиска YouTube:', error.message);
     return {
@@ -109,6 +108,7 @@ async function getVideoInfo(url) {
     }
 
     return { success: false, error: 'Видео не найдено' };
+    
   } catch (error) {
     console.error('Ошибка получения инфо о видео:', error.message);
     return { success: false, error: error.message };
