@@ -15,8 +15,7 @@ const COBALT_INSTANCES = [
   'https://capi.3kh0.net/api/json'
 ];
 
-const DOWNLOAD_TIMEOUT = 120000; // 2 минуты
-const MAX_AUDIO_SIZE = 50 * 1024 * 1024; // 50 МБ лимит буфера
+const DOWNLOAD_TIMEOUT = 10000; // 10 секунд на каждый инстанс Cobaltconst MAX_AUDIO_SIZE = 50 * 1024 * 1024; // 50 МБ лимит буфера
 
 /**
  * Получает URL для скачивания аудио через Cobalt API с фоллбэком
