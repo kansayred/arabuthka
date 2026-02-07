@@ -635,6 +635,7 @@ loadTracks();
                     </div>
                     <div class="search-result-actions">
                         <button class="search-result-btn play-btn" onclick="playSearchResult(${i})" title="Воспроизвести">▶️</button>
+                        ${!track.isDownloaded ? `<button class="search-result-btn" onclick="downloadSearchResult(${i})" title="Скачать">⬇️</button>` : ''}
                     </div>
                 </div>`;
             }).join('');
@@ -683,3 +684,49 @@ function playSearchResult(index) {
     }
 }
 window.playSearchResult = playSearchResult;
+
+// Скачивание трека из результатов поиска в библиотеку
+async function downloadSearchResult(index) {
+    const results = window._searchResults;
+    if (!results || !results[index]) return;
+    const track = results[index];
+
+    // Находим кнопку и показываем прогресс
+    const btns = document.querySelectorAll('.search-result-item');
+    const btn = btns[index]?.querySelector('.search-result-btn:not(.play-btn)');
+    if (btn) {
+        btn.textContent = '⏳';
+        btn.disabled = true;
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/api/search/download`, {
+            method: 'POST',
+            headers: {
+                ...authHeaders,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                previewUrl: track.previewUrl || track.url,
+                title: track.title || track.name,
+                artist: track.artist || ''
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            if (btn) {
+                btn.textContent = '✅';
+                btn.title = 'Добавлено';
+            }
+            // Обновляем библиотеку
+            loadTracks();
+        } else {
+            if (btn) btn.textContent = '❌';
+            console.error('Ошибка скачивания:', data.error);
+        }
+    } catch (err) {
+        if (btn) btn.textContent = '❌';
+        console.error('Ошибка:', err);
+    }
+}
+window.downloadSearchResult = downloadSearchResult;
