@@ -18,6 +18,43 @@ const { createAuthMiddleware } = require('../middleware/auth');
 // Auth middleware из общего модуля
 const authMiddleware = createAuthMiddleware(process.env.TELEGRAM_BOT_TOKEN);
 
+// =============================================
+// КЕШИРОВАНИЕ РЕЗУЛЬТАТОВ ПОИСКА
+// In-memory кеш для уменьшения нагрузки на внешние API
+// =============================================
+const searchCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 минут
+
+function getCacheKey(query, limit) {
+  return `${query.toLowerCase().trim()}_${limit}`;
+}
+
+function getFromCache(key) {
+  const cached = searchCache.get(key);
+  if (!cached) return null;
+  
+  const now = Date.now();
+  if (now - cached.timestamp > CACHE_TTL) {
+    searchCache.delete(key);
+    return null;
+  }
+  
+  return cached.data;
+}
+
+function setCache(key, data) {
+  searchCache.set(key, {
+    data,
+    timestamp: Date.now()
+  });
+  
+  // Очистка старых записей (макс 1000 запросов)
+  if (searchCache.size > 1000) {
+    const firstKey = searchCache.keys().next().value;
+    searchCache.delete(firstKey);
+  }
+}
+
 // ---------------------------------------------
 // Утилита: экранирование спецсимволов LIKE
 // Защита от SQL-инъекции через символы % и _
@@ -99,8 +136,18 @@ router.get('/search/external', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Параметр q обязателен' });
     }
 
+        // Проверяем кеш
+    const cacheKey = getCacheKey(q, limit);
+    const cachedResult = getFromCache(cacheKey);
+    
+    if (cachedResult) {
+      return res.json({ ...cachedResult, cached: true });
+    }
+
     const result = await musicSearch.searchAllSources(q, limit);
     res.json(result);
+        // Сохраняем в кеш
+    setCache(cacheKey, result);
   } catch (error) {
     console.error('❌ Ошибка внешнего поиска:', error.message);
     res.status(500).json({ error: 'Ошибка поиска' });
