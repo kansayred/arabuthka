@@ -27,7 +27,7 @@ async function searchYouTube(query, limit = 5) {
     });
 
     const videos = searchResults.items
-      .filter(item => item.type === 'video')
+      .filter(item => item.type === 'video') && item.url
       .map(video => ({
         id: video.id,
         url: video.url,
