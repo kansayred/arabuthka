@@ -208,10 +208,17 @@ async function handleDownloadCallback(bot, query) {
 
     audioStream.on('data', (chunk) => chunks.push(chunk));
     
-    await new Promise((resolve, reject) => {
-      audioStream.on('end', resolve);
-      audioStream.on('error', reject);
-    });
+    // Таймаут 60 секунд для скачивания
+    const downloadTimeout = 60000;
+    await Promise.race([
+      new Promise((resolve, reject) => {
+        audioStream.on('end', resolve);
+        audioStream.on('error', reject);
+      }),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Таймаут скачивания')), downloadTimeout)
+      )
+    ]);
 
     const buffer = Buffer.concat(chunks);
 
@@ -230,6 +237,26 @@ async function handleDownloadCallback(bot, query) {
     await bot.answerCallbackQuery(query.id, {
       text: '❌ Ошибка при скачивании',
       show_alert: true
+          
+    // Удаляем сообщение о статусе, если оно есть
+    if (statusMsg) {
+      try {
+        await bot.deleteMessage(chatId, statusMsg.message_id);
+      } catch (e) {
+        // Игнорируем ошибку удаления
+      }
+    }
+    
+    // Отправляем сообщение об ошибке пользователю
+    await bot.sendMessage(
+      chatId,
+      `❌ Не удалось скачать трек.\n\n` +
+      `Возможные причины:\n` +
+      `• Видео недоступно в вашем регионе\n` +
+      `• Видео защищено от скачивания\n` +
+      `• Временные проблемы с YouTube\n\n` +
+      `Попробуйте /download с названием трека.`
+    );
     });
   }
 }
