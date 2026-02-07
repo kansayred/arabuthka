@@ -244,11 +244,10 @@ router.get('/search/external', authMiddleware, async (req, res) => {
 // ---------------------------------------------
 // Скачивание трека из внешнего источника
 // ---------------------------------------------
-router.post('/search/download', authMiddleware, async (req, res) => {
+router.post('/search/download', authMiddleware, downloadRateLimiter, async (req, res) => {
   try {
     const { title, artist } = req.body;
     const userId = req.userId;
-    , downloadRateLimiter
     // Валидация
     if (!title || typeof title !== 'string' || title.trim().length === 0) {
       return res.status(400).json({ error: 'Параметр title обязателен и не может быть пустым' });
