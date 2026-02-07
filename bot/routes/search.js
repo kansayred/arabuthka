@@ -8,6 +8,7 @@ const router = express.Router();
 const { Pool } = require('pg');
 const cloudinary = require('cloudinary').v2;
 const musicSearch = require('../services/musicSearch');
+const cobaltDownloader = require('../services/cobaltDownloader');
 const crypto = require('crypto');
 
 const pool = new Pool({
@@ -164,14 +165,15 @@ router.post('/search/download', authMiddleware, async (req, res) => {
     const { previewUrl, title, artist } = req.body;
     const userId = req.userId;
 
-    if (!previewUrl || !title) {
-      return res.status(400).json({ error: 'Не указаны previewUrl и title' });
+        if (!title) {
+      return res.status(400).json({ error: 'Не указан title' });
     }
 
-    // Скачиваем превью
-    const downloadResult = await musicSearch.downloadPreview(previewUrl);
+        // Скачиваем полный трек через YouTube + Cobalt
+    const searchQuery = artist ? `${artist} - ${title}` : title;
+    const downloadResult = await cobaltDownloader.searchAndDownload(searchQuery);
     if (!downloadResult.success) {
-      return res.status(500).json({ error: 'Не удалось скачать трек' });
+      return res.status(500).json({ error: downloadResult.error || 'Не удалось скачать трек' });
     }
 
     // Загружаем в Cloudinary
