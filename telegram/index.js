@@ -129,3 +129,84 @@ bot.onText(/\/player/, (msg) => {
 
 // /search - Поиск музыки с результатами
 // bot.onText(/\/search/, (msg) => handleSearchCommand(msg));
+
+
+// =============================================
+// ФУНКЦИЯ ПОМОЩИ
+// =============================================
+function sendHelpMessage(chatId) {
+  const helpText = `📖 *Справка по Arabuthka*
+
+*Команды:*
+/start — начать работу
+/player — открыть плеер
+/help — эта справка
+
+*Как пользоваться:*
+1. Открой плеер через кнопку
+2. Загрузи свои треки
+3. Слушай музыку!`;
+
+  bot.sendMessage(chatId, helpText, { parse_mode: 'Markdown' });
+}
+
+// =============================================
+// ОБРАБОТКА CALLBACK-КНОПОК
+// =============================================
+bot.on('callback_query', (query) => {
+  const chatId = query.message.chat.id;
+  
+  if (query.data === 'help') {
+    sendHelpMessage(chatId);
+    bot.answerCallbackQuery(query.id);
+  }
+});
+
+// =============================================
+// ЗАПУСК СЕРВЕРА И WEBHOOK
+// =============================================
+const server = app.listen(PORT, async () => {
+  console.log(`🚀 Telegram-бот запущен на порту ${PORT}`);
+  console.log(`📍 Режим: ${isProduction ? 'webhook' : 'polling'}`);
+  
+  // В production-режиме устанавливаем webhook
+  if (isProduction && process.env.WEBHOOK_URL) {
+    const webhookUrl = `${process.env.WEBHOOK_URL}${webhookPath}`;
+    try {
+      await bot.setWebHook(webhookUrl);
+      console.log(`✅ Webhook установлен: ${webhookUrl}`);
+    } catch (err) {
+      console.error('❌ Ошибка установки webhook:', err.message);
+    }
+  }
+});
+
+// =============================================
+// GRACEFUL SHUTDOWN
+// Корректное завершение при получении SIGTERM/SIGINT
+// =============================================
+async function gracefulShutdown(signal) {
+  console.log(`\n⚠️ Получен ${signal}. Завершаем работу...`);
+  
+  try {
+    // В production удаляем webhook
+    if (isProduction) {
+      await bot.deleteWebHook();
+      console.log('🔗 Webhook удалён');
+    } else {
+      // В режиме polling останавливаем опрос
+      bot.stopPolling();
+      console.log('📴 Polling остановлен');
+    }
+  } catch (err) {
+    console.error('❌ Ошибка при завершении:', err.message);
+  }
+  
+  server.close(() => {
+    console.log('✅ Сервер завершил работу');
+    process.exit(0);
+  });
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
