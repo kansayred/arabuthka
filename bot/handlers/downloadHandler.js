@@ -2,7 +2,6 @@
 // Обработчик команды /download с поддержкой Cobalt API
 
 const { searchAndDownload } = require('../services/cobaltDownloader');
-const { searchYouTube, downloadAudio } = require('../services/youtubeDownloader');
 
 // --------------------------------------------
 // Обработчик команды /download
@@ -24,18 +23,7 @@ async function handleDownload(bot, msg) {
     // Пытаемся скачать через Cobalt API (основной метод)
     let downloadResult = await searchAndDownload(query);
 
-    // Если Cobalt не сработал, пробуем fallback
-    if (!downloadResult.success) {
-      console.log(`⚠️ Cobalt не сработал, пробуем youtubeDownloader: ${downloadResult.error}`);
-      
-      await bot.editMessageText(
-        `🔄 Переключаюсь на альтернативный метод...`,
-        { chat_id: chatId, message_id: searchMsg.message_id }
-      );
-
-      downloadResult = await fallbackDownload(query);
-    }
-
+    
     if (!downloadResult.success) {
       await bot.editMessageText(
         `❌ Не удалось скачать трек: ${downloadResult.error || 'Неизвестная ошибка'}`,
@@ -68,36 +56,5 @@ async function handleDownload(bot, msg) {
   }
 }
 
-// --------------------------------------------
-// Fallback метод через youtubeDownloader
-// --------------------------------------------
-async function fallbackDownload(query) {
-  try {
-    const searchResults = await searchYouTube(query);
-    
-    if (!searchResults || searchResults.length === 0) {
-      return { success: false, error: 'Трек не найден' };
-    }
-
-    const firstResult = searchResults[0];
-    const downloadResult = await downloadAudio(firstResult.url);
-
-    if (!downloadResult.success) {
-      return { success: false, error: downloadResult.error?.message || 'Ошибка скачивания' };
-    }
-
-    return {
-      success: true,
-      buffer: downloadResult.buffer,
-      track: {
-        title: downloadResult.videoInfo.title,
-        artist: downloadResult.videoInfo.author,
-        duration: downloadResult.videoInfo.duration
-      }
-    };
-  } catch (error) {
-    return { success: false, error: error.message };
-  }
-}
 
 module.exports = { handleDownload };
