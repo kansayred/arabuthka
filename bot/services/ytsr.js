@@ -16,6 +16,15 @@ async function searchYouTube(query, limit = 5) {
     
     const filters = await ytsr.getFilters(searchQuery);
     const videoFilter = filters.get('Type').get('Video');
+        
+    if (!videoFilter || !videoFilter.url) {
+      console.error('Ошибка: не удалось получить фильтр видео');
+      return { 
+        success: false, 
+        error: 'YouTube API: не удалось получить фильтр видео',
+        videos: []
+      };
+    }
     
     const searchResults = await ytsr(videoFilter.url, { 
       limit: limit,
