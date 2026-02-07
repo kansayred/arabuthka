@@ -173,6 +173,15 @@ This project is proprietary. All rights reserved.
 | Модуль | Описание |
 |--------|----------|
 | `logger.js` | Система логирования с уровнями |
+
+### Services
+
+| Модуль | Описание |
+|--------|----------|
+| `cobaltDownloader.js` | Скачивание музыки через Cobalt API |
+| `ytsr.js` | Поиск видео на YouTube |
+| `musicSearch.js` | Поиск через iTunes и Deezer API |
+| `youtubeDownloader.js` | Fallback для скачивания аудио |
 | `validators.js` | Валидация входящих данных |
 
 ## См. также
