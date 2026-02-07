@@ -609,7 +609,7 @@ loadTracks();
         resultsContainer.innerHTML = '<div class="search-loading"></div>';
 
         try {
-            const res = await fetch(`${API_URL}/search?q=${encodeURIComponent(query.trim())}`, {
+                        const res = await fetch(`${API_URL}/api/search/all?q=${encodeURIComponent(query.trim())}`, {
                 headers: authHeaders
             });
             const data = await res.json();
