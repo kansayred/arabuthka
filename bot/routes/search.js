@@ -9,72 +9,23 @@ const { Pool } = require('pg');
 const cloudinary = require('cloudinary').v2;
 const musicSearch = require('../services/musicSearch');
 const cobaltDownloader = require('../services/cobaltDownloader');
-const crypto = require('crypto');
+const { createAuthMiddleware } = require('../middleware/auth');
 
+// Используем общий пул БД (не создаём дубликат)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
+// Auth middleware из общего модуля
+const authMiddleware = createAuthMiddleware(process.env.TELEGRAM_BOT_TOKEN);
+
 // ---------------------------------------------
-// Auth Middleware для проверки Telegram InitData
+// Утилита: экранирование спецсимволов LIKE
+// Защита от SQL-инъекции через символы % и _
 // ---------------------------------------------
-const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const MAX_AUTH_AGE_SECONDS = 86400;
-
-function validateInitData(initData) {
-  if (!initData || !BOT_TOKEN) return null;
-  try {
-    const params = new URLSearchParams(initData);
-    const hash = params.get('hash');
-    params.delete('hash');
-
-    const authDate = params.get('auth_date');
-    if (authDate) {
-      const authTimestamp = parseInt(authDate, 10);
-      const now = Math.floor(Date.now() / 1000);
-      if (now - authTimestamp > MAX_AUTH_AGE_SECONDS) {
-        return null;
-      }
-    }
-
-    const sortedParams = Array.from(params.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, value]) => `${key}=${value}`)
-      .join('\n');
-
-    const secretKey = crypto
-      .createHmac('sha256', 'WebAppData')
-      .update(BOT_TOKEN)
-      .digest();
-
-    const calculatedHash = crypto
-      .createHmac('sha256', secretKey)
-      .update(sortedParams)
-      .digest('hex');
-
-    if (calculatedHash !== hash) return null;
-
-    const userStr = params.get('user');
-    if (userStr) {
-      const user = JSON.parse(decodeURIComponent(userStr));
-      return { user };
-    }
-    return null;
-  } catch (err) {
-    return null;
-  }
-}
-
-function authMiddleware(req, res, next) {
-  const initData = req.headers['x-telegram-init-data'] || req.query.initData;
-  const validated = validateInitData(initData);
-  if (!validated) {
-    return res.status(401).json({ error: 'Нет доступа' });
-  }
-  req.telegramUser = validated.user;
-  req.userId = validated.user.id;
-  next();
+function escapeLike(str) {
+  return str.replace(/[%_\\]/g, '\\$&');
 }
 
 // ---------------------------------------------
@@ -89,14 +40,15 @@ router.get('/search/all', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Параметр q (запрос) обязателен' });
     }
 
-    // 1. Ищем в скачанных треках пользователя
+    // 1. Ищем в скачанных треках пользователя (с экранированием LIKE)
+    const escapedQ = escapeLike(q);
     const myTracksResult = await pool.query(
       `SELECT id, name as title, url, created_at, 'my_library' as source, true as is_downloaded
        FROM tracks 
        WHERE user_id = $1 AND LOWER(name) LIKE LOWER($2)
        ORDER BY created_at DESC
        LIMIT $3`,
-      [userId, `%${q}%`, limit]
+      [userId, `%${escapedQ}%`, limit]
     );
 
     const myTracks = myTracksResult.rows.map(track => ({
@@ -165,13 +117,14 @@ router.post('/search/download', authMiddleware, async (req, res) => {
     const { previewUrl, title, artist } = req.body;
     const userId = req.userId;
 
-        if (!title) {
+    if (!title) {
       return res.status(400).json({ error: 'Не указан title' });
     }
 
-        // Скачиваем полный трек через YouTube + Cobalt
+    // Скачиваем полный трек через YouTube + Cobalt
     const searchQuery = artist ? `${artist} - ${title}` : title;
     const downloadResult = await cobaltDownloader.searchAndDownload(searchQuery);
+
     if (!downloadResult.success) {
       return res.status(500).json({ error: downloadResult.error || 'Не удалось скачать трек' });
     }
