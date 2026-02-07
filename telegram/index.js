@@ -122,14 +122,11 @@ bot.onText(/\/player/, (msg) => {
 });
 
 // /download - Скачивание музыки по запросу
-// bot.onText(/\/download/, (msg) => handleDownloadCommand(msg));
-
+bot.onText(/\/download (.+)/, (msg, match) => handleDownload(bot, msg));
            // /music - Альтернативная команда для скачивания музыки
-// bot.onText(/\/music/, (msg) => handleDownloadCommand(msg));
-
+bot.onText(/\/music (.+)/, (msg, match) => handleDownload(bot, msg));
 // /search - Поиск музыки с результатами
-// bot.onText(/\/search/, (msg) => handleSearchCommand(msg));
-
+bot.onText(/\/search (.+)/, (msg, match) => handleSearch(bot, msg));
 
 // =============================================
 // ФУНКЦИЯ ПОМОЩИ
@@ -159,6 +156,11 @@ bot.on('callback_query', (query) => {
   if (query.data === 'help') {
     sendHelpMessage(chatId);
     bot.answerCallbackQuery(query.id);
+  }
+
+    // Обработка кнопок скачивания музыки
+  if (query.data && query.data.startsWith('download_')) {
+    handleDownloadCallback(bot, query);
   }
 });
 
