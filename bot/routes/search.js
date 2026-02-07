@@ -5,17 +5,15 @@
 
 const express = require('express');
 const router = express.Router();
-const { Pool } = require('pg');
+
 const cloudinary = require('cloudinary').v2;
 const musicSearch = require('../services/musicSearch');
 const cobaltDownloader = require('../services/cobaltDownloader');
+
+// Используем единый пул БД из общего модуля
+const pool = require('../db/pool');
 const { createAuthMiddleware } = require('../middleware/auth');
 
-// Используем общий пул БД (не создаём дубликат)
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
 
 // Auth middleware из общего модуля
 const authMiddleware = createAuthMiddleware(process.env.TELEGRAM_BOT_TOKEN);
