@@ -237,6 +237,7 @@ async function handleDownloadCallback(bot, query) {
     await bot.answerCallbackQuery(query.id, {
       text: '❌ Ошибка при скачивании',
       show_alert: true
+            });
           
     // Удаляем сообщение о статусе, если оно есть
     if (statusMsg) {
@@ -257,7 +258,6 @@ async function handleDownloadCallback(bot, query) {
       `• Временные проблемы с YouTube\n\n` +
       `Попробуйте /download с названием трека.`
     );
-    });
   }
 }
 
