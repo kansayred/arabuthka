@@ -35,7 +35,7 @@ async function getDownloadUrl(videoUrl) {
         instance,
         {
           url: videoUrl,
-          downloadMode: 'audio',
+          isAudioOnly: true,
           audioFormat: 'mp3'
         },
         {
