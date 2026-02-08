@@ -1,115 +1,83 @@
-// cobaltDownloader.js
-// Сервис для скачивания музыки через Cobalt API
+// musicDownloader.js
+// Сервис для скачивания музыки с YouTube через ytdl-core
 
-const axios = require('axios');
+const ytdl = require('@distube/ytdl-core');
 const { searchYouTube } = require('./ytsr');
+const { Readable } = require('stream');
 
 // -----------------------------------------------
 // Конфигурация
 // -----------------------------------------------
 
-// Список Cobalt-инстансов с поддержкой YouTube (по приоритету)
-const COBALT_INSTANCES = [
-  'https://cobalt-api.meowing.de/',
-  'https://cobalt-backend.canine.tools/',
-  'https://capi.3kh0.net/'
-];
-
-const DOWNLOAD_TIMEOUT = 10000; // 10 секунд на каждый инстанс Cobalt
-const MAX_AUDIO_SIZE = 50 * 1024 * 1024; // 50 МБ лимит буфера
+const MAX_AUDIO_SIZE = 50 * 1024 * 1024; // 50 МБ лимит
 
 /**
- * Получает URL для скачивания аудио через Cobalt API с фоллбэком
+ * Скачивает аудио с YouTube используя ytdl-core
  * @param {string} videoUrl - URL видео YouTube
- * @returns {Promise<{success: boolean, url?: string, error?: string}>}
- */
-async function getDownloadUrl(videoUrl) {
-  console.log('[Cobalt] Попытка получить download URL для:', videoUrl);
-  let lastError = 'Все Cobalt-инстансы недоступны';
-  
-  for (const instance of COBALT_INSTANCES) {
-    try {
-      console.log(`[Cobalt] Попытка через ${instance}...`);
-      
-      const response = await axios.post(
-        instance,
-        {
-          url: videoUrl,
-          downloadMode: 'audio',
-          audioFormat: 'mp3'
-        },
-        {
-          timeout: DOWNLOAD_TIMEOUT,
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-      
-      console.log(`[Cobalt] Ответ от ${instance}:`, JSON.stringify(response.data).substring(0, 200));
-      
-      if (response.data && (response.data.status === 'tunnel' || response.data.status === 'redirect') && response.data.url) {
-        console.log(`[Cobalt] Успешно получен URL через ${instance}`);
-        return { success: true, url: response.data.url };
-      }
-      
-      if (response.data && response.data.status === 'error') {
-        const errorCode = response.data.error?.code || 'unknown';
-        lastError = `Cobalt ошибка (${instance}): ${errorCode}`;
-        console.warn(`[Cobalt] ${lastError}`);
-        continue;
-      }
-      
-      lastError = `Cobalt: неожиданный ответ от ${instance}`;
-      console.warn(`[Cobalt] ${lastError}`);
-      
-    } catch (error) {
-      lastError = `Cobalt (${instance}): ${error.message}`;
-      console.warn(`[Cobalt] ${lastError}`);
-    }
-  }
-  
-  console.error('[Cobalt] Все инстансы не удалось:', lastError);
-  return { success: false, error: lastError };
-}
-
-/**
- * Скачивает аудиофайл по URL
- * @param {string} url - URL для скачивания
  * @returns {Promise<{success: boolean, buffer?: Buffer, error?: string}>}
  */
-async function downloadAudio(url) {
+async function downloadYouTubeAudio(videoUrl) {
   try {
-    console.log('[Download] Начинаем скачивание аудио от:', url.substring(0, 100));
+    console.log('[YouTube] Начинаем скачивание аудио от:', videoUrl);
     
-    const response = await axios.get(url, {
-      responseType: 'arraybuffer',
-      timeout: 30000,
-      maxContentLength: MAX_AUDIO_SIZE,
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
-    });
+    // Получаем информацию о видео
+    const info = await ytdl.getInfo(videoUrl);
+    console.log('[YouTube] Информация о видео получена:', info.videoDetails.title);
     
-    const buffer = Buffer.from(response.data);
-    console.log(`[Download] Скачано ${(buffer.length / 1024 / 1024).toFixed(2)} МБ`);
+    // Фильтруем только аудио форматы
+    const audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
     
-    if (buffer.length === 0) {
-      console.error('[Download] Получен пустой файл!');
-      return { success: false, error: 'Получен пустой файл' };
+    if (!audioFormats || audioFormats.length === 0) {
+      console.error('[YouTube] Аудио форматы не найдены');
+      return { success: false, error: 'Аудио форматы не найдены' };
     }
     
-    return { success: true, buffer };
+    // Выбираем формат с наивысшим битрейтом
+    const bestAudio = audioFormats.sort((a, b) => b.audioBitrate - a.audioBitrate)[0];
+    console.log(`[YouTube] Выбран формат: ${bestAudio.container} (${bestAudio.audioBitrate}kbps)`);
+    
+    // Создаем стрим для скачивания
+    const audioStream = ytdl.downloadFromInfo(info, { format: bestAudio });
+    
+    // Собираем данные в буфер
+    const chunks = [];
+    let totalSize = 0;
+    
+    return new Promise((resolve, reject) => {
+      audioStream.on('data', (chunk) => {
+        chunks.push(chunk);
+        totalSize += chunk.length;
+        
+        // Проверяем лимит размера
+        if (totalSize > MAX_AUDIO_SIZE) {
+          audioStream.destroy();
+          reject(new Error('Файл слишком большой (максимум 50 МБ)'));
+        }
+      });
+      
+      audioStream.on('end', () => {
+        const buffer = Buffer.concat(chunks);
+        console.log(`[YouTube] Скачано ${(buffer.length / 1024 / 1024).toFixed(2)} МБ`);
+        resolve({ success: true, buffer });
+      });
+      
+      audioStream.on('error', (error) => {
+        console.error('[YouTube] Ошибка скачивания:', error.message);
+        reject(error);
+      });
+    });
     
   } catch (error) {
-    if (error.code === 'ERR_BAD_RESPONSE' || error.message.includes('maxContentLength')) {
-      console.error('[Download] Файл слишком большой (>50МБ)');
+    console.error('[YouTube] Ошибка при получении информации:', error.message);
+    
+    if (error.message.includes('Video unavailable')) {
+      return { success: false, error: 'Видео недоступно' };
+    }
+    if (error.message.includes('too large')) {
       return { success: false, error: 'Файл слишком большой (максимум 50 МБ)' };
     }
     
-    console.error('[Download] Ошибка скачивания:', error.message);
-    return { success: false, error: error.message };
+    return { success: false, error: `Ошибка скачивания: ${error.message}` };
   }
 }
 
@@ -150,40 +118,30 @@ async function searchAndDownload(query) {
       duration: track.duration
     });
     
-    // Попытка скачать через Cobalt API
-    console.log('\n[Cobalt] Пробуем скачать через Cobalt API...');
-    const downloadUrlResult = await getDownloadUrl(track.url);
+    // Скачиваем аудио через ytdl-core
+    console.log('\n[YouTube] Начинаем скачивание через ytdl-core...');
+    const downloadResult = await downloadYouTubeAudio(track.url);
     
-    if (downloadUrlResult.success) {
-      console.log('[Cobalt] URL получен, скачиваем...');
-      const downloadResult = await downloadAudio(downloadUrlResult.url);
-      
-      if (downloadResult.success) {
-        console.log('[Cobalt] ========== УСПЕШНО СКАЧАНО ==========\n');
-        return {
-          success: true,
-          buffer: downloadResult.buffer,
-          track: {
-            title: track.title,
-            artist: track.artist,
-            duration: track.duration,
-            thumbnail: track.thumbnail,
-            url: track.url
-          }
-        };
-      } else {
-        console.warn('[Cobalt] URL получен, но скачивание не удалось:', downloadResult.error);
-      }
+    if (downloadResult.success) {
+      console.log('[YouTube] ========== УСПЕШНО СКАЧАНО ==========\n');
+      return {
+        success: true,
+        buffer: downloadResult.buffer,
+        track: {
+          title: track.title,
+          artist: track.artist,
+          duration: track.duration,
+          thumbnail: track.thumbnail,
+          url: track.url
+        }
+      };
     } else {
-      console.warn('[Cobalt] Не смог получить download URL:', downloadUrlResult.error);
+      console.error('[YouTube] Скачивание не удалось:', downloadResult.error);
+      return {
+        success: false,
+        error: downloadResult.error || 'Не удалось скачать аудио'
+      };
     }
-    
-    // Все способы не сработали
-    console.error('[Download] ========== СКАЧИВАНИЕ НЕ УДАЛОСЬ ==========\n');
-    return {
-      success: false,
-      error: 'Сервис загрузки временно недоступен. Попробуйте позже или выберите другой трек.'
-    };
     
   } catch (error) {
     console.error('[CRITICAL] Критическая ошибка searchAndDownload:', error.message);
@@ -193,7 +151,6 @@ async function searchAndDownload(query) {
 }
 
 module.exports = {
-  getDownloadUrl,
-  downloadAudio,
+  downloadYouTubeAudio,
   searchAndDownload
 };
