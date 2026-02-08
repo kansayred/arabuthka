@@ -1,9 +1,6 @@
 // cobaltDownloader.js
 // Сервис для скачивания музыки с YouTube через youtubei.js
 
-const https = require('https');
-const http = require('http');
-
 // -----------------------------------------------
 // Конфигурация
 // -----------------------------------------------
@@ -35,25 +32,29 @@ async function downloadYouTubeAudio(videoId) {
 
     const yt = await getInnertube();
 
-    // Получаем информацию о видео для выбора формата
-    const info = await yt.getBasicInfo(videoId);
+    // Используем yt.download() для получения потока
+    const stream = await yt.download(videoId, {
+      type: 'audio',
+      quality: 'best',
+      format: 'mp4'
+    });
 
-    // Выбираем лучший аудио формат
-    const format = info.chooseFormat({ type: 'audio', quality: 'best' });
+    console.log('[YouTube] Поток получен, скачиваем...');
 
-    if (!format) {
-      console.error('[YouTube] Не найден аудио формат');
-      return { success: false, error: 'Не найден аудио формат для этого видео' };
+    // Скачиваем весь поток в Buffer
+    const chunks = [];
+    let totalSize = 0;
+
+    for await (const chunk of stream) {
+      chunks.push(chunk);
+      totalSize += chunk.length;
+      
+      if (totalSize > MAX_AUDIO_SIZE) {
+        throw new Error('Файл слишком большой (максимум 50 МБ)');
+      }
     }
 
-    console.log('[YouTube] Выбран формат:', format.mime_type, 'bitrate:', format.bitrate);
-
-    // Получаем URL потока
-    const streamUrl = format.decipher(yt.session.player);
-    console.log('[YouTube] URL потока получен');
-
-    // Скачиваем через https
-    const buffer = await downloadFromUrl(streamUrl);
+    const buffer = Buffer.concat(chunks);
 
     if (!buffer || buffer.length === 0) {
       return { success: false, error: 'Получен пустой файл' };
@@ -73,49 +74,6 @@ async function downloadYouTubeAudio(videoId) {
 
     return { success: false, error: 'Ошибка скачивания: ' + error.message };
   }
-}
-
-/**
- * Скачивает файл по URL и возвращает Buffer
- * @param {string} url
- * @returns {Promise<Buffer>}
- */
-function downloadFromUrl(url) {
-  return new Promise((resolve, reject) => {
-    const client = url.startsWith('https') ? https : http;
-    client.get(url, (response) => {
-      // Обработка редиректов
-      if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
-        return downloadFromUrl(response.headers.location).then(resolve).catch(reject);
-      }
-
-      if (response.statusCode !== 200) {
-        return reject(new Error('HTTP статус: ' + response.statusCode));
-      }
-
-      const chunks = [];
-      let totalSize = 0;
-
-      response.on('data', (chunk) => {
-        chunks.push(chunk);
-        totalSize += chunk.length;
-        if (totalSize > MAX_AUDIO_SIZE) {
-          response.destroy();
-          reject(new Error('Файл слишком большой (максимум 50 МБ)'));
-        }
-      });
-
-      response.on('end', () => {
-        resolve(Buffer.concat(chunks));
-      });
-
-      response.on('error', (err) => {
-        reject(err);
-      });
-    }).on('error', (err) => {
-      reject(err);
-    });
-  });
 }
 
 /**
