@@ -37,7 +37,7 @@ async function searchYouTube(query, limit = 5) {
       .slice(0, limit) // Ограничиваем до нужного количества
       .map(video => ({
         id: video.id,
-        url: video.url,
+        url: video.url.startsWith('http') ? video.url : `https://www.youtube.com${video.url}`,
         title: video.title,
         artist: video.author?.name || 'Неизвестный исполнитель',
         duration: video.duration,
