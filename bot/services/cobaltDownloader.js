@@ -1,6 +1,9 @@
 // cobaltDownloader.js
 // Сервис для скачивания музыки с YouTube через youtubei.js
 
+const https = require('https');
+const http = require('http');
+
 // -----------------------------------------------
 // Конфигурация
 // -----------------------------------------------
@@ -32,29 +35,29 @@ async function downloadYouTubeAudio(videoId) {
 
     const yt = await getInnertube();
 
-    // Используем yt.download() для получения потока
-    const stream = await yt.download(videoId, {
-      type: 'audio',
-      quality: 'best',
-      format: 'mp4'
-    });
+    // Получаем полную информацию о видео
+    const info = await yt.getInfo(videoId);
 
-    console.log('[YouTube] Поток получен, скачиваем...');
+    // Ищем аудио формат который НЕ требует decipher (имеет прямой URL)
+    const audioFormats = info.streaming_data?.adaptive_formats?.filter(f => 
+      f.mime_type?.includes('audio') && f.url
+    ) || [];
 
-    // Скачиваем весь поток в Buffer
-    const chunks = [];
-    let totalSize = 0;
-
-    for await (const chunk of stream) {
-      chunks.push(chunk);
-      totalSize += chunk.length;
-      
-      if (totalSize > MAX_AUDIO_SIZE) {
-        throw new Error('Файл слишком большой (максимум 50 МБ)');
-      }
+    if (audioFormats.length === 0) {
+      console.error('[YouTube] Не найдены аудио форматы с прямым URL');
+      return { success: false, error: 'Не найдены доступные аудио форматы' };
     }
 
-    const buffer = Buffer.concat(chunks);
+    // Выбираем лучший аудио формат (по bitrate)
+    const bestFormat = audioFormats.sort((a, b) => 
+      (b.bitrate || 0) - (a.bitrate || 0)
+    )[0];
+
+    console.log('[YouTube] Выбран формат:', bestFormat.mime_type, 'bitrate:', bestFormat.bitrate);
+    console.log('[YouTube] URL:', bestFormat.url.substring(0, 100) + '...');
+
+    // Скачиваем через прямой URL
+    const buffer = await downloadFromUrl(bestFormat.url);
 
     if (!buffer || buffer.length === 0) {
       return { success: false, error: 'Получен пустой файл' };
@@ -74,6 +77,49 @@ async function downloadYouTubeAudio(videoId) {
 
     return { success: false, error: 'Ошибка скачивания: ' + error.message };
   }
+}
+
+/**
+ * Скачивает файл по URL и возвращает Buffer
+ * @param {string} url
+ * @returns {Promise<Buffer>}
+ */
+function downloadFromUrl(url) {
+  return new Promise((resolve, reject) => {
+    const client = url.startsWith('https') ? https : http;
+    client.get(url, (response) => {
+      // Обработка редиректов
+      if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+        return downloadFromUrl(response.headers.location).then(resolve).catch(reject);
+      }
+
+      if (response.statusCode !== 200) {
+        return reject(new Error('HTTP статус: ' + response.statusCode));
+      }
+
+      const chunks = [];
+      let totalSize = 0;
+
+      response.on('data', (chunk) => {
+        chunks.push(chunk);
+        totalSize += chunk.length;
+        if (totalSize > MAX_AUDIO_SIZE) {
+          response.destroy();
+          reject(new Error('Файл слишком большой (максимум 50 МБ)'));
+        }
+      });
+
+      response.on('end', () => {
+        resolve(Buffer.concat(chunks));
+      });
+
+      response.on('error', (err) => {
+        reject(err);
+      });
+    }).on('error', (err) => {
+      reject(err);
+    });
+  });
 }
 
 /**
