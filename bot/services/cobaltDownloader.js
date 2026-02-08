@@ -1,7 +1,7 @@
 // cobaltDownloader.js
-// Сервис для скачивания музыки с YouTube через play-dl
+// Сервис для скачивания музыки с YouTube через @distube/ytdl-core
 
-const play = require('play-dl');
+const ytdl = require('@distube/ytdl-core');
 
 // -----------------------------------------------
 // Конфигурация
@@ -20,13 +20,29 @@ async function downloadYouTubeAudio(videoId) {
     
     const url = `https://www.youtube.com/watch?v=${videoId}`;
     
-    // Получаем stream через play-dl
-    const streamData = await play.stream(url, { quality: 2 }); // quality: 2 = highest audio
+    // Проверяем доступность видео
+    if (!ytdl.validateURL(url)) {
+      return { success: false, error: 'Неверный URL YouTube' };
+    }
     
-    console.log('[YouTube] Stream получен, тип:', streamData.type);
+    // Получаем информацию о видео
+    const info = await ytdl.getInfo(url);
     
-    // Конвертируем stream в buffer
-    const buffer = await streamToBuffer(streamData.stream);
+    // Выбираем лучший аудио формат
+    const audioFormats = ytdl.filterFormats(info.formats, 'audioonly');
+    
+    if (audioFormats.length === 0) {
+      return { success: false, error: 'Не найдены аудио форматы' };
+    }
+    
+    // Сортируем по битрейту и выбираем лучший
+    const bestFormat = audioFormats.sort((a, b) => b.audioBitrate - a.audioBitrate)[0];
+    
+    console.log('[YouTube] Выбран формат:', bestFormat.mimeType, 'bitrate:', bestFormat.audioBitrate);
+    
+    // Скачиваем аудио
+    const stream = ytdl(url, { format: bestFormat });
+    const buffer = await streamToBuffer(stream);
     
     if (!buffer || buffer.length === 0) {
       return { success: false, error: 'Получен пустой файл' };
@@ -44,6 +60,10 @@ async function downloadYouTubeAudio(videoId) {
     
     if (error.message && (error.message.includes('unavailable') || error.message.includes('private'))) {
       return { success: false, error: 'Видео недоступно' };
+    }
+    
+    if (error.message && error.message.includes('429')) {
+      return { success: false, error: 'Слишком много запросов к YouTube. Попробуйте позже' };
     }
     
     return { success: false, error: 'Ошибка скачивания: ' + error.message };
@@ -90,15 +110,18 @@ async function searchAndDownload(query) {
     console.log('\n[Search] ========== НАЧАЛО ПРОЦЕССА СКАЧИВАНИЯ ==========');
     console.log('[Search] Поисковый запрос:', query);
     
-    // Поиск на YouTube через play-dl
-    const searchResults = await play.search(query + ' audio', {
-      limit: 5,
-      source: { youtube: 'video' }
-    });
+    // Используем ytsr для поиска (нужно установить отдельно)
+    // Или делаем простой поиск через YouTube URL
+    const ytsr = require('ytsr');
     
-    console.log('[Search] Найдено видео:', searchResults.length);
+    const searchQuery = query + ' audio';
+    const searchResults = await ytsr(searchQuery, { limit: 5 });
     
-    if (searchResults.length === 0) {
+    const videos = searchResults.items.filter(item => item.type === 'video');
+    
+    console.log('[Search] Найдено видео:', videos.length);
+    
+    if (videos.length === 0) {
       console.error('[Search] Ничего не найдено');
       return {
         success: false,
@@ -106,12 +129,12 @@ async function searchAndDownload(query) {
       };
     }
     
-    const video = searchResults[0];
+    const video = videos[0];
     const videoId = video.id;
     const videoTitle = video.title || query;
-    const videoArtist = video.channel?.name || 'Неизвестный исполнитель';
-    const videoDuration = video.durationRaw || '0:00';
-    const videoThumbnail = video.thumbnails?.[0]?.url || null;
+    const videoArtist = video.author?.name || 'Неизвестный исполнитель';
+    const videoDuration = video.duration || '0:00';
+    const videoThumbnail = video.bestThumbnail?.url || null;
     
     console.log('[Search] Найден трек:', {
       title: videoTitle,
