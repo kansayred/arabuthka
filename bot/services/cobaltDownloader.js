@@ -1,8 +1,8 @@
 // cobaltDownloader.js
-// Сервис для скачивания музыки с YouTube через play-dl
+// Сервис для скачивания музыки с YouTube через youtubei.js
 
-const play = require('play-dl');
-const { searchYouTube } = require('./ytsr');
+const https = require('https');
+const http = require('http');
 
 // -----------------------------------------------
 // Конфигурация
@@ -10,68 +10,116 @@ const { searchYouTube } = require('./ytsr');
 
 const MAX_AUDIO_SIZE = 50 * 1024 * 1024; // 50 МБ лимит
 
+// Кешируем Innertube клиент
+let _innertube = null;
+
+async function getInnertube() {
+  if (_innertube) return _innertube;
+  const { Innertube } = await import('youtubei.js');
+  _innertube = await Innertube.create({
+    lang: 'ru',
+    location: 'RU',
+    generate_session_locally: true
+  });
+  return _innertube;
+}
+
 /**
- * Скачивает аудио с YouTube используя play-dl
- * @param {string} videoUrl - URL видео YouTube
+ * Скачивает аудио с YouTube по video ID
+ * @param {string} videoId - ID видео YouTube
  * @returns {Promise<{success: boolean, buffer?: Buffer, error?: string}>}
  */
-async function downloadYouTubeAudio(videoUrl) {
+async function downloadYouTubeAudio(videoId) {
   try {
-    console.log('[YouTube] Начинаем скачивание аудио от:', videoUrl);
+    console.log('[YouTube] Начинаем скачивание аудио, videoId:', videoId);
 
-    const stream = await play.stream(videoUrl, { quality: 2 });
-    console.log('[YouTube] Стрим получен, тип:', stream.type);
+    const yt = await getInnertube();
 
-    const chunks = [];
-    let totalSize = 0;
+    // Получаем информацию о видео для выбора формата
+    const info = await yt.getBasicInfo(videoId);
 
-    return new Promise((resolve, reject) => {
-      stream.stream.on('data', (chunk) => {
-        chunks.push(chunk);
-        totalSize += chunk.length;
+    // Выбираем лучший аудио формат
+    const format = info.chooseFormat({ type: 'audio', quality: 'best' });
 
-        if (totalSize > MAX_AUDIO_SIZE) {
-          stream.stream.destroy();
-          reject(new Error('Файл слишком большой (максимум 50 МБ)'));
-        }
-      });
+    if (!format) {
+      console.error('[YouTube] Не найден аудио формат');
+      return { success: false, error: 'Не найден аудио формат для этого видео' };
+    }
 
-      stream.stream.on('end', () => {
-        const buffer = Buffer.concat(chunks);
-        console.log(`[YouTube] Скачано ${(buffer.length / 1024 / 1024).toFixed(2)} МБ`);
+    console.log('[YouTube] Выбран формат:', format.mime_type, 'bitrate:', format.bitrate);
 
-        if (buffer.length === 0) {
-          return resolve({ success: false, error: 'Получен пустой файл' });
-        }
+    // Получаем URL потока
+    const streamUrl = format.decipher(yt.session.player);
+    console.log('[YouTube] URL потока получен');
 
-        resolve({ success: true, buffer });
-      });
+    // Скачиваем через https
+    const buffer = await downloadFromUrl(streamUrl);
 
-      stream.stream.on('error', (error) => {
-        console.error('[YouTube] Ошибка стрима:', error.message);
-        reject(error);
-      });
-    });
+    if (!buffer || buffer.length === 0) {
+      return { success: false, error: 'Получен пустой файл' };
+    }
 
+    console.log('[YouTube] Скачано ' + (buffer.length / 1024 / 1024).toFixed(2) + ' МБ');
+    return { success: true, buffer };
   } catch (error) {
     console.error('[YouTube] Ошибка:', error.message);
 
-    if (error.message.includes('Sign in')) {
+    if (error.message && error.message.includes('Sign in')) {
       return { success: false, error: 'Видео требует авторизацию' };
     }
-    if (error.message.includes('unavailable') || error.message.includes('private')) {
+    if (error.message && (error.message.includes('unavailable') || error.message.includes('private'))) {
       return { success: false, error: 'Видео недоступно' };
     }
-    if (error.message.includes('too large')) {
-      return { success: false, error: 'Файл слишком большой (максимум 50 МБ)' };
-    }
 
-    return { success: false, error: `Ошибка скачивания: ${error.message}` };
+    return { success: false, error: 'Ошибка скачивания: ' + error.message };
   }
 }
 
 /**
- * Ищет трек и скачивает аудио
+ * Скачивает файл по URL и возвращает Buffer
+ * @param {string} url
+ * @returns {Promise<Buffer>}
+ */
+function downloadFromUrl(url) {
+  return new Promise((resolve, reject) => {
+    const client = url.startsWith('https') ? https : http;
+    client.get(url, (response) => {
+      // Обработка редиректов
+      if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+        return downloadFromUrl(response.headers.location).then(resolve).catch(reject);
+      }
+
+      if (response.statusCode !== 200) {
+        return reject(new Error('HTTP статус: ' + response.statusCode));
+      }
+
+      const chunks = [];
+      let totalSize = 0;
+
+      response.on('data', (chunk) => {
+        chunks.push(chunk);
+        totalSize += chunk.length;
+        if (totalSize > MAX_AUDIO_SIZE) {
+          response.destroy();
+          reject(new Error('Файл слишком большой (максимум 50 МБ)'));
+        }
+      });
+
+      response.on('end', () => {
+        resolve(Buffer.concat(chunks));
+      });
+
+      response.on('error', (err) => {
+        reject(err);
+      });
+    }).on('error', (err) => {
+      reject(err);
+    });
+  });
+}
+
+/**
+ * Ищет трек на YouTube и скачивает аудио
  * @param {string} query - Поисковый запрос
  * @returns {Promise<{success: boolean, buffer?: Buffer, track?: object, error?: string}>}
  */
@@ -80,36 +128,39 @@ async function searchAndDownload(query) {
     console.log('\n[Search] ========== НАЧАЛО ПРОЦЕССА СКАЧИВАНИЯ ==========');
     console.log('[Search] Поисковый запрос:', query);
 
-    // Поиск трека на YouTube
-    const searchResult = await searchYouTube(query);
+    const yt = await getInnertube();
 
-    console.log('[Search] Результат поиска:', JSON.stringify({
-      success: searchResult.success,
-      videosCount: searchResult.videos?.length || 0,
-      error: searchResult.error
-    }));
+    // Поиск на YouTube через youtubei.js
+    const searchQuery = query + ' audio';
+    const searchResults = await yt.search(searchQuery, { type: 'video' });
 
-    if (!searchResult.success) {
-      console.error('[Search] Поиск не удался:', searchResult.error);
-      return { success: false, error: `Ошибка поиска: ${searchResult.error}` };
-    }
+    const videos = searchResults.results
+      ? searchResults.results.filter(item => item.type === 'Video' && item.id)
+      : [];
 
-    if (!searchResult.videos || searchResult.videos.length === 0) {
-      console.error('[Search] Ничего не найдено по запросу');
+    console.log('[Search] Найдено видео:', videos.length);
+
+    if (videos.length === 0) {
+      console.error('[Search] Ничего не найдено');
       return { success: false, error: 'Ничего не найдено по запросу. Попробуйте изменить запрос.' };
     }
 
-    const track = searchResult.videos[0];
+    const video = videos[0];
+    const videoTitle = video.title ? video.title.toString() : query;
+    const videoArtist = video.author ? video.author.name : 'Неизвестный исполнитель';
+    const videoDuration = video.duration ? video.duration.text : '0:00';
+    const videoThumbnail = video.thumbnails && video.thumbnails[0] ? video.thumbnails[0].url : null;
+
     console.log('[Search] Найден трек:', {
-      title: track.title,
-      artist: track.artist,
-      url: track.url,
-      duration: track.duration
+      title: videoTitle,
+      artist: videoArtist,
+      id: video.id,
+      duration: videoDuration
     });
 
-    // Скачиваем аудио через play-dl
-    console.log('\n[YouTube] Начинаем скачивание через play-dl...');
-    const downloadResult = await downloadYouTubeAudio(track.url);
+    // Скачиваем аудио
+    console.log('\n[YouTube] Начинаем скачивание...');
+    const downloadResult = await downloadYouTubeAudio(video.id);
 
     if (downloadResult.success) {
       console.log('[YouTube] ========== УСПЕШНО СКАЧАНО ==========\n');
@@ -117,11 +168,11 @@ async function searchAndDownload(query) {
         success: true,
         buffer: downloadResult.buffer,
         track: {
-          title: track.title,
-          artist: track.artist,
-          duration: track.duration,
-          thumbnail: track.thumbnail,
-          url: track.url
+          title: videoTitle,
+          artist: videoArtist,
+          duration: videoDuration,
+          thumbnail: videoThumbnail,
+          url: 'https://www.youtube.com/watch?v=' + video.id
         }
       };
     } else {
@@ -131,11 +182,10 @@ async function searchAndDownload(query) {
         error: downloadResult.error || 'Не удалось скачать аудио'
       };
     }
-
   } catch (error) {
     console.error('[CRITICAL] Критическая ошибка searchAndDownload:', error.message);
     console.error('[CRITICAL] Stack trace:', error.stack);
-    return { success: false, error: `Критическая ошибка: ${error.message}` };
+    return { success: false, error: 'Критическая ошибка: ' + error.message };
   }
 }
 
