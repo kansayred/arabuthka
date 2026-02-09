@@ -343,6 +343,15 @@ app.get('/', (req, res) => res.send('Arabutka API работает 🎵'));
 
 const PORT = process.env.PORT || 3000;
 
+// Обработка 404 — маршрут не найден
+app.use((req, res) => {
+  res.status(404).json({
+    error: 'Маршрут не найден',
+    path: req.path,
+    method: req.method
+  });
+});
+
 // =============================================
 // ГЛОБАЛЬНЫЙ ОБРАБОТЧИК ОШИБОК
 // Перехватывает все необработанные ошибки в маршрутах.
@@ -362,14 +371,6 @@ app.use((err, req, res, next) => {
   res.status(statusCode).json(response);
 });
 
-// Обработка 404 — маршрут не найден
-app.use((req, res) => {
-  res.status(404).json({
-    error: 'Маршрут не найден',
-    path: req.path,
-    method: req.method
-  });
-});
 
 // =============================================
 // ЗАПУСК СЕРВЕРА
