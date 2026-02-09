@@ -282,7 +282,7 @@ app.post('/upload', uploadLimiter, authMiddleware, upload.single('track'), async
     );
     res.json({ success: true, track: dbResult.rows[0] });
   } catch (error) {
-    console.log('Ошибка загрузки:', error.message);
+    console.error('Ошибка загрузки:', error.message);
     if (error.code === 'LIMIT_FILE_SIZE') {
       return res.status(413).json({ error: 'Файл слишком большой (максимум 25 МБ)' });
     }
