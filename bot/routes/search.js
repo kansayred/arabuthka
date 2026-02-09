@@ -245,90 +245,32 @@ router.get('/search/external', authMiddleware, async (req, res) => {
 // Скачивание трека из внешнего источника
 // ---------------------------------------------
 router.post('/search/download', authMiddleware, downloadRateLimiter, async (req, res) => {
-  try {
-    const { title, artist } = req.body;
-    const userId = req.userId;
-    // Валидация
-    if (!title || typeof title !== 'string' || title.trim().length === 0) {
-      return res.status(400).json({ error: 'Параметр title обязателен и не может быть пустым' });
-    }
-    
-    const sanitizedTitle = title.trim();
-    const sanitizedArtist = artist && typeof artist === 'string' ? artist.trim() : '';
-    
-    if (sanitizedTitle.length > MAX_QUERY_LENGTH) {
-      return res.status(400).json({ error: `Название трека слишком длинное (максимум ${MAX_QUERY_LENGTH} символов)` });
-    }
-    
-    logInfo('Запрос на скачивание трека', { userId, title: sanitizedTitle, artist: sanitizedArtist });
-    
-    // Проверяем, не скачан ли уже этот трек
-    const searchQuery = sanitizedArtist ? `${sanitizedArtist} - ${sanitizedTitle}` : sanitizedTitle;
-    const existingTrack = await pool.query(
-      'SELECT id, name, url FROM tracks WHERE user_id = $1 AND LOWER(name) = LOWER($2) LIMIT 1',
-      [userId, searchQuery]
-    );
-    
-    if (existingTrack.rows.length > 0) {
-      logInfo('Трек уже существует в библиотеке', { trackId: existingTrack.rows[0].id });
-      return res.json({
-        success: true,
-        message: 'Этот трек уже есть в вашей библиотеке',
-        track: existingTrack.rows[0],
-        alreadyExists: true
-      });
-    }
-    
-    // Скачиваем полный трек через YouTube + Cobalt/yt-dlp
-    logInfo('Начинаем скачивание через Cobalt/yt-dlp', { query: searchQuery });
-    const downloadResult = await cobaltDownloader.searchAndDownload(searchQuery);
-    
-    if (!downloadResult.success) {
-      logError('Скачивание не удалось', new Error(downloadResult.error || 'Unknown error'));
-      return res.status(500).json({ 
-        error: downloadResult.error || 'Не удалось скачать трек',
-        details: 'Попробуйте позже или выберите другой трек'
-      });
-    }
-    
-    logInfo('Трек скачан, загружаем в Cloudinary', { bufferSize: downloadResult.buffer.length });
-    
-    // Загружаем в Cloudinary
-    const uploadResult = await new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        { 
-          resource_type: 'video', 
-          folder: `arabutka/${userId}`,
-          public_id: `${sanitizedTitle.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}`
-        },
-        (error, result) => error ? reject(error) : resolve(result)
-      );
-      stream.end(downloadResult.buffer);
-    });
-    
-    logInfo('Файл загружен в Cloudinary', { publicId: uploadResult.public_id });
-    
-    // Сохраняем в БД
-    const dbResult = await pool.query(
-      'INSERT INTO tracks (user_id, name, url, cloudinary_id) VALUES ($1, $2, $3, $4) RETURNING *',
-      [userId, searchQuery, uploadResult.secure_url, uploadResult.public_id]
-    );
-    
-    logInfo('Трек сохранен в БД', { trackId: dbResult.rows[0].id });
-    
-    res.json({
-      success: true,
-      message: 'Трек успешно добавлен в вашу библиотеку',
-      track: dbResult.rows[0]
-    });
-    
-  } catch (error) {
-    logError('Критическая ошибка при скачивании трека', error);
-    res.status(500).json({ 
-      error: 'Внутренняя ошибка сервера',
-      details: 'Пожалуйста, попробуйте позже'
-    });
-  }
+  // =============================================
+  // ЗАГЛУШКА: Функция скачивания треков временно недоступна
+  // Причина: Подготовка к первым инвестициям и MVP.
+  //
+  // Политика проекта: до заключения контрактов с лейблами
+  // пользователи могут загружать только собственные треки
+  // через endpoint /upload.
+  //
+  // TODO (после заключения контрактов):
+  // 1. Интегрировать API лейблов для легального доступа к каталогу
+  // 2. Реализовать полноценный поиск и скачивание с лицензированными треками
+  // 3. Добавить редактирование метаданных (для подписки AraMax)
+  // 4. Стандартизировать форматы и качество треков
+  // =============================================
+  
+  logInfo('Запрос на скачивание трека (заглушка)', { userId: req.userId });
+  
+  res.status(501).json({
+    success: false,
+    error: 'Функция скачивания временно недоступна',
+    message: 'Для подготовки к инвестициям функция скачивания треков из внешних источников временно отключена. Вы можете загружать собственные треки через функцию загрузки.',
+    details: 'После заключения контрактов с лейблами функция будет возобновлена с полным доступом к лицензированным трекам.',
+    availableActions: [
+      'Загрузить собственные треки через /upload',
+      'Использовать поиск по вашей библиотеке'
+    ]
+  });
 });
-
 module.exports = router;
