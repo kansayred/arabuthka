@@ -181,7 +181,10 @@ async function initDatabase(retries = 5, delay = 2000) {
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
-      await pool.query('CREATE INDEX IF NOT EXISTS idx_tracks_user_id ON tracks(user_id)');
+            // Составной индекс (user_id, created_at DESC) ускоряет запрос /tracks,
+      // который фильтрует по user_id И сортирует по created_at DESC.
+      // Без этого PostgreSQL выполняет дополнительную сортировку в памяти.
+      await pool.query('CREATE INDEX IF NOT EXISTS idx_tracks_user_created ON tracks(user_id, created_at DESC)');
       console.log('✅ Таблица tracks готова (попытка ' + attempt + ')');
       return;
     } catch (err) {
