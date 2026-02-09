@@ -5,7 +5,10 @@
 const Config = {
     // API endpoints
     api: {
-        baseUrl: '/api',
+        // Базовый URL API. Использует переменную окружения API_URL,
+        // если не задана — пользуется продакшен Railway URL.
+        // Для локальной разработки: задайте API_URL='http://localhost:3000' в .env
+        baseUrl: window.ENV_API_URL || 'https://arabuthka-production.up.railway.app',
         searchEndpoint: '/search',
         downloadEndpoint: '/download',
         tracksEndpoint: '/tracks',
