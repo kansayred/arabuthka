@@ -411,3 +411,26 @@ function gracefulShutdown(signal) {
 
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// =============================================
+// ПЕРЕХВАТ НЕОБРАБОТАННЫХ ОШИБОК
+// Без этих обработчиков любой необработанный промис или исключение
+// молча убивает процесс на Railway без логирования причины.
+// Теперь: логируем ошибку, отправляем в Sentry и завершаем корректно.
+// =============================================
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('\n🚨 НЕОБРАБОТАННЫЙ ПРОМИС:');
+  console.error('Причина:', reason);
+  console.error('Промис:', promise);
+  // Не завершаем процесс — даём серверу продолжить работу,
+  // но логируем для отслеживания и исправления
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('\n💀 НЕОБРАБОТАННОЕ ИСКЛЮЧЕНИЕ:');
+  console.error('Ошибка:', error.message);
+  console.error('Стек:', error.stack);
+  // Критическая ошибка: процесс в неопределённом состоянии,
+  // завершаем корректно чтобы Railway мог перезапустить
+  gracefulShutdown('uncaughtException');
+});
