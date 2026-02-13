@@ -10,6 +10,7 @@ const musicSearch = require('../services/musicSearch');
 const pool = require('../db/pool');
 const { createAuthMiddleware } = require('../middleware/auth');
 const { createRateLimiter } = require('../middleware/rateLimit');
+const logger = require('../utils/logger');
 
 // =============================================
 // КОНФИГУРАЦИЯ
@@ -54,22 +55,19 @@ function getCacheKey(query, limit) {
 function getFromCache(key) {
   const cached = searchCache.get(key);
   if (!cached) return null;
-  
+
   const now = Date.now();
   if (now - cached.timestamp > CACHE_TTL) {
     searchCache.delete(key);
     return null;
   }
-  
+
   return cached.data;
 }
 
 function setCache(key, data) {
-  searchCache.set(key, {
-    data,
-    timestamp: Date.now()
-  });
-  
+  searchCache.set(key, { data, timestamp: Date.now() });
+
   if (searchCache.size > MAX_CACHE_SIZE) {
     const firstKey = searchCache.keys().next().value;
     searchCache.delete(firstKey);
@@ -84,16 +82,16 @@ function validateSearchQuery(q) {
   if (!q || typeof q !== 'string') {
     return { valid: false, error: 'Параметр q обязателен и должен быть строкой' };
   }
-  
+
   const trimmed = q.trim();
   if (trimmed.length === 0) {
     return { valid: false, error: 'Поисковый запрос не может быть пустым' };
   }
-  
+
   if (trimmed.length > MAX_QUERY_LENGTH) {
     return { valid: false, error: `Запрос слишком длинный (максимум ${MAX_QUERY_LENGTH} символов)` };
   }
-  
+
   return { valid: true, query: trimmed };
 }
 
@@ -114,13 +112,13 @@ function escapeLike(str) {
 }
 
 function logInfo(message, data = {}) {
-  console.log(`ℹ️ [Search] ${message}`, JSON.stringify(data));
+  logger.info(`[Search] ${message}`, data);
 }
 
 function logError(message, error) {
-  console.error(`❌ [Search] ${message}:`, error.message);
+  logger.error(`[Search] ${message}:`, error.message);
   if (error.stack) {
-    console.error(error.stack);
+    logger.error(error.stack);
   }
 }
 
@@ -135,51 +133,51 @@ router.get('/search/all', authMiddleware, searchRateLimiter, async (req, res) =>
   try {
     const { q, limit = DEFAULT_LIMIT } = req.query;
     const userId = req.userId;
-    
+
     // Валидация
     const validation = validateSearchQuery(q);
     if (!validation.valid) {
       return res.status(400).json({ error: validation.error });
     }
-    
     const validatedLimit = validateLimit(limit);
+
     logInfo('Поиск по всем трекам', { userId, query: validation.query, limit: validatedLimit });
-    
+
     // 1. Ищем в скачанных треках пользователя
     const escapedQ = escapeLike(validation.query);
     const myTracksResult = await pool.query(
       `SELECT id, name as title, url, created_at, 'my_library' as source, true as is_downloaded
-       FROM tracks 
+       FROM tracks
        WHERE user_id = $1 AND LOWER(name) LIKE LOWER($2)
        ORDER BY created_at DESC
        LIMIT $3`,
       [userId, `%${escapedQ}%`, validatedLimit]
     );
-    
+
     const myTracks = myTracksResult.rows.map(track => ({
       ...track,
       artist: 'Моя библиотека',
       isDownloaded: true
     }));
-    
+
     // 2. Ищем во внешних источниках
     const externalResult = await musicSearch.searchAllSources(validation.query, validatedLimit);
-    
-    const externalTracks = externalResult.success 
-      ? externalResult.tracks.map(track => ({
-          ...track,
-          isDownloaded: false
-        }))
+    const externalTracks = externalResult.success
+      ? externalResult.tracks.map(track => ({ ...track, isDownloaded: false }))
       : [];
-    
+
     // 3. Объединяем результаты
     const allTracks = [
       ...myTracks,
       ...externalTracks
     ].slice(0, validatedLimit);
-    
-    logInfo('Поиск завершен', { found: allTracks.length, myLibrary: myTracks.length, external: externalTracks.length });
-    
+
+    logInfo('Поиск завершен', {
+      found: allTracks.length,
+      myLibrary: myTracks.length,
+      external: externalTracks.length
+    });
+
     res.json({
       success: true,
       query: validation.query,
@@ -191,7 +189,6 @@ router.get('/search/all', authMiddleware, searchRateLimiter, async (req, res) =>
         sources: externalResult.sources || {}
       }
     });
-    
   } catch (error) {
     logError('Ошибка поиска по всем трекам', error);
     res.status(500).json({ error: 'Внутренняя ошибка сервера' });
@@ -201,39 +198,38 @@ router.get('/search/all', authMiddleware, searchRateLimiter, async (req, res) =>
 // ---------------------------------------------
 // Поиск только во внешних источниках
 // ---------------------------------------------
-router.get('/search/external', authMiddleware, async (req, res) => {
+router.get('/search/external', authMiddleware, searchRateLimiter, async (req, res) => {
   try {
     const { q, limit = DEFAULT_LIMIT } = req.query;
-    
-    // Валидация, searchRateLimiter
+
+    // Валидация
     const validation = validateSearchQuery(q);
     if (!validation.valid) {
       return res.status(400).json({ error: validation.error });
     }
-    
+
     const validatedLimit = validateLimit(limit);
     const cacheKey = getCacheKey(validation.query, validatedLimit);
-    
+
     // Проверяем кеш
     const cachedResult = getFromCache(cacheKey);
     if (cachedResult) {
       logInfo('Результат из кеша', { query: validation.query });
       return res.json({ ...cachedResult, cached: true });
     }
-    
+
     logInfo('Поиск во внешних источниках', { query: validation.query, limit: validatedLimit });
-    
+
     const result = await musicSearch.searchAllSources(validation.query, validatedLimit);
-    
+
     if (result.success) {
       setCache(cacheKey, result);
       logInfo('Внешний поиск завершен', { found: result.count });
     } else {
       logError('Внешний поиск не удался', new Error(result.error || 'Unknown error'));
     }
-    
+
     res.json(result);
-    
   } catch (error) {
     logError('Ошибка внешнего поиска', error);
     res.status(500).json({ error: 'Внутренняя ошибка сервера' });
@@ -258,9 +254,9 @@ router.post('/search/download', authMiddleware, downloadRateLimiter, async (req,
   // 3. Добавить редактирование метаданных (для подписки AraMax)
   // 4. Стандартизировать форматы и качество треков
   // =============================================
-  
+
   logInfo('Запрос на скачивание трека (заглушка)', { userId: req.userId });
-  
+
   res.status(501).json({
     success: false,
     error: 'Функция скачивания временно недоступна',
@@ -272,4 +268,5 @@ router.post('/search/download', authMiddleware, downloadRateLimiter, async (req,
     ]
   });
 });
+
 module.exports = router;
