@@ -1,14 +1,35 @@
 {
-  "name": "arabutka-bot",
+  "name": "arabuthka-bot",
   "version": "1.0.0",
+  "description": "Arabuthka Telegram bot - handles bot commands and user interactions",
   "main": "index.js",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "test": "jest --verbose",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "dotenv": "^17.2.3",
+    "dotenv": "^17.0.0",
     "node-telegram-bot-api": "^0.64.0",
     "express": "^4.21.0",
-    "@distube/ytdl-core": "^4.14.4",    "ytsr": "^3.8.4"
-  }
+    "@distube/ytdl-core": "^4.14.4",
+    "ytsr": "^3.8.4",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "eslint": "^8.56.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kansayred/arabuthka.git"
+  },
+  "author": "Arabuthka Team",
+  "license": "PROPRIETARY"
 }
