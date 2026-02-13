@@ -1,15 +1,29 @@
 {
   "name": "arabuthka-webapp",
   "version": "1.0.0",
-  "description": "Arabuthka Telegram Web App — статический фронтенд для Railway",
+  "description": "Arabuthka Telegram Web App — PWA frontend for music streaming",
   "type": "module",
   "scripts": {
-    "start": "serve -s . -l $PORT"
+    "start": "serve -s . -l $PORT",
+    "dev": "serve -s . -l 3000",
+    "build": "echo 'No build step needed for vanilla JS'",
+    "lint": "eslint *.js",
+    "lint:fix": "eslint *.js --fix"
   },
   "dependencies": {
     "serve": "^14.2.1"
   },
+  "devDependencies": {
+    "eslint": "^8.56.0"
+  },
   "engines": {
-    "node": ">=18.0.0"
-  }
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kansayred/arabuthka.git"
+  },
+  "author": "Arabuthka Team",
+  "license": "PROPRIETARY"
 }
