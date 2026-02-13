@@ -1,9 +1,12 @@
 // downloadHandler.js
 // Обработчик команды /download с использованием YouTube API
 const { searchAndDownload } = require('../services/youtubeDownloader');
+const logger = require('../utils/logger');
+
 // --------------------------------------------
 // Обработчик команды /download
-// Использует youtubeDownloader.js для поиска и скачивания// --------------------------------------------
+// Использует youtubeDownloader.js для поиска и скачивания
+// --------------------------------------------
 async function handleDownload(bot, msg) {
   const chatId = msg.chat.id;
   const query = msg.text.replace('/download', '').trim();
@@ -17,9 +20,9 @@ async function handleDownload(bot, msg) {
     // Уведомляем пользователя о начале поиска
     const searchMsg = await bot.sendMessage(chatId, `🔍 Ищу трек: "${query}"...`);
 
-    // Пытаемся скачать через youtubeDownloader    let downloadResult = await searchAndDownload(query);
+    // Пытаемся скачать через youtubeDownloader
+    let downloadResult = await searchAndDownload(query);
 
-    
     if (!downloadResult.success) {
       await bot.editMessageText(
         `❌ Не удалось скачать трек: ${downloadResult.error || 'Неизвестная ошибка'}`,
@@ -41,16 +44,15 @@ async function handleDownload(bot, msg) {
       caption: `🎵 ${track.title}\n👤 ${track.artist}`
     });
 
-    console.log(`✅ Трек успешно отправлен: ${track.title}`);
+    logger.info(`Трек успешно отправлен: ${track.title}`);
 
   } catch (error) {
-    console.error('❌ Ошибка в handleDownload:', error);
+    logger.error('Ошибка в handleDownload:', error);
     await bot.sendMessage(
       chatId,
-      `❌ Произошла ошибка при обработке запроса. Попробуйте позже.`
+      '❌ Произошла ошибка при обработке запроса. Попробуйте позже.'
     );
   }
 }
-
 
 module.exports = { handleDownload };
