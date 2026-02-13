@@ -7,7 +7,6 @@ const express = require('express');
 const router = express.Router();
 const cloudinary = require('cloudinary').v2;
 const musicSearch = require('../services/musicSearch');
-const cobaltDownloader = require('../services/cobaltDownloader');
 const pool = require('../db/pool');
 const { createAuthMiddleware } = require('../middleware/auth');
 const { createRateLimiter } = require('../middleware/rateLimit');
