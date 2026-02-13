@@ -1,12 +1,9 @@
 // downloadHandler.js
-// Обработчик команды /download с поддержкой Cobalt API
-
-const { searchAndDownload } = require('../services/cobaltDownloader');
-
+// Обработчик команды /download с использованием YouTube API
+const { searchAndDownload } = require('../services/youtubeDownloader');
 // --------------------------------------------
 // Обработчик команды /download
-// Использует Cobalt API с fallback на youtubeDownloader
-// --------------------------------------------
+// Использует youtubeDownloader.js для поиска и скачивания// --------------------------------------------
 async function handleDownload(bot, msg) {
   const chatId = msg.chat.id;
   const query = msg.text.replace('/download', '').trim();
@@ -20,8 +17,7 @@ async function handleDownload(bot, msg) {
     // Уведомляем пользователя о начале поиска
     const searchMsg = await bot.sendMessage(chatId, `🔍 Ищу трек: "${query}"...`);
 
-    // Пытаемся скачать через Cobalt API (основной метод)
-    let downloadResult = await searchAndDownload(query);
+    // Пытаемся скачать через youtubeDownloader    let downloadResult = await searchAndDownload(query);
 
     
     if (!downloadResult.success) {
