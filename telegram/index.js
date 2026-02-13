@@ -23,7 +23,8 @@ const express = require('express');
 // =============================================
 // ИМПОРТ ОБРАБОТЧИКОВ СКАЧИВАНИЯ МУЗЫКИ
 // =============================================
-const { handleDownload, handleSearch, handleDownloadCallback } = require('./handlers/downloadHandler');
+// ВРЕМЕННО ОТКЛЮЧЕНО: скачивание до заключения контрактов с лейблами
+// const { handleDownload, handleSearch, handleDownloadCallback } = require('./handlers/downloadHandler');
 // const { handleSearchCommand, handleDownloadCommand } = require('./handlers/musicHandler');
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -121,12 +122,18 @@ bot.onText(/\/player/, (msg) => {
   });
 });
 
-// /download - Скачивание музыки по запросу
-bot.onText(/\/download (.+)/, (msg, match) => handleDownload(bot, msg));
-           // /music - Альтернативная команда для скачивания музыки
-bot.onText(/\/music (.+)/, (msg, match) => handleDownload(bot, msg));
-// /search - Поиск музыки с результатами
-bot.onText(/\/search (.+)/, (msg, match) => handleSearch(bot, msg));
+// /download - Скачивание временно отключено (до заключения контрактов с лейблами)
+bot.onText(/\/download(.*)/, (msg) => {
+  bot.sendMessage(msg.chat.id, '⚠️ Скачивание музыки временно недоступно.\n\nФункция будет восстановлена после заключения контрактов с лейблами.\n🎵 Пока вы можете загружать собственные треки через плеер.');
+});
+// /music - Альтернативная команда (тоже временно отключена)
+bot.onText(/\/music(.*)/, (msg) => {
+  bot.sendMessage(msg.chat.id, '⚠️ Скачивание музыки временно недоступно.\n🎵 Загружайте собственные треки через плеер.');
+});
+// /search - Поиск временно отключён
+bot.onText(/\/search(.*)/, (msg) => {
+  bot.sendMessage(msg.chat.id, '⚠️ Поиск музыки временно недоступен.\n🎵 Загружайте собственные треки через плеер.');
+});
 
 // =============================================
 // ФУНКЦИЯ ПОМОЩИ
@@ -159,10 +166,13 @@ bot.on('callback_query', (query) => {
   }
 
     // Обработка кнопок скачивания музыки
+// Обработка кнопок скачивания музыки (временно отключено)
   if (query.data && query.data.startsWith('download_')) {
-    handleDownloadCallback(bot, query);
+    bot.answerCallbackQuery(query.id, {
+      text: '⚠️ Скачивание временно недоступно',
+      show_alert: true
+    });
   }
-});
 
 // =============================================
 // ЗАПУСК СЕРВЕРА И WEBHOOK
@@ -212,3 +222,19 @@ async function gracefulShutdown(signal) {
 
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+  // =============================================
+// ПЕРЕХВАТ НЕОБРАБОТАННЫХ ОШИБОК
+// Логируем вместо молчаливого падения процесса на Railway.
+// =============================================
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('\n🚨 НЕОБРАБОТАННЫЙ ПРОМИС (Телеграм-бот):');
+  console.error('Причина:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('\n💀 НЕОБРАБОТАННОЕ ИСКЛЮЧЕНИЕ (Телеграм-бот):');
+  console.error('Ошибка:', error.message);
+  console.error('Стек:', error.stack);
+  gracefulShutdown('uncaughtException');
+});
