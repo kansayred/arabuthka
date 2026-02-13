@@ -6,7 +6,7 @@ tg.expand();
 // Media Session API
 import { MediaSessionManager } from './mediaSession.js';
 
-const API_URL = 'https://arabuthka-production.up.railway.app';
+const API_URL = (window.Config && window.Config.api && window.Config.api.baseUrl) || 'https://arabuthka-production.up.railway.app';
 
 // Авторизация
 const initData = tg.initData;
