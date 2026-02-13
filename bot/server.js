@@ -4,6 +4,11 @@ if (!process.env.RAILWAY_ENVIRONMENT) {
 }
 
 // =============================================
+// ЦЕНТРАЛИЗОВАННОЕ ЛОГИРОВАНИЕ
+// =============================================
+const logger = require('./utils/logger');
+
+// =============================================
 // ВАЛИДАЦИЯ ПЕРЕМЕННЫХ ОКРУЖЕНИЯ
 // Проверяем наличие критичных переменных при старте.
 // Если чего-то нет — падаем сразу с понятной ошибкой,
@@ -20,13 +25,12 @@ const REQUIRED_ENV = [
 
 for (const key of REQUIRED_ENV) {
   if (!process.env[key]) {
-    console.error(`❌ КРИТИЧЕСКАЯ ОШИБКА: Переменная окружения ${key} не задана!`);
-    console.error('Установите все необходимые переменные в .env (локально) или в Railway.');
+    logger.error(`КРИТИЧЕСКАЯ ОШИБКА: Переменная окружения ${key} не задана!`);
+    logger.error('Установите все необходимые переменные в .env (локально) или в Railway.');
     process.exit(1);
   }
 }
-
-console.log('✅ Все необходимые переменные окружения присутствуют');
+logger.info('Все необходимые переменные окружения присутствуют');
 
 const express = require('express');
 const multer = require('multer');
@@ -69,7 +73,6 @@ app.set('trust proxy', 1);
 // - Railway-домен (если задан)
 // - Telegram WebView (запросы без origin)
 // =============================================
-
 const allowedOrigins = [
   'https://arabutka-webapp.vercel.app',
   'https://arabuthka-webapp.vercel.app'
@@ -100,7 +103,7 @@ if (!process.env.RAILWAY_ENVIRONMENT) {
       if (isOriginAllowed(origin)) {
         callback(null, true);
       } else {
-        console.warn(`⚠️ CORS заблокирован: ${origin}`);
+        logger.warn(`CORS заблокирован: ${origin}`);
         callback(new Error('Запрещено CORS'));
       }
     },
@@ -129,19 +132,14 @@ app.use((req, res, next) => {
 
 // =============================================
 // ЛОГИРОВАНИЕ ЗАПРОСОВ
-// Простой логгер для отладки и мониторинга.
-// Логирует метод, URL, статус и время ответа.
+// Используем централизованный logger для структурированных логов.
+// В production выводит JSON для удобного парсинга.
 // =============================================
 app.use((req, res, next) => {
   const start = Date.now();
-  const { method, url } = req;
   res.on('finish', () => {
     const duration = Date.now() - start;
-    const { statusCode } = res;
-    let statusIcon = '✅';
-    if (statusCode >= 400 && statusCode < 500) statusIcon = '⚠️';
-    if (statusCode >= 500) statusIcon = '❌';
-    console.log(`${statusIcon} ${method} ${url} ${statusCode} - ${duration}ms`);
+    logger.request(req, res.statusCode, duration);
   });
   next();
 });
@@ -181,21 +179,21 @@ async function initDatabase(retries = 5, delay = 2000) {
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
-            // Составной индекс (user_id, created_at DESC) ускоряет запрос /tracks,
+      // Составной индекс (user_id, created_at DESC) ускоряет запрос /tracks,
       // который фильтрует по user_id И сортирует по created_at DESC.
       // Без этого PostgreSQL выполняет дополнительную сортировку в памяти.
       await pool.query('CREATE INDEX IF NOT EXISTS idx_tracks_user_created ON tracks(user_id, created_at DESC)');
-      console.log('✅ Таблица tracks готова (попытка ' + attempt + ')');
+      logger.info(`Таблица tracks готова (попытка ${attempt})`);
       return;
     } catch (err) {
-      console.error(`❌ Попытка ${attempt}/${retries} — не удалось подключиться к БД:`, err.message);
+      logger.error(`Попытка ${attempt}/${retries} - не удалось подключиться к БД`, err);
       if (attempt === retries) {
-        console.error('🚨 Все попытки исчерпаны. БД недоступна, но сервер продолжит работу.');
-        console.error('Эндпоинты, зависящие от БД, будут возвращать ошибку 503.');
+        logger.error('Все попытки исчерпаны. БД недоступна, но сервер продолжит работу.');
+        logger.error('Эндпоинты, зависящие от БД, будут возвращать ошибку 503.');
         return;
       }
       const waitTime = delay * Math.pow(2, attempt - 1);
-      console.log(`⏳ Следующая попытка через ${waitTime / 1000} секунд...`);
+      logger.info(`Следующая попытка через ${waitTime / 1000} секунд...`);
       await new Promise(resolve => setTimeout(resolve, waitTime));
     }
   }
@@ -247,7 +245,7 @@ app.get('/health', async (req, res) => {
       uptime: process.uptime()
     });
   } catch (err) {
-    console.error('❌ Health-check: БД недоступна:', err.message);
+    logger.error('Health-check: БД недоступна', err);
     res.status(503).json({
       status: 'error',
       error: 'База данных недоступна'
@@ -269,7 +267,10 @@ app.post('/upload', uploadLimiter, authMiddleware, upload.single('track'), async
     if (!req.file) {
       return res.status(400).json({ error: 'Файл не прикреплён' });
     }
+
     const userId = req.userId;
+    logger.userAction(userId, 'upload_start', { filename: req.file.originalname, size: req.file.size });
+
     const uploadResult = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         { resource_type: 'video', folder: `arabutka/${userId}` },
@@ -277,15 +278,19 @@ app.post('/upload', uploadLimiter, authMiddleware, upload.single('track'), async
       );
       stream.end(req.file.buffer);
     });
+
     const originalName = req.file.originalname;
     const name = originalName.replace(/\.(mp3|wav|ogg|m4a|aac)$/i, '');
+
     const dbResult = await pool.query(
       'INSERT INTO tracks (user_id, name, url, cloudinary_id) VALUES ($1, $2, $3, $4) RETURNING *',
       [userId, name, uploadResult.secure_url, uploadResult.public_id]
     );
+
+    logger.userAction(userId, 'upload_success', { trackId: dbResult.rows[0].id, name });
     res.json({ success: true, track: dbResult.rows[0] });
   } catch (error) {
-    console.error('Ошибка загрузки:', error.message);
+    logger.error('Ошибка загрузки', error);
     if (error.code === 'LIMIT_FILE_SIZE') {
       return res.status(413).json({ error: 'Файл слишком большой (максимум 25 МБ)' });
     }
@@ -298,15 +303,19 @@ app.get('/tracks', authMiddleware, async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 50;
     const offset = (page - 1) * limit;
+
     if (page < 1 || limit < 1 || limit > 100) {
       return res.status(400).json({ error: 'Неверные параметры: page >= 1, limit должен быть от 1 до 100' });
     }
+
     const countResult = await pool.query('SELECT COUNT(*) FROM tracks WHERE user_id = $1', [req.userId]);
     const total = parseInt(countResult.rows[0].count);
+
     const result = await pool.query(
       'SELECT * FROM tracks WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3',
       [req.userId, limit, offset]
     );
+
     res.json({
       tracks: result.rows,
       pagination: {
@@ -319,7 +328,7 @@ app.get('/tracks', authMiddleware, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Ошибка получения треков:', error.message);
+    logger.error('Ошибка получения треков', error);
     res.status(500).json({ error: 'Не удалось получить треки' });
   }
 });
@@ -328,21 +337,25 @@ app.delete('/tracks/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const track = await pool.query('SELECT * FROM tracks WHERE id = $1 AND user_id = $2', [id, req.userId]);
+
     if (track.rows.length === 0) {
       return res.status(404).json({ success: false, error: 'Трек не найден' });
     }
+
     if (track.rows[0].cloudinary_id) {
       await cloudinary.uploader.destroy(track.rows[0].cloudinary_id, { resource_type: 'video' });
     }
+
     await pool.query('DELETE FROM tracks WHERE id = $1', [id]);
+    logger.userAction(req.userId, 'track_deleted', { trackId: id });
     res.json({ success: true });
   } catch (err) {
-    console.error(err);
+    logger.error('Ошибка удаления', err);
     res.status(500).json({ success: false, error: 'Ошибка удаления' });
   }
 });
 
-app.get('/', (req, res) => res.send('Arabutka API работает 🎵'));
+app.get('/', (req, res) => res.send('Arabutka API работает'));
 
 const PORT = process.env.PORT || 3000;
 
@@ -361,25 +374,26 @@ app.use((req, res) => {
 // Возвращает понятный JSON-ответ вместо HTML-страницы ошибки.
 // =============================================
 app.use((err, req, res, next) => {
-  console.error('❌ Ошибка в маршруте:', err.message);
-  console.error(err.stack);
+  logger.error('Ошибка в маршруте', err);
+
   const statusCode = err.status || err.statusCode || 500;
   const response = {
     error: err.message || 'Внутренняя ошибка сервера',
     status: statusCode
   };
+
   if (!process.env.RAILWAY_ENVIRONMENT) {
     response.stack = err.stack;
   }
+
   res.status(statusCode).json(response);
 });
-
 
 // =============================================
 // ЗАПУСК СЕРВЕРА
 // =============================================
 const server = app.listen(PORT, () => {
-  console.log(`🚀 Сервер запущен на порту ${PORT}`);
+  logger.info(`Сервер запущен на порту ${PORT}`);
 });
 
 // =============================================
@@ -391,20 +405,22 @@ const server = app.listen(PORT, () => {
 // соединения с БД вместо мгновенного обрыва.
 // =============================================
 function gracefulShutdown(signal) {
-  console.log(`\n⚠️ Получен ${signal}. Начинаем корректное завершение...`);
+  logger.warn(`Получен ${signal}. Начинаем корректное завершение...`);
+
   server.close(async () => {
-    console.log('🔒 HTTP-сервер закрыт');
+    logger.info('HTTP-сервер закрыт');
     try {
       await pool.end();
-      console.log('🗄️ Соединения с PostgreSQL закрыты');
+      logger.info('Соединения с PostgreSQL закрыты');
     } catch (err) {
-      console.error('❌ Ошибка при закрытии БД:', err.message);
+      logger.error('Ошибка при закрытии БД', err);
     }
-    console.log('✅ Сервер успешно завершил работу');
+    logger.info('Сервер успешно завершил работу');
     process.exit(0);
   });
+
   setTimeout(() => {
-    console.error('🚨 Таймаут завершения. Принудительный выход.');
+    logger.error('Таймаут завершения. Принудительный выход.');
     process.exit(1);
   }, 10000);
 }
@@ -419,18 +435,10 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 // Теперь: логируем ошибку, отправляем в Sentry и завершаем корректно.
 // =============================================
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('\n🚨 НЕОБРАБОТАННЫЙ ПРОМИС:');
-  console.error('Причина:', reason);
-  console.error('Промис:', promise);
-  // Не завершаем процесс — даём серверу продолжить работу,
-  // но логируем для отслеживания и исправления
+  logger.error('НЕОБРАБОТАННЫЙ ПРОМИС', { reason: String(reason) });
 });
 
 process.on('uncaughtException', (error) => {
-  console.error('\n💀 НЕОБРАБОТАННОЕ ИСКЛЮЧЕНИЕ:');
-  console.error('Ошибка:', error.message);
-  console.error('Стек:', error.stack);
-  // Критическая ошибка: процесс в неопределённом состоянии,
-  // завершаем корректно чтобы Railway мог перезапустить
+  logger.error('НЕОБРАБОТАННОЕ ИСКЛЮЧЕНИЕ', error);
   gracefulShutdown('uncaughtException');
 });
