@@ -4,18 +4,22 @@ if (!process.env.RAILWAY_ENVIRONMENT) {
 }
 
 // =============================================
+// ЦЕНТРАЛИЗОВАННОЕ ЛОГИРОВАНИЕ
+// =============================================
+const logger = require('./utils/logger');
+
+// =============================================
 // ВАЛИДАЦИЯ ПЕРЕМЕННЫХ ОКРУЖЕНИЯ
 // =============================================
 const REQUIRED_ENV = ['TELEGRAM_BOT_TOKEN', 'WEBAPP_URL'];
 
 for (const key of REQUIRED_ENV) {
   if (!process.env[key]) {
-    console.error(`❌ КРИТИЧЕСКАЯ ОШИБКА: Переменная ${key} не задана!`);
+    logger.error(`КРИТИЧЕСКАЯ ОШИБКА: Переменная ${key} не задана!`);
     process.exit(1);
   }
 }
-
-console.log('✅ Telegram-бот: все переменные окружения присутствуют');
+logger.info('Telegram-бот: все переменные окружения присутствуют');
 
 const TelegramBot = require('node-telegram-bot-api');
 const express = require('express');
@@ -38,8 +42,8 @@ const PORT = process.env.PORT || 3000;
 // а получает обновления push-уведомлениями.
 // =============================================
 const isProduction = !!process.env.RAILWAY_ENVIRONMENT;
-
 let bot;
+
 if (isProduction) {
   // Продакшн: webhook-режим — бот не запускает polling,
   // а ждёт POST-запросы от Telegram на наш сервер
@@ -66,6 +70,7 @@ app.get('/health', (req, res) => {
 // Эндпоинт для Telegram webhook — сюда приходят все обновления.
 // Секретный путь на основе токена защищает от подделки запросов.
 const webhookPath = `/webhook/${token}`;
+
 app.post(webhookPath, (req, res) => {
   bot.processUpdate(req.body);
   res.sendStatus(200);
@@ -84,23 +89,24 @@ bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   const firstName = msg.from.first_name || 'друг';
 
-  const welcomeMessage = `🎵 *Добро пожаловать в Arabuthka, ${firstName}!*
+  logger.botCommand(chatId, '/start', msg.from.username);
 
+  const welcomeMessage = `\u{1F3B5} *Добро пожаловать в Arabuthka, ${firstName}!*
 Это твоя личная музыкальная библиотека в Telegram.
 
-📱 *Что умеет бот:*
-• Загружай свои треки
-• Слушай музыку прямо в Telegram
-• Управляй плейлистом
+\u{1F4F1} *Что умеет бот:*
+\u{2022} Загружай свои треки
+\u{2022} Слушай музыку прямо в Telegram
+\u{2022} Управляй плейлистом
 
-Нажми кнопку ниже, чтобы открыть плеер 👇`;
+Нажми кнопку ниже, чтобы открыть плеер \u{1F447}`;
 
   bot.sendMessage(chatId, welcomeMessage, {
     parse_mode: 'Markdown',
     reply_markup: {
       inline_keyboard: [
-        [{ text: '🎧 Открыть плеер', web_app: { url: webAppUrl } }],
-        [{ text: '❓ Помощь', callback_data: 'help' }]
+        [{ text: '\u{1F3A7} Открыть плеер', web_app: { url: webAppUrl } }],
+        [{ text: '\u{2753} Помощь', callback_data: 'help' }]
       ]
     }
   });
@@ -108,15 +114,17 @@ bot.onText(/\/start/, (msg) => {
 
 // /help - Справка по боту
 bot.onText(/\/help/, (msg) => {
+  logger.botCommand(msg.chat.id, '/help', msg.from.username);
   sendHelpMessage(msg.chat.id);
 });
 
 // /player - Быстрое открытие плеера
 bot.onText(/\/player/, (msg) => {
-  bot.sendMessage(msg.chat.id, '🎧 Открой плеер:', {
+  logger.botCommand(msg.chat.id, '/player', msg.from.username);
+  bot.sendMessage(msg.chat.id, '\u{1F3A7} Открой плеер:', {
     reply_markup: {
       inline_keyboard: [
-        [{ text: '🎵 Открыть Arabuthka', web_app: { url: webAppUrl } }]
+        [{ text: '\u{1F3B5} Открыть Arabuthka', web_app: { url: webAppUrl } }]
       ]
     }
   });
@@ -124,33 +132,37 @@ bot.onText(/\/player/, (msg) => {
 
 // /download - Скачивание временно отключено (до заключения контрактов с лейблами)
 bot.onText(/\/download(.*)/, (msg) => {
-  bot.sendMessage(msg.chat.id, '⚠️ Скачивание музыки временно недоступно.\n\nФункция будет восстановлена после заключения контрактов с лейблами.\n🎵 Пока вы можете загружать собственные треки через плеер.');
+  logger.botCommand(msg.chat.id, '/download', msg.from.username);
+  bot.sendMessage(msg.chat.id, '\u{26A0}\u{FE0F} Скачивание музыки временно недоступно.\n\nФункция будет восстановлена после заключения контрактов с лейблами.\n\u{1F3B5} Пока вы можете загружать собственные треки через плеер.');
 });
+
 // /music - Альтернативная команда (тоже временно отключена)
 bot.onText(/\/music(.*)/, (msg) => {
-  bot.sendMessage(msg.chat.id, '⚠️ Скачивание музыки временно недоступно.\n🎵 Загружайте собственные треки через плеер.');
+  logger.botCommand(msg.chat.id, '/music', msg.from.username);
+  bot.sendMessage(msg.chat.id, '\u{26A0}\u{FE0F} Скачивание музыки временно недоступно.\n\u{1F3B5} Загружайте собственные треки через плеер.');
 });
+
 // /search - Поиск временно отключён
 bot.onText(/\/search(.*)/, (msg) => {
-  bot.sendMessage(msg.chat.id, '⚠️ Поиск музыки временно недоступен.\n🎵 Загружайте собственные треки через плеер.');
+  logger.botCommand(msg.chat.id, '/search', msg.from.username);
+  bot.sendMessage(msg.chat.id, '\u{26A0}\u{FE0F} Поиск музыки временно недоступен.\n\u{1F3B5} Загружайте собственные треки через плеер.');
 });
 
 // =============================================
 // ФУНКЦИЯ ПОМОЩИ
 // =============================================
 function sendHelpMessage(chatId) {
-  const helpText = `📖 *Справка по Arabuthka*
+  const helpText = `\u{1F4D6} *Справка по Arabuthka*
 
 *Команды:*
-/start — начать работу
-/player — открыть плеер
-/help — эта справка
+/start \u{2014} начать работу
+/player \u{2014} открыть плеер
+/help \u{2014} эта справка
 
 *Как пользоваться:*
 1. Открой плеер через кнопку
 2. Загрузи свои треки
 3. Слушай музыку!`;
-
   bot.sendMessage(chatId, helpText, { parse_mode: 'Markdown' });
 }
 
@@ -159,37 +171,38 @@ function sendHelpMessage(chatId) {
 // =============================================
 bot.on('callback_query', (query) => {
   const chatId = query.message.chat.id;
-  
+
   if (query.data === 'help') {
+    logger.botCommand(chatId, 'callback:help', query.from.username);
     sendHelpMessage(chatId);
     bot.answerCallbackQuery(query.id);
   }
 
-    // Обработка кнопок скачивания музыки
-// Обработка кнопок скачивания музыки (временно отключено)
+  // Обработка кнопок скачивания музыки (временно отключено)
   if (query.data && query.data.startsWith('download_')) {
+    logger.botCommand(chatId, `callback:${query.data}`, query.from.username);
     bot.answerCallbackQuery(query.id, {
-      text: '⚠️ Скачивание временно недоступно',
+      text: '\u{26A0}\u{FE0F} Скачивание временно недоступно',
       show_alert: true
     });
   }
-  });
+});
 
 // =============================================
 // ЗАПУСК СЕРВЕРА И WEBHOOK
 // =============================================
 const server = app.listen(PORT, async () => {
-  console.log(`🚀 Telegram-бот запущен на порту ${PORT}`);
-  console.log(`📍 Режим: ${isProduction ? 'webhook' : 'polling'}`);
-  
+  logger.info(`Telegram-бот запущен на порту ${PORT}`);
+  logger.info(`Режим: ${isProduction ? 'webhook' : 'polling'}`);
+
   // В production-режиме устанавливаем webhook
   if (isProduction && process.env.WEBHOOK_URL) {
     const webhookUrl = `${process.env.WEBHOOK_URL}${webhookPath}`;
     try {
       await bot.setWebHook(webhookUrl);
-      console.log(`✅ Webhook установлен: ${webhookUrl}`);
+      logger.info(`Webhook установлен: ${webhookUrl}`);
     } catch (err) {
-      console.error('❌ Ошибка установки webhook:', err.message);
+      logger.error('Ошибка установки webhook', err);
     }
   }
 });
@@ -199,24 +212,24 @@ const server = app.listen(PORT, async () => {
 // Корректное завершение при получении SIGTERM/SIGINT
 // =============================================
 async function gracefulShutdown(signal) {
-  console.log(`\n⚠️ Получен ${signal}. Завершаем работу...`);
-  
+  logger.warn(`Получен ${signal}. Завершаем работу...`);
+
   try {
     // В production удаляем webhook
     if (isProduction) {
       await bot.deleteWebHook();
-      console.log('🔗 Webhook удалён');
+      logger.info('Webhook удалён');
     } else {
       // В режиме polling останавливаем опрос
       bot.stopPolling();
-      console.log('📴 Polling остановлен');
+      logger.info('Polling остановлен');
     }
   } catch (err) {
-    console.error('❌ Ошибка при завершении:', err.message);
+    logger.error('Ошибка при завершении', err);
   }
-  
+
   server.close(() => {
-    console.log('✅ Сервер завершил работу');
+    logger.info('Сервер завершил работу');
     process.exit(0);
   });
 }
@@ -224,18 +237,15 @@ async function gracefulShutdown(signal) {
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
-  // =============================================
+// =============================================
 // ПЕРЕХВАТ НЕОБРАБОТАННЫХ ОШИБОК
 // Логируем вместо молчаливого падения процесса на Railway.
 // =============================================
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('\n🚨 НЕОБРАБОТАННЫЙ ПРОМИС (Телеграм-бот):');
-  console.error('Причина:', reason);
+  logger.error('НЕОБРАБОТАННЫЙ ПРОМИС (Телеграм-бот)', { reason: String(reason) });
 });
 
 process.on('uncaughtException', (error) => {
-  console.error('\n💀 НЕОБРАБОТАННОЕ ИСКЛЮЧЕНИЕ (Телеграм-бот):');
-  console.error('Ошибка:', error.message);
-  console.error('Стек:', error.stack);
+  logger.error('НЕОБРАБОТАННОЕ ИСКЛЮЧЕНИЕ (Телеграм-бот)', error);
   gracefulShutdown('uncaughtException');
 });
