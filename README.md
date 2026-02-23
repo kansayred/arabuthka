@@ -16,7 +16,7 @@ The project is being prepared for its first round of investment.
 |---|---|
 | Backend API | Node.js, Express |
 | Database | PostgreSQL |
-| File Storage | Cloudinary |
+| File Storage | Selectel S3 |
 | Telegram Bot | node-telegram-bot-api |
 | Frontend | Vanilla JS, HTML, CSS (PWA) |
 | Hosting (API) | Railway |
@@ -35,7 +35,7 @@ Telegram App
 [Express API Server (Railway)]
     |              |
     v              v
-[PostgreSQL]  [Cloudinary]
+[PostgreSQL]  [Selectel S3]
 ```
 
 **Three services:**
@@ -61,7 +61,7 @@ Telegram App
 
 - Node.js 18+
 - PostgreSQL database
-- Cloudinary account
+- Selectel S3 account
 - Telegram Bot Token (via @BotFather)
 
 ### Environment Variables
@@ -109,9 +109,9 @@ node index.js
 4. Set environment variables:
    - `DATABASE_URL` (auto-set by Railway PostgreSQL plugin)
    - `TELEGRAM_BOT_TOKEN`
-   - `CLOUDINARY_CLOUD_NAME`
-   - `CLOUDINARY_API_KEY`
-   - `CLOUDINARY_API_SECRET`
+   - `Selectel S3_CLOUD_NAME`
+   - `Selectel S3_API_KEY`
+   - `Selectel S3_API_SECRET`
 5. Set root directory to `bot/`
 6. Set start command: `node server.js`
 7. Deploy
@@ -168,7 +168,7 @@ arabuthka/
 ## Key Resources
 
 - **Hosting:** Railway (backend), Vercel (frontend)
-- **Storage:** Cloudinary
+- **Storage:** Selectel S3
 - **Code:** GitHub
 - **IDE:** VSCode
 
