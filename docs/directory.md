@@ -41,7 +41,7 @@ bot/
   - Инициализация Grammy (библиотека для Telegram Bot API)
   - Обработка входящих сообщений
   - Загрузка MP3-файлов от пользователей
-  - Отправка файлов в Cloudinary
+  - Отправка файлов в Selectel S3
   - Сохранение метаданных в базу через API
 - **Технологии**: Node.js, Grammy, Axios, FormData
 
@@ -59,8 +59,8 @@ bot/
 ```env
 BOT_TOKEN=your_telegram_bot_token
 RAILWAY_API_URL=https://arabuthka-production.up.railway.app
-CLOUDINARY_URL=cloudinary://...
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
+Selectel S3_URL=Selectel S3://...
+Selectel S3_CLOUD_NAME=your_cloud_name
+Selectel S3_API_KEY=your_api_key
+Selectel S3_API_SECRET=your_api_secret
 ```
