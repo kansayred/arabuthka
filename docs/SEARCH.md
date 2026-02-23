@@ -9,7 +9,7 @@ Arabuthka теперь поддерживает **глобальный поис�
 ✅ Поиск по миллионам треков из iTunes и Deezer  
 ✅ Объединенный поиск: ваши треки + доступные для скачивания  
 ✅ Скачивание превью (30 сек) и добавление в библиотеку  
-✅ Автоматическая загрузка в Cloudinary  
+✅ Автоматическая загрузка в Selectel S3  
 ✅ Без необходимости скачивать файлы на устройство  
 
 ---
@@ -44,7 +44,7 @@ Headers:
       "id": 123,
       "title": "Lose Yourself",
       "artist": "Моя библиотека",
-      "url": "https://res.cloudinary.com/...",
+      "url": "https://res.Selectel S3.com/...",
       "isDownloaded": true,
       "source": "my_library",
       "created_at": "2026-02-06T10:00:00Z"
@@ -146,8 +146,8 @@ X-Telegram-Init-Data: <init_data>
     "id": 42,
     "user_id": 123456,
     "name": "Eminem - Lose Yourself",
-    "url": "https://res.cloudinary.com/...",
-    "cloudinary_id": "arabutka/123456/Eminem_Lose_Yourself_1738843200",
+    "url": "https://res.Selectel S3.com/...",
+    "Selectel S3_id": "arabutka/123456/Eminem_Lose_Yourself_1738843200",
     "created_at": "2026-02-06T12:00:00Z"
   }
 }
@@ -189,7 +189,7 @@ X-Telegram-Init-Data: <init_data>
 1. **Пользователь выбирает трек** из результатов поиска
 2. **Клиент отправляет POST** `/search/download` с `previewUrl`
 3. **Сервер скачивает** превью (30 сек) из внешнего источника
-4. **Загрузка в Cloudinary** в папку пользователя
+4. **Загрузка в Selectel S3** в папку пользователя
 5. **Сохранение в БД** с названием "Артист - Название"
 6. **Трекинг события** `track_downloaded_from_search` в аналитике
 7. **Возврат данных** о добавленном треке
@@ -312,7 +312,7 @@ const downloadTrack = async (track) => {
 ```json
 {
   "axios": "^1.6.0",
-  "cloudinary": "^1.41.0"
+  "Selectel S3": "^1.41.0"
 }
 ```
 
