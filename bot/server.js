@@ -18,10 +18,8 @@ const logger = require('./utils/logger');
 const REQUIRED_ENV = [
   'DATABASE_URL',
   'TELEGRAM_BOT_TOKEN',
-  'CLOUDINARY_CLOUD_NAME',
-  'CLOUDINARY_API_KEY',
-  'CLOUDINARY_API_SECRET'
-];
+    'S3_ACCESS_KEY',
+  'S3_SECRET_KEY'
 
 for (const key of REQUIRED_ENV) {
   if (!process.env[key]) {
@@ -34,7 +32,7 @@ logger.info('Все необходимые переменные окружени
 
 const express = require('express');
 const multer = require('multer');
-const cloudinary = require('cloudinary').v2;
+const { uploadToS3, deleteFromS3 } = require('./services/s3');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 
@@ -201,14 +199,6 @@ async function initDatabase(retries = 5, delay = 2000) {
 
 initDatabase();
 
-// =============================================
-// CLOUDINARY
-// =============================================
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
 
 // =============================================
 // ЗАГРУЗКА ФАЙЛОВ — лимиты и проверка формата
@@ -271,20 +261,16 @@ app.post('/upload', uploadLimiter, authMiddleware, upload.single('track'), async
     const userId = req.userId;
     logger.userAction(userId, 'upload_start', { filename: req.file.originalname, size: req.file.size });
 
-    const uploadResult = await new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        { resource_type: 'video', folder: `arabutka/${userId}` },
-        (error, result) => error ? reject(error) : resolve(result)
-      );
-      stream.end(req.file.buffer);
-    });
+        // Загрузка в Selectel S3
+    const s3Key = `arabutka/${userId}/track_${Date.now()}`;
+    const fileUrl = await uploadToS3(req.file.buffer, s3Key, req.file.mimetype || 'audio/mpeg');
 
     const originalName = req.file.originalname;
     const name = originalName.replace(/\.(mp3|wav|ogg|m4a|aac)$/i, '');
 
     const dbResult = await pool.query(
       'INSERT INTO tracks (user_id, name, url, cloudinary_id) VALUES ($1, $2, $3, $4) RETURNING *',
-      [userId, name, uploadResult.secure_url, uploadResult.public_id]
+            [userId, name, fileUrl, s3Key]
     );
 
     logger.userAction(userId, 'upload_success', { trackId: dbResult.rows[0].id, name });
@@ -343,7 +329,7 @@ app.delete('/tracks/:id', authMiddleware, async (req, res) => {
     }
 
     if (track.rows[0].cloudinary_id) {
-      await cloudinary.uploader.destroy(track.rows[0].cloudinary_id, { resource_type: 'video' });
+            await deleteFromS3(track.rows[0].cloudinary_id);
     }
 
     await pool.query('DELETE FROM tracks WHERE id = $1', [id]);
