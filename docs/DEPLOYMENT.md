@@ -8,7 +8,7 @@
 - [Backend (Railway)](#backend-railway)
 - [Frontend (Vercel)](#frontend-vercel)
 - [База данных (PostgreSQL)](#база-данных-postgresql)
-- [Cloudinary](#cloudinary)
+- [Selectel S3](#selectel-s3)
 - [Telegram Bot](#telegram-bot)
 - [CI/CD](#cicd)
 - [Мониторинг](#мониторинг)
@@ -32,7 +32,7 @@
                     ┌────────┴────────┐
                     ▼                 ▼
               ┌──────────┐      ┌──────────┐
-              │PostgreSQL│      │Cloudinary│
+              │PostgreSQL│      │Selectel S3│
               │ (Railway)│      │  (Cloud) │
               └──────────┘      └──────────┘
 ```
@@ -41,7 +41,7 @@
 - **Frontend**: React + Vite → Vercel
 - **Backend**: Node.js + Express → Railway
 - **Database**: PostgreSQL → Railway
-- **Storage**: Audio files → Cloudinary
+- **Storage**: Audio files → Selectel S3
 - **Bot**: Telegram Bot API
 
 ---
@@ -64,9 +64,9 @@
 |----------|-------------|----------|
 | `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:pass@host:5432/db` |
 | `TELEGRAM_BOT_TOKEN` | Bot token from @BotFather | `123456:ABC-DEF1234...` |
-| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name | `your-cloud-name` |
-| `CLOUDINARY_API_KEY` | Cloudinary API key | `123456789012345` |
-| `CLOUDINARY_API_SECRET` | Cloudinary API secret | `abcdefgh...` |
+| `S3_BUCKET_NAME` | Selectel S3 bucket name | `your-bucket-name` |
+| `S3_ACCESS_KEY` | Selectel S3 access key | `123456789012345` |
+| `S3_SECRET_KEY` | Selectel S3 secret key | `abcdefgh...` |
 | `RAILWAY_ENVIRONMENT` | Auto-set by Railway | `production` |
 | `RAILWAY_PUBLIC_DOMAIN` | Auto-set by Railway | `your-app.up.railway.app` |
 | `PORT` | Server port (optional) | `3000` |
@@ -162,7 +162,7 @@ CREATE TABLE IF NOT EXISTS tracks (
   user_id BIGINT NOT NULL,
   name VARCHAR(255) NOT NULL,
   url TEXT NOT NULL,
-  cloudinary_id TEXT,
+  s3_key TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -190,16 +190,16 @@ psql $DATABASE_URL < backup.sql
 
 ---
 
-## Cloudinary
+## Selectel S3
 
 ### 1. Регистрация
 
-1. Зарегистрируйтесь на [Cloudinary](https://cloudinary.com)
+1. Зарегистрируйтесь на [Selectel S3](https://selectel.ru)
 2. Перейдите в **Dashboard**
 3. Скопируйте:
-   - Cloud Name
-   - API Key
-   - API Secret
+   - Bucket Name
+   - Access Key
+   - Secret Key
 
 ### 2. Настройка хранилища
 
@@ -209,7 +209,7 @@ psql $DATABASE_URL < backup.sql
 
 ### 3. Управление файлами
 
-Через [Media Library](https://cloudinary.com/console/media_library):
+Через [Панель управления S3](https://my.selectel.ru/storage/s3):
 - Просмотр загруженных файлов
 - Удаление неиспользуемых
 - Статистика использования
@@ -359,10 +359,10 @@ psql $DATABASE_URL -c "SELECT NOW();"
 2. Backend автоматически переподключится (см. `initDatabase()`)
 3. Проверьте статус БД в Railway Dashboard
 
-### Cloudinary ошибки
+### Selectel S3 ошибки
 
 1. Проверьте квоту (Free: 25 GB)
-2. Убедитесь, что API credentials правильные
+2. Убедитесь, что S3 credentials правильные
 3. Проверьте формат файлов (MP3, WAV, OGG, M4A, AAC)
 
 ---
@@ -376,7 +376,7 @@ psql $DATABASE_URL -c "SELECT NOW();"
 - [ ] Health check возвращает 200
 - [ ] Vercel проект создан
 - [ ] Frontend деплоится корректно
-- [ ] Cloudinary аккаунт настроен
+- [ ] Selectel S3 аккаунт настроен
 - [ ] Telegram бот создан и настроен
 - [ ] Mini App URL установлен в боте
 - [ ] CI/CD workflows работают
@@ -398,7 +398,7 @@ psql $DATABASE_URL -c "SELECT NOW();"
 - Настройте connection pooling
 - Добавьте индексы для частых запросов
 
-### Cloudinary
+### Selectel S3
 
 - **Free**: 25 GB storage, 25 GB bandwidth
 - **Plus**: от $99/месяц для больших объемов
