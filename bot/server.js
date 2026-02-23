@@ -114,17 +114,19 @@ if (!process.env.RAILWAY_ENVIRONMENT) {
 app.use(express.json());
 
 // =============================================
-// SECURITY HEADERS
-// Защитные HTTP-заголовки для безопасности.
-// Защищают от XSS, clickjacking, MIME-sniffing и др.
+// SECURITY HEADERS (helmet)
+// Автоматическая установка защитных HTTP-заголовков.
+// Включает: X-Content-Type-Options, X-Frame-Options,
+// X-XSS-Protection, и др. Убирает X-Powered-By.
 // =============================================
+const helmet = require('helmet');
+app.use(helmet({
+  contentSecurityPolicy: false, // CSP отключён — Telegram WebApp требует inline-скрипты
+  crossOriginEmbedderPolicy: false // Telegram WebView не поддерживает COEP
+}));
 app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
-  res.removeHeader('X-Powered-By');
   next();
 });
 
@@ -173,7 +175,7 @@ async function initDatabase(retries = 5, delay = 2000) {
           user_id BIGINT NOT NULL,
           name VARCHAR(255) NOT NULL,
           url TEXT NOT NULL,
-          cloudinary_id TEXT,
+          s3_key TEXT,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
@@ -269,7 +271,7 @@ app.post('/upload', uploadLimiter, authMiddleware, upload.single('track'), async
     const name = originalName.replace(/\.(mp3|wav|ogg|m4a|aac)$/i, '');
 
     const dbResult = await pool.query(
-      'INSERT INTO tracks (user_id, name, url, cloudinary_id) VALUES ($1, $2, $3, $4) RETURNING *',
+      'INSERT INTO tracks (user_id, name, url, s3_key) VALUES ($1, $2, $3, $4) RETURNING *',
             [userId, name, fileUrl, s3Key]
     );
 
@@ -328,8 +330,8 @@ app.delete('/tracks/:id', authMiddleware, async (req, res) => {
       return res.status(404).json({ success: false, error: 'Трек не найден' });
     }
 
-    if (track.rows[0].cloudinary_id) {
-            await deleteFromS3(track.rows[0].cloudinary_id);
+    if (track.rows[0].s3_key) {
+            await deleteFromS3(track.rows[0].s3_key);
     }
 
     await pool.query('DELETE FROM tracks WHERE id = $1', [id]);
