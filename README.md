@@ -109,9 +109,9 @@ node index.js
 4. Set environment variables:
    - `DATABASE_URL` (auto-set by Railway PostgreSQL plugin)
    - `TELEGRAM_BOT_TOKEN`
-   - `Selectel S3_CLOUD_NAME`
-   - `Selectel S3_API_KEY`
-   - `Selectel S3_API_SECRET`
+   - `S3_BUCKET_NAME`
+   - `S3_ACCESS_KEY`
+   - `S3_SECRET_KEY`
 5. Set root directory to `bot/`
 6. Set start command: `node server.js`
 7. Deploy
@@ -153,7 +153,7 @@ arabuthka/
 
 ## Roadmap
 
-- [ ] Lock screen and notification controls (PWA mode)
+- [x] Lock screen and notification controls (PWA mode)
 - [ ] Track standardization system ("Lopasti i Zhernova" rules)
 - [ ] Recommendation algorithm "Delamain"
 - [ ] Multi-language support (EN, RU)
