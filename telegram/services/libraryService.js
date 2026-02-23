@@ -26,7 +26,7 @@ async function saveTrackToLibrary(userId, audioBuffer, trackInfo) {
 
     // Сохраняем в базу данных
     const result = await pool.query(
-      `INSERT INTO tracks (user_id, name, url, cloudinary_id, created_at) 
+      `INSERT INTO tracks (user_id, name, url, s3_key, created_at) 
        VALUES ($1, $2, $3, $4, NOW()) 
        RETURNING *`,
             [userId, trackInfo.title, fileUrl, s3Key]
@@ -92,8 +92,8 @@ async function deleteFromLibrary(userId, trackId) {
     }
 
         // Удаляем из Selectel S3
-    if (track.rows[0].cloudinary_id) {
-      await deleteFromS3(track.rows[0].cloudinary_id);
+    if (track.rows[0].s3_key) {
+      await deleteFromS3(track.rows[0].s3_key);
     }
 
     // Удаляем из БД
