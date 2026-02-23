@@ -2,7 +2,7 @@
 // Сервис для работы с библиотекой треков пользователя
 
 const { Pool } = require('pg');
-const cloudinary = require('cloudinary').v2;
+const { uploadToS3, deleteFromS3 } = require('../../bot/services/s3');
 
 // Инициализация подключения к БД
 const pool = new Pool({
@@ -10,14 +10,6 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// Инициализация Cloudinary
-if (process.env.CLOUDINARY_CLOUD_NAME) {
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
-  });
-}
 
 /**
  * Сохраняет трек в библиотеку пользователя
@@ -28,25 +20,16 @@ if (process.env.CLOUDINARY_CLOUD_NAME) {
  */
 async function saveTrackToLibrary(userId, audioBuffer, trackInfo) {
   try {
-    // Загружаем в Cloudinary
-    const uploadResult = await new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        { 
-          resource_type: 'video', 
-          folder: `arabutka/${userId}`,
-          public_id: `track_${Date.now()}`
-        },
-        (error, result) => error ? reject(error) : resolve(result)
-      );
-      stream.end(audioBuffer);
-    });
+        // Загрузка в Selectel S3
+    const s3Key = `arabutka/${userId}/track_${Date.now()}`;
+    const fileUrl = await uploadToS3(audioBuffer, s3Key, 'audio/mpeg');
 
     // Сохраняем в базу данных
     const result = await pool.query(
       `INSERT INTO tracks (user_id, name, url, cloudinary_id, created_at) 
        VALUES ($1, $2, $3, $4, NOW()) 
        RETURNING *`,
-      [userId, trackInfo.title, uploadResult.secure_url, uploadResult.public_id]
+            [userId, trackInfo.title, fileUrl, s3Key]
     );
 
     return {
@@ -108,11 +91,9 @@ async function deleteFromLibrary(userId, trackId) {
       return { success: false, error: 'Трек не найден' };
     }
 
-    // Удаляем из Cloudinary
+        // Удаляем из Selectel S3
     if (track.rows[0].cloudinary_id) {
-      await cloudinary.uploader.destroy(track.rows[0].cloudinary_id, { 
-        resource_type: 'video' 
-      });
+      await deleteFromS3(track.rows[0].cloudinary_id);
     }
 
     // Удаляем из БД
