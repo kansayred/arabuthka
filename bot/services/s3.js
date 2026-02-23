@@ -1,6 +1,6 @@
 // s3.js — Клиент Selectel S3
 // Единая точка подключения к объектному хранилищу.
-// Используется вместо Cloudinary для хранения аудиофайлов.
+// Хранение аудиофайлов в Selectel S3.
 
 const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const logger = require('../utils/logger');
