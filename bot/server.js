@@ -20,7 +20,7 @@ const REQUIRED_ENV = [
   'TELEGRAM_BOT_TOKEN',
     'S3_ACCESS_KEY',
   'S3_SECRET_KEY'
-
+];
 for (const key of REQUIRED_ENV) {
   if (!process.env[key]) {
     logger.error(`КРИТИЧЕСКАЯ ОШИБКА: Переменная окружения ${key} не задана!`);
