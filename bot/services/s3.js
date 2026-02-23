@@ -6,8 +6,10 @@ const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/cl
 const logger = require('../utils/logger');
 
 // Подключение к Selectel S3 (Санкт-Петербург, ru-1)
+const S3_ENDPOINT = process.env.S3_ENDPOINT || 'https://s3.ru-1.storage.selcloud.ru';
+
 const s3 = new S3Client({
-  endpoint: 'https://s3.storage.selcloud.ru',
+  endpoint: S3_ENDPOINT,
   region: 'ru-1',
   credentials: {
     accessKeyId: process.env.S3_ACCESS_KEY,
@@ -16,7 +18,7 @@ const s3 = new S3Client({
   forcePathStyle: true // обязательно для Selectel
 });
 
-const BUCKET = process.env.S3_BUCKET || 'maneshkin';
+const BUCKET = process.env.S3_BUCKET_NAME || 'maneshkin';
 
 /**
  * Загрузка файла в S3
@@ -34,7 +36,7 @@ async function uploadToS3(buffer, key, contentType = 'audio/mpeg') {
     ACL: 'public-read'
   }));
 
-  const url = `https://s3.storage.selcloud.ru/${BUCKET}/${key}`;
+  const url = `${S3_ENDPOINT}/${BUCKET}/${key}`;
   logger.info(`[S3] Загружен: ${key}`);
   return url;
 }
