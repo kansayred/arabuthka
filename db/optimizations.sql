@@ -105,7 +105,7 @@ ON analytics_events(created_at DESC);
 --   user_id BIGINT NOT NULL,
 --   name VARCHAR(255) NOT NULL,
 --   url TEXT NOT NULL,
---   cloudinary_id TEXT,
+--   s3_key TEXT,
 --   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 -- ) PARTITION BY RANGE (created_at);
 
