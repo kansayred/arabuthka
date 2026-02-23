@@ -140,8 +140,8 @@ POST /upload
     "id": 1,
     "user_id": 123456789,
     "name": "My Song",
-    "url": "https://res.cloudinary.com/.../my_song.mp3",
-    "cloudinary_id": "arabutka/123456789/abcd1234",
+    "url": "https://res.Selectel S3.com/.../my_song.mp3",
+    "s3_key": "arabutka/123456789/abcd1234",
     "created_at": "2025-01-15T12:00:00.000Z"
   }
 }
@@ -184,8 +184,8 @@ GET /tracks
       "id": 2,
       "user_id": 123456789,
       "name": "Track Name",
-      "url": "https://res.cloudinary.com/.../track.mp3",
-      "cloudinary_id": "arabutka/123456789/xyz789",
+      "url": "https://res.Selectel S3.com/.../track.mp3",
+      "s3_key": "arabutka/123456789/xyz789",
       "created_at": "2025-01-15T12:00:00.000Z"
     }
   ],
@@ -284,8 +284,8 @@ In development mode, stack trace is included:
 | id | integer | Unique identifier |
 | user_id | bigint | Telegram user ID |
 | name | string | Track name (without extension) |
-| url | string | Cloudinary URL for streaming |
-| cloudinary_id | string | Cloudinary public ID |
+| url | string | Selectel S3 URL for streaming |
+| s3_key | string | Selectel S3 public ID |
 | created_at | timestamp | Upload timestamp |
 
 ### Database Schema
@@ -296,7 +296,7 @@ CREATE TABLE tracks (
   user_id BIGINT NOT NULL,
   name VARCHAR(255) NOT NULL,
   url TEXT NOT NULL,
-  cloudinary_id TEXT,
+  s3_key TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -311,9 +311,9 @@ CREATE INDEX idx_tracks_user_id ON tracks(user_id);
 |----------|----------|-------------|
 | DATABASE_URL | Yes | PostgreSQL connection string |
 | TELEGRAM_BOT_TOKEN | Yes | Bot token for auth validation |
-| CLOUDINARY_CLOUD_NAME | Yes | Cloudinary cloud name |
-| CLOUDINARY_API_KEY | Yes | Cloudinary API key |
-| CLOUDINARY_API_SECRET | Yes | Cloudinary API secret |
+| Selectel S3_CLOUD_NAME | Yes | Selectel S3 cloud name |
+| Selectel S3_API_KEY | Yes | Selectel S3 API key |
+| Selectel S3_API_SECRET | Yes | Selectel S3 API secret |
 | PORT | No | Server port (default: 3000) |
 | RAILWAY_ENVIRONMENT | No | Set by Railway in production |
 | RAILWAY_PUBLIC_DOMAIN | No | Public domain for CORS |
