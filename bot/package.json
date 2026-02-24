@@ -16,7 +16,11 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "migrate": "node db/migrate.js",
-    "db:seed": "node db/seed.js"
+    "db:seed": "node db/seed.js",
+    "audit:cloudinary": "node scripts/audit-cloudinary.js",
+    "migrate:cloudinary": "node scripts/migrate-cloudinary-urls.js",
+    "migrate:cloudinary:dry": "node scripts/migrate-cloudinary-urls.js --dry-run",
+    "verify:urls": "node scripts/verify-track-urls.js"
   },
   "dependencies": {
         "@aws-sdk/client-s3": "^3.0.0",
