@@ -400,16 +400,16 @@ app.get('/stream/:trackId', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Файл не найден в хранилище' });
     }
 
-    const s3Stream = await getFromS3(s3_key);
+    const s3Response = await getFromS3(s3_key);
 
-    res.setHeader('Content-Type', 'audio/mpeg');
-    res.setHeader('Accept-Ranges', 'bytes');
+    res.setHeader('Content-Type', s3Response.ContentType || 'audio/mpeg');
+    res.setHeader('Accept-Ranges', 'bytes');     if (s3Response.ContentLength) res.setHeader('Content-Length', s3Response.ContentLength);
     res.setHeader('Cache-Control', 'public, max-age=86400');
     res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(name)}.mp3"`);
 
-    s3Stream.pipe(res);
+    s3Response.Body.pipe(res);
 
-    s3Stream.on('error', (err) => {
+    s3Response.Body.on('error', (err) => {
       logger.error('Ошибка стриминга из S3', err);
       if (!res.headersSent) {
         res.status(500).json({ error: 'Ошибка воспроизведения' });
