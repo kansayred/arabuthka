@@ -242,7 +242,7 @@ function playTrack(index) {
     currentIndex = index;
     const track = tracks[currentIndex];
 
-    audio.src = `${API_URL}/stream/${track.id}?auth=${encodeURIComponent(initData)}`;
+    audio.src = `${API_URL}/stream/${track.id}?initData=${encodeURIComponent(initData)}`;
     audio.play().catch(err => console.log('Ошибка воспроизведения:', err));
 
     // Обновляем основной плеер
