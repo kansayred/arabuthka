@@ -106,7 +106,7 @@ if (!process.env.RAILWAY_ENVIRONMENT) {
       }
     },
     credentials: true,
-    methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Telegram-Init-Data']
   }));
 }
@@ -183,6 +183,31 @@ async function initDatabase(retries = 5, delay = 2000) {
       // который фильтрует по user_id И сортирует по created_at DESC.
       // Без этого PostgreSQL выполняет дополнительную сортировку в памяти.
       await pool.query('CREATE INDEX IF NOT EXISTS idx_tracks_user_created ON tracks(user_id, created_at DESC)');
+      
+      // Таблицы плейлистов
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS playlists (
+          id SERIAL PRIMARY KEY,
+          user_id BIGINT NOT NULL,
+          name VARCHAR(255) NOT NULL,
+          description TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS playlist_tracks (
+          id SERIAL PRIMARY KEY,
+          playlist_id INTEGER NOT NULL REFERENCES playlists(id) ON DELETE CASCADE,
+          track_id INTEGER NOT NULL REFERENCES tracks(id) ON DELETE CASCADE,
+          position INTEGER NOT NULL DEFAULT 0,
+          added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(playlist_id, track_id)
+        )
+      `);
+      await pool.query('CREATE INDEX IF NOT EXISTS idx_playlists_user ON playlists(user_id)');
+      await pool.query('CREATE INDEX IF NOT EXISTS idx_playlist_tracks_playlist ON playlist_tracks(playlist_id, position)');
+      logger.info('Таблицы playlists и playlist_tracks готовы');
       logger.info(`Таблица tracks готова (попытка ${attempt})`);
       return;
     } catch (err) {
@@ -250,6 +275,12 @@ app.get('/health', async (req, res) => {
 // =============================================
 const searchRoutes = require('./routes/search');
 app.use('/api', searchRoutes);
+
+// =============================================
+// МАРШРУТЫ ПЛЕЙЛИСТОВ
+// =============================================
+const playlistRoutes = require('./routes/playlists');
+app.use('/playlists', authMiddleware, playlistRoutes);
 
 // =============================================
 // ЗАЩИЩЁННЫЕ API-ЭНДПОИНТЫ
