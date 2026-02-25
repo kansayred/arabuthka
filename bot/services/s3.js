@@ -2,7 +2,7 @@
 // Единая точка подключения к объектному хранилищу.
 // Хранение аудиофайлов в Selectel S3.
 
-const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
 const logger = require('../utils/logger');
 
 // Подключение к Selectel S3 (Санкт-Петербург, ru-1)
@@ -35,10 +35,22 @@ async function uploadToS3(buffer, key, contentType = 'audio/mpeg') {
     ContentType: contentType,
     ACL: 'public-read'
   }));
-
   const url = `${S3_ENDPOINT}/${BUCKET}/${key}`;
   logger.info(`[S3] Загружен: ${key}`);
   return url;
+}
+
+/**
+ * Получение файла из S3 (для прокси-стриминга)
+ * @param {string} key — путь/имя объекта
+ * @returns {Promise<{Body: ReadableStream, ContentType: string, ContentLength: number}>}
+ */
+async function getFromS3(key) {
+  const response = await s3.send(new GetObjectCommand({
+    Bucket: BUCKET,
+    Key: key
+  }));
+  return response;
 }
 
 /**
@@ -53,4 +65,4 @@ async function deleteFromS3(key) {
   logger.info(`[S3] Удалён: ${key}`);
 }
 
-module.exports = { uploadToS3, deleteFromS3, BUCKET };
+module.exports = { uploadToS3, deleteFromS3, getFromS3, BUCKET };
