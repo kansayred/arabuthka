@@ -32,7 +32,7 @@ logger.info('Все необходимые переменные окружени
 
 const express = require('express');
 const multer = require('multer');
-const { uploadToS3, deleteFromS3 } = require('./services/s3');
+const { uploadToS3, deleteFromS3, getFromS3 } = require('./services/s3');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 
@@ -375,6 +375,51 @@ app.delete('/tracks/:id', authMiddleware, async (req, res) => {
 });
 
 app.get('/', (req, res) => res.send('Arabutka API работает'));
+
+// ==============================================
+// СТРИМИНГ АУДИО — прокси через сервер
+// Фронтенд запрашивает /stream/:trackId,
+// сервер берёт s3_key из БД и проксирует файл из S3.
+// Это обходит CORS-ограничения Selectel.
+// ==============================================
+app.get('/stream/:trackId', authMiddleware, async (req, res) => {
+  try {
+    const { trackId } = req.params;
+    const result = await pool.query(
+      'SELECT s3_key, name FROM tracks WHERE id = $1 AND user_id = $2',
+      [trackId, req.userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Трек не найден' });
+    }
+
+    const { s3_key, name } = result.rows[0];
+
+    if (!s3_key) {
+      return res.status(404).json({ error: 'Файл не найден в хранилище' });
+    }
+
+    const s3Stream = await getFromS3(s3_key);
+
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Accept-Ranges', 'bytes');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(name)}.mp3"`);
+
+    s3Stream.pipe(res);
+
+    s3Stream.on('error', (err) => {
+      logger.error('Ошибка стриминга из S3', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Ошибка воспроизведения' });
+      }
+    });
+  } catch (error) {
+    logger.error('Ошибка в /stream/:trackId', error);
+    res.status(500).json({ error: 'Ошибка воспроизведения' });
+  }
+});
 
 const PORT = process.env.PORT || 3000;
 
