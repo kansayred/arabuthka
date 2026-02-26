@@ -434,6 +434,43 @@ app.get('/debug/s3-list', async (req, res) => {
     res.status(500).json({ error: err.message, name: err.name });
   }
 });
+
+// Временный: удаление орфанных треков (файлы не существуют в S3)
+app.delete('/debug/cleanup-orphans', async (req, res) => {
+  try {
+    const { S3Client, HeadObjectCommand } = require('@aws-sdk/client-s3');
+    const s3 = new S3Client({
+      endpoint: process.env.S3_ENDPOINT || 'https://s3.ru-1.storage.selcloud.ru',
+      region: 'ru-1',
+      credentials: {
+        accessKeyId: process.env.S3_ACCESS_KEY,
+        secretAccessKey: process.env.S3_SECRET_KEY
+      },
+      forcePathStyle: true
+    });
+    const bucket = process.env.S3_BUCKET_NAME || 'maneshkin';
+    const allTracks = await pool.query('SELECT id, name, s3_key FROM tracks');
+    const orphans = [];
+    for (const track of allTracks.rows) {
+      if (!track.s3_key) { orphans.push(track); continue; }
+      try {
+        await s3.send(new HeadObjectCommand({ Bucket: bucket, Key: track.s3_key }));
+      } catch (err) {
+        if (err.name === 'NotFound' || err.name === 'NoSuchKey' || err.$metadata?.httpStatusCode === 404) {
+          orphans.push(track);
+        }
+      }
+    }
+    if (orphans.length === 0) {
+      return res.json({ message: 'Орфанных треков нет', deleted: 0 });
+    }
+    const ids = orphans.map(t => t.id);
+    await pool.query('DELETE FROM tracks WHERE id = ANY($1)', [ids]);
+    res.json({ message: `Удалено ${orphans.length} орфанных треков`, deleted: orphans.length, orphans: orphans.map(t => ({ id: t.id, name: t.name, s3_key: t.s3_key })) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 // Фронтенд запрашивает /stream/:trackId,
 // сервер берёт s3_key из БД и проксирует файл из S3.
 // Это обходит CORS-ограничения Selectel.
