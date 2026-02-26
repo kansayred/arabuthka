@@ -236,14 +236,20 @@ function renderTracks() {
 // ===========================================
 // ВОСПРОИЗВЕДЕНИЕ
 // ===========================================
-function playTrack(index) {
+async function playTrack(index) {
     if (index < 0 || index >= tracks.length) return;
 
     currentIndex = index;
     const track = tracks[currentIndex];
 
-    audio.src = `${API_URL}/stream/${track.id}?initData=${encodeURIComponent(initData)}`;
-    audio.play().catch(err => console.log('Ошибка воспроизведения:', err));
+        try {
+      const resp = await fetch(`${API_URL}/stream/${track.id}`, { headers: authHeaders });
+      const blob = await resp.blob();
+      audio.src = URL.createObjectURL(blob);
+      audio.play();
+    } catch (err) {
+      console.error('Ошибка воспроизведения:', err);
+    }
 
     // Обновляем основной плеер
     if (trackTitle) trackTitle.textContent = track.name;

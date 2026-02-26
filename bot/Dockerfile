@@ -4,7 +4,7 @@
 # ==============================================
 
 # Базовый образ - Alpine для минимального размера
-FROM node:18-alpine
+FROM node:20-alpine
 
 # Метаданные
 LABEL maintainer="Arabuthka Team"

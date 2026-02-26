@@ -357,7 +357,8 @@ app.get('/tracks', authMiddleware, async (req, res) => {
 
 app.delete('/tracks/:id', authMiddleware, async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params.id);
+        if (isNaN(id) || id < 1) return res.status(400).json({ error: 'Неверный ID' });
     const track = await pool.query('SELECT * FROM tracks WHERE id = $1 AND user_id = $2', [id, req.userId]);
 
     if (track.rows.length === 0) {
@@ -376,7 +377,12 @@ app.delete('/tracks/:id', authMiddleware, async (req, res) => {
     res.status(500).json({ success: false, error: 'Ошибка удаления' });
   }
   });
-// ==============================================
+app.get('/', (req, res) => res.send('Arabutka API работает'));
+
+// === DEBUG-эндпоинты только для локальной разработки ===
+if (!process.env.RAILWAY_ENVIRONMENT) {
+
+  // ==============================================
 // ДИАГНОСТИКА ТРЕКОВ (временный endpoint)
 // ==============================================
 app.get('/debug/tracks', async (req, res) => {
@@ -399,7 +405,6 @@ app.get('/debug/tracks', async (req, res) => {
 });
 
 
-app.get('/', (req, res) => res.send('Arabutka API работает'));
 
 // ==============================================
 // СТРИМИНГ АУДИО — прокси через сервер
@@ -471,13 +476,15 @@ app.delete('/debug/cleanup-orphans', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+} // конец if (!RAILWAY_ENVIRONMENT)
 // Фронтенд запрашивает /stream/:trackId,
 // сервер берёт s3_key из БД и проксирует файл из S3.
 // Это обходит CORS-ограничения Selectel.
 // ==============================================
 app.get('/stream/:trackId', authMiddleware, async (req, res) => {
   try {
-    const { trackId } = req.params;
+    const trackId = parseInt(req.params.trackId);
+        if (isNaN(trackId) || trackId < 1) return res.status(400).json({ error: 'Неверный ID трека' });
     const result = await pool.query(
       'SELECT s3_key, name, url FROM tracks WHERE id = $1 AND user_id = $2',
       [trackId, req.userId]
