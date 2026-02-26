@@ -375,13 +375,14 @@ app.delete('/tracks/:id', authMiddleware, async (req, res) => {
     logger.error('Ошибка удаления', err);
     res.status(500).json({ success: false, error: 'Ошибка удаления' });
   }
+  });
 // ==============================================
 // ДИАГНОСТИКА ТРЕКОВ (временный endpoint)
 // ==============================================
 app.get('/debug/tracks', async (req, res) => {
   try {
     const result = await pool.query(
-            'SELECT id, name, url, s3_key, created_at FROM tracks ORDER BY id'
+            'SELECT id, name, url, s3_key, created_at FROM tracks ORDER BY id');
       
     const tracks = result.rows.map(t => ({
       id: t.id,
@@ -397,8 +398,6 @@ app.get('/debug/tracks', async (req, res) => {
   }
 });
 
-
-});
 
 app.get('/', (req, res) => res.send('Arabutka API работает'));
 
