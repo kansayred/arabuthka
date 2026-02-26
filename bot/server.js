@@ -386,7 +386,7 @@ app.get('/stream/:trackId', authMiddleware, async (req, res) => {
   try {
     const { trackId } = req.params;
     const result = await pool.query(
-      'SELECT s3_key, name FROM tracks WHERE id = $1 AND user_id = $2',
+      'SELECT s3_key, name, url FROM tracks WHERE id = $1 AND user_id = $2',
       [trackId, req.userId]
     );
 
@@ -394,27 +394,36 @@ app.get('/stream/:trackId', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Трек не найден' });
     }
 
-    const { s3_key, name } = result.rows[0];
+    const { s3_key, name, url } = result.rows[0];
 
+// Нет s3_key — fallback на прямой URL (старые треки до миграции)
     if (!s3_key) {
-      return res.status(404).json({ error: 'Файл не найден в хранилище' });
+      if (!url) return res.status(404).json({ error: 'Файл не найден в хранилище' });
+      logger.warn(`[stream] Нет s3_key для трека ${trackId}, редирект на url`);
+      return res.redirect(url);
     }
 
-    const s3Response = await getFromS3(s3_key);
-
-    res.setHeader('Content-Type', s3Response.ContentType || 'audio/mpeg');
-    res.setHeader('Accept-Ranges', 'bytes');     if (s3Response.ContentLength) res.setHeader('Content-Length', s3Response.ContentLength);
-    res.setHeader('Cache-Control', 'public, max-age=86400');
-    res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(name)}.mp3"`);
-
-    s3Response.Body.pipe(res);
-
-    s3Response.Body.on('error', (err) => {
-      logger.error('Ошибка стриминга из S3', err);
-      if (!res.headersSent) {
-        res.status(500).json({ error: 'Ошибка воспроизведения' });
+    try {
+      const s3Response = await getFromS3(s3_key);
+      res.setHeader('Content-Type', s3Response.ContentType || 'audio/mpeg');
+      res.setHeader('Accept-Ranges', 'bytes');      if (s3Response.ContentLength) res.setHeader('Content-Length', s3Response.ContentLength);
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(name)}.mp3"`);
+      s3Response.Body.pipe(res);
+      s3Response.Body.on('error', (err) => {
+        logger.error('Ошибка стриминга из S3', err);
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Ошибка воспроизведения' });
+        }
+      });
+    } catch (s3Error) {
+      // S3 не нашёл файл — fallback на прямой URL из БД
+      if (s3Error.name === 'NoSuchKey' && url) {
+        logger.warn(`[stream] NoSuchKey для ${s3_key}, fallback на url: ${url}`);
+        return res.redirect(url);
       }
-    });
+      throw s3Error;
+    }
   } catch (error) {
     logger.error('Ошибка в /stream/:trackId', error);
     res.status(500).json({ error: 'Ошибка воспроизведения' });
