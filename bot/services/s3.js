@@ -45,14 +45,31 @@ async function uploadToS3(buffer, key, contentType = 'audio/mpeg') {
  * @param {string} key — путь/имя объекта
  * @returns {Promise<{Body: ReadableStream, ContentType: string, ContentLength: number}>}
  */
+
 async function getFromS3(key) {
+  const { Readable } = require('stream');
   const response = await s3.send(new GetObjectCommand({
     Bucket: BUCKET,
     Key: key
   }));
-  return response;
+  // AWS SDK v3 returns Body as a web ReadableStream.
+  // Convert to Node.js Readable for .pipe() compatibility.
+  let body = response.Body;
+  if (body && typeof body.pipe !== 'function') {
+    // Body is a web ReadableStream, convert to Node.js stream
+    if (typeof Readable.fromWeb === 'function') {
+      body = Readable.fromWeb(body);
+    } else if (typeof body.transformToByteArray === 'function') {
+      const bytes = await body.transformToByteArray();
+      body = Readable.from(Buffer.from(bytes));
+    }
+  }
+  return {
+    Body: body,
+    ContentType: response.ContentType,
+    ContentLength: response.ContentLength
+  };
 }
-
 /**
  * Удаление файла из S3
  * @param {string} key — путь/имя объекта
