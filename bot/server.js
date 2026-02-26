@@ -438,6 +438,7 @@ app.get('/stream/:trackId', authMiddleware, async (req, res) => {
       res.setHeader('Accept-Ranges', 'bytes');      if (s3Response.ContentLength) res.setHeader('Content-Length', s3Response.ContentLength);
       res.setHeader('Cache-Control', 'public, max-age=86400');
       res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(name)}.mp3"`);
+            logger.info(`[stream] S3 response received for key: ${s3_key}, ContentType: ${s3Response.ContentType}, ContentLength: ${s3Response.ContentLength}, BodyType: ${typeof s3Response.Body}, hasPipe: ${typeof s3Response.Body?.pipe}`);
       s3Response.Body.pipe(res);
       s3Response.Body.on('error', (err) => {
         logger.error('Ошибка стриминга из S3', err);
