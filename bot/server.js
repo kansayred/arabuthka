@@ -403,6 +403,37 @@ app.get('/', (req, res) => res.send('Arabutka API работает'));
 
 // ==============================================
 // СТРИМИНГ АУДИО — прокси через сервер
+
+// Временный эндпоинт для диагностики S3 бакета
+app.get('/debug/s3-list', async (req, res) => {
+  try {
+    const { S3Client, ListObjectsV2Command } = require('@aws-sdk/client-s3');
+    const s3 = new S3Client({
+      endpoint: process.env.S3_ENDPOINT || 'https://s3.ru-1.storage.selcloud.ru',
+      region: 'ru-1',
+      credentials: {
+        accessKeyId: process.env.S3_ACCESS_KEY,
+        secretAccessKey: process.env.S3_SECRET_KEY
+      },
+      forcePathStyle: true
+    });
+    const bucket = process.env.S3_BUCKET_NAME || 'maneshkin';
+    const prefix = req.query.prefix || 'arabutka/';
+    const response = await s3.send(new ListObjectsV2Command({
+      Bucket: bucket,
+      Prefix: prefix,
+      MaxKeys: 100
+    }));
+    const objects = (response.Contents || []).map(obj => ({
+      key: obj.Key,
+      size: obj.Size,
+      lastModified: obj.LastModified
+    }));
+    res.json({ bucket, prefix, count: objects.length, objects });
+  } catch (err) {
+    res.status(500).json({ error: err.message, name: err.name });
+  }
+});
 // Фронтенд запрашивает /stream/:trackId,
 // сервер берёт s3_key из БД и проксирует файл из S3.
 // Это обходит CORS-ограничения Selectel.
