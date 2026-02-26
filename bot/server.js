@@ -7,6 +7,7 @@ if (!process.env.RAILWAY_ENVIRONMENT) {
 // ЦЕНТРАЛИЗОВАННОЕ ЛОГИРОВАНИЕ
 // =============================================
 const logger = require('./utils/logger');
+const axios = require('axios');
 
 // =============================================
 // ВАЛИДАЦИЯ ПЕРЕМЕННЫХ ОКРУЖЕНИЯ
@@ -396,13 +397,17 @@ app.get('/stream/:trackId', authMiddleware, async (req, res) => {
 
     const { s3_key, name, url } = result.rows[0];
 
-// Нет s3_key — fallback на прямой URL (старые треки до миграции)
+// Нет s3_key — проксируем через axios (старые треки, бакет приватный)
     if (!s3_key) {
       if (!url) return res.status(404).json({ error: 'Файл не найден в хранилище' });
-      logger.warn(`[stream] Нет s3_key для трека ${trackId}, редирект на url`);
-      return res.redirect(url);
+      logger.warn(`[stream] Нет s3_key для трека ${trackId}, проксируем url`);
+      const axiosRes = await axios.get(url, { responseType: 'stream' });
+      res.setHeader('Content-Type', axiosRes.headers['content-type'] || 'audio/mpeg');
+      res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(name)}.mp3"`);
+      return axiosRes.data.pipe(res);
     }
-
     try {
       const s3Response = await getFromS3(s3_key);
       res.setHeader('Content-Type', s3Response.ContentType || 'audio/mpeg');
@@ -417,10 +422,16 @@ app.get('/stream/:trackId', authMiddleware, async (req, res) => {
         }
       });
     } catch (s3Error) {
-      // S3 не нашёл файл — fallback на прямой URL из БД
-      if (s3Error.name === 'NoSuchKey' && url) {
-        logger.warn(`[stream] NoSuchKey для ${s3_key}, fallback на url: ${url}`);
-        return res.redirect(url);
+// S3 не нашёл файл — проксируем через axios (ACL не работает, бакет приватный)
+      if (s3Error.name === 'NoSuchKey' || s3Error.name === 'AccessDenied') {
+        if (!url) throw s3Error;
+        logger.warn(`[stream] ${s3Error.name} для ${s3_key}, проксируем url`);
+        const axiosRes = await axios.get(url, { responseType: 'stream' });
+        res.setHeader('Content-Type', axiosRes.headers['content-type'] || 'audio/mpeg');
+        res.setHeader('Accept-Ranges', 'bytes');
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(name)}.mp3"`);
+        return axiosRes.data.pipe(res);
       }
       throw s3Error;
     }
