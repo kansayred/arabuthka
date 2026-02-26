@@ -588,6 +588,20 @@ if (navProfile) navProfile.addEventListener('click', () => {
 initStickyPlayer();
 loadTracks();
 
+// === ДИАГНОСТИКА (временно) ===
+fetch(`${API_URL}/debug/tracks?initData=${encodeURIComponent(initData)}`)
+    .then(r => r.json())
+        .then(data => { document.title = `DB: ${data.count} треков, ${data.tracks?.map(t => t.url_type).join(',')}`; })
+    .catch(err => console.log('[DEBUG] Ошибка:', err));
+
+// === ОТЛАДКА АУДИО (временно) ===
+audio.addEventListener('error', (e) => {
+    const err = audio.error;
+    const msg = err ? `Ошибка аудио: code=${err.code}, msg=${err.message}` : 'Неизвестная ошибка';
+    document.title = msg;
+    if (trackTitle) trackTitle.textContent = msg;
+});
+
 // ===========================================
 // ГЛОБАЛЬНЫЙ ПОИСК МУЗЫКИ
 // ===========================================
