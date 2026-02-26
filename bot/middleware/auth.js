@@ -4,6 +4,7 @@
 // =============================================
 
 const crypto = require('crypto');
+const logger = require('../utils/logger');
 
 // Максимальный возраст initData в секундах (24 часа)
 // Защищает от replay-атак: старые токены не принимаются
@@ -29,7 +30,7 @@ function validateInitData(initData, botToken) {
       const authTimestamp = parseInt(authDate, 10);
       const now = Math.floor(Date.now() / 1000);
       if (now - authTimestamp > MAX_AUTH_AGE_SECONDS) {
-        console.log('⚠️ initData устарела (старше 24 часов)');
+            logger.warn('initData устарела (старше 24 часов)');
         return null;
       }
     }
@@ -52,7 +53,7 @@ function validateInitData(initData, botToken) {
       .digest('hex');
 
     if (calculatedHash !== hash) {
-      console.log('❌ Неверная подпись initData');
+            logger.warn('Неверная подпись initData');
       return null;
     }
 
@@ -65,7 +66,7 @@ function validateInitData(initData, botToken) {
 
     return null;
   } catch (err) {
-    console.log('Ошибка валидации initData:', err.message);
+          logger.error('Ошибка валидации initData', { error: err.message });
     return null;
   }
 }

@@ -514,13 +514,14 @@ app.get('/stream/:trackId', authMiddleware, async (req, res) => {
       res.setHeader('Cache-Control', 'public, max-age=86400');
       res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(name)}.mp3"`);
             logger.info(`[stream] S3 response received for key: ${s3_key}, ContentType: ${s3Response.ContentType}, ContentLength: ${s3Response.ContentLength}, BodyType: ${typeof s3Response.Body}, hasPipe: ${typeof s3Response.Body?.pipe}`);
-      if (typeof s3Response.Body.pipe === 'function') { s3Response.Body.pipe(res); } else { logger.error('[stream] Body has no pipe method, converting to buffer'); const chunks = []; for await (const chunk of s3Response.Body) { chunks.push(chunk); } res.end(Buffer.concat(chunks)); }
       s3Response.Body.on('error', (err) => {
         logger.error('Ошибка стриминга из S3', err);
         if (!res.headersSent) {
           res.status(500).json({ error: 'Ошибка воспроизведения' });
         }
       });
+            if (typeof s3Response.Body.pipe === 'function') { s3Response.Body.pipe(res); } else { logger.error('[stream] Body has no pipe method, converting to buffer'); const chunks = []; for await (const chunk of s3Response.Body) { chunks.push(chunk); } res.end(Buffer.concat(chunks)); }
+      
     } catch (s3Error) {
 // S3 не нашёл файл — проксируем через axios (ACL не работает, бакет приватный)
       if (s3Error.name === 'NoSuchKey' || s3Error.name === 'AccessDenied') {

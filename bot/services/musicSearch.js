@@ -4,6 +4,7 @@
 // =============================================
 
 const axios = require('axios');
+const logger = require('../utils/logger');
 
 // ---------------------------------------------
 // Поиск через iTunes API (бесплатный, легальный)
@@ -39,7 +40,7 @@ async function searchItunes(query, limit = 20) {
       tracks: results
     };
   } catch (error) {
-    console.error('❌ Ошибка поиска в iTunes:', error.message);
+    logger.error('❌ Ошибка поиска в iTunes:', error.message);
     return {
       success: false,
       error: error.message,
@@ -79,7 +80,7 @@ async function searchDeezer(query, limit = 20) {
       tracks: results
     };
   } catch (error) {
-    console.error('❌ Ошибка поиска в Deezer:', error.message);
+    logger.error('❌ Ошибка поиска в Deezer:', error.message);
     return {
       success: false,
       error: error.message,
@@ -137,7 +138,7 @@ async function searchAllSources(query, limit = 20) {
       }
     };
   } catch (error) {
-    console.error('❌ Ошибка объединенного поиска:', error.message);
+    logger.error('❌ Ошибка объединенного поиска:', error.message);
     return {
       success: false,
       error: error.message,
@@ -164,7 +165,7 @@ async function downloadPreview(previewUrl) {
       contentType: response.headers['content-type']
     };
   } catch (error) {
-    console.error('❌ Ошибка скачивания превью:', error.message);
+    logger.error('❌ Ошибка скачивания превью:', error.message);
     return {
       success: false,
       error: error.message

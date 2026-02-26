@@ -84,6 +84,10 @@ router.post('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+        const parsedId = parseInt(id);
+    if (isNaN(parsedId) || parsedId < 1) {
+      return res.status(400).json({ error: 'Неверный ID плейлиста' });
+    }
 
     const playlist = await pool.query(
       'SELECT * FROM playlists WHERE id = $1 AND user_id = $2',
@@ -119,6 +123,10 @@ router.get('/:id', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+        const parsedId = parseInt(id);
+    if (isNaN(parsedId) || parsedId < 1) {
+      return res.status(400).json({ error: 'Неверный ID плейлиста' });
+    }
     const { name, description } = req.body;
 
     if (name && name.trim().length > MAX_PLAYLIST_NAME) {
@@ -178,6 +186,10 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+        const parsedId = parseInt(id);
+    if (isNaN(parsedId) || parsedId < 1) {
+      return res.status(400).json({ error: 'Неверный ID плейлиста' });
+    }
 
     const result = await pool.query(
       'DELETE FROM playlists WHERE id = $1 AND user_id = $2 RETURNING id',
@@ -202,6 +214,10 @@ router.delete('/:id', async (req, res) => {
 router.post('/:id/tracks', async (req, res) => {
   try {
     const { id } = req.params;
+        const parsedId = parseInt(id);
+    if (isNaN(parsedId) || parsedId < 1) {
+      return res.status(400).json({ error: 'Неверный ID плейлиста' });
+    }
     const { trackId } = req.body;
 
     if (!trackId) {
@@ -266,6 +282,11 @@ router.post('/:id/tracks', async (req, res) => {
 router.delete('/:id/tracks/:trackId', async (req, res) => {
   try {
     const { id, trackId } = req.params;
+        const parsedId = parseInt(id);
+    const parsedTrackId = parseInt(trackId);
+    if (isNaN(parsedId) || parsedId < 1 || isNaN(parsedTrackId) || parsedTrackId < 1) {
+      return res.status(400).json({ error: 'Неверный ID' });
+    }
 
     // Проверяем владельца плейлиста
     const playlist = await pool.query(

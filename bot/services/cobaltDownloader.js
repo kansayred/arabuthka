@@ -2,6 +2,7 @@
 // Сервис для скачивания музыки с YouTube через @distube/ytdl-core
 
 const ytdl = require('@distube/ytdl-core');
+const logger = require('../utils/logger');
 
 // -----------------------------------------------
 // Конфигурация
@@ -16,7 +17,7 @@ const MAX_AUDIO_SIZE = 50 * 1024 * 1024; // 50 МБ лимит
  */
 async function downloadYouTubeAudio(videoId) {
   try {
-    console.log('[YouTube] Начинаем скачивание аудио, videoId:', videoId);
+    logger.info('[YouTube] Начинаем скачивание аудио, videoId:', videoId);
     
     const url = `https://www.youtube.com/watch?v=${videoId}`;
     
@@ -38,7 +39,7 @@ async function downloadYouTubeAudio(videoId) {
     // Сортируем по битрейту и выбираем лучший
     const bestFormat = audioFormats.sort((a, b) => b.audioBitrate - a.audioBitrate)[0];
     
-    console.log('[YouTube] Выбран формат:', bestFormat.mimeType, 'bitrate:', bestFormat.audioBitrate);
+    logger.info('[YouTube] Выбран формат:', bestFormat.mimeType, 'bitrate:', bestFormat.audioBitrate);
     
     // Скачиваем аудио
     const stream = ytdl(url, { format: bestFormat });
@@ -48,11 +49,11 @@ async function downloadYouTubeAudio(videoId) {
       return { success: false, error: 'Получен пустой файл' };
     }
     
-    console.log('[YouTube] Скачано ' + (buffer.length / 1024 / 1024).toFixed(2) + ' МБ');
+    logger.info('[YouTube] Скачано ' + (buffer.length / 1024 / 1024).toFixed(2) + ' МБ');
     return { success: true, buffer };
     
   } catch (error) {
-    console.error('[YouTube] Ошибка:', error.message);
+    logger.error('[YouTube] Ошибка:', error.message);
     
     if (error.message && error.message.includes('Sign in')) {
       return { success: false, error: 'Видео требует авторизацию' };
@@ -107,8 +108,8 @@ function streamToBuffer(stream) {
  */
 async function searchAndDownload(query) {
   try {
-    console.log('\n[Search] ========== НАЧАЛО ПРОЦЕССА СКАЧИВАНИЯ ==========');
-    console.log('[Search] Поисковый запрос:', query);
+    logger.info('\n[Search] ========== НАЧАЛО ПРОЦЕССА СКАЧИВАНИЯ ==========');
+    logger.info('[Search] Поисковый запрос:', query);
     
     // Используем ytsr для поиска (нужно установить отдельно)
     // Или делаем простой поиск через YouTube URL
@@ -119,10 +120,10 @@ async function searchAndDownload(query) {
     
     const videos = searchResults.items.filter(item => item.type === 'video');
     
-    console.log('[Search] Найдено видео:', videos.length);
+    logger.info('[Search] Найдено видео:', videos.length);
     
     if (videos.length === 0) {
-      console.error('[Search] Ничего не найдено');
+      logger.error('[Search] Ничего не найдено');
       return {
         success: false,
         error: 'Ничего не найдено по запросу. Попробуйте изменить запрос.'
@@ -136,7 +137,7 @@ async function searchAndDownload(query) {
     const videoDuration = video.duration || '0:00';
     const videoThumbnail = video.bestThumbnail?.url || null;
     
-    console.log('[Search] Найден трек:', {
+    logger.info('[Search] Найден трек:', {
       title: videoTitle,
       artist: videoArtist,
       id: videoId,
@@ -144,11 +145,11 @@ async function searchAndDownload(query) {
     });
     
     // Скачиваем аудио
-    console.log('\n[YouTube] Начинаем скачивание...');
+    logger.info('\n[YouTube] Начинаем скачивание...');
     const downloadResult = await downloadYouTubeAudio(videoId);
     
     if (downloadResult.success) {
-      console.log('[YouTube] ========== УСПЕШНО СКАЧАНО ==========\n');
+      logger.info('[YouTube] ========== УСПЕШНО СКАЧАНО ==========\n');
       return {
         success: true,
         buffer: downloadResult.buffer,
@@ -161,15 +162,15 @@ async function searchAndDownload(query) {
         }
       };
     } else {
-      console.error('[YouTube] Скачивание не удалось:', downloadResult.error);
+      logger.error('[YouTube] Скачивание не удалось:', downloadResult.error);
       return {
         success: false,
         error: downloadResult.error || 'Не удалось скачать аудио'
       };
     }
   } catch (error) {
-    console.error('[CRITICAL] Критическая ошибка searchAndDownload:', error.message);
-    console.error('[CRITICAL] Stack trace:', error.stack);
+    logger.error('[CRITICAL] Критическая ошибка searchAndDownload:', error.message);
+    logger.error('[CRITICAL] Stack trace:', error.stack);
     return {
       success: false,
       error: 'Критическая ошибка: ' + error.message

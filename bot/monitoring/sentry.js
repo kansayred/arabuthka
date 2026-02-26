@@ -5,10 +5,11 @@
 
 const Sentry = require('@sentry/node');
 const { ProfilingIntegration } = require('@sentry/profiling-node');
+const logger = require('../utils/logger');
 
 // Инициализация Sentry
 function init(app) {  if (!process.env.SENTRY_DSN) {
-    console.log('⚠️  Sentry DSN не настроен. Мониторинг отключен.');
+    logger.warn('⚠️  Sentry DSN не настроен. Мониторинг отключен.');
     return null;
   }
 
@@ -50,7 +51,7 @@ function init(app) {  if (!process.env.SENTRY_DSN) {
     ],
   });
 
-  console.log('✅ Sentry инициализирован');
+  logger.info('✅ Sentry инициализирован');
                     
   // Интеграция middleware с Express (если передан app)
   if (app) {
