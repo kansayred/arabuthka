@@ -126,6 +126,8 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false // Telegram WebView не поддерживает COEP
 }));
 app.use((req, res, next) => {
+    // Не блокируем кэширование для стриминга аудио
+  if (req.path.startsWith('/stream')) return next();
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
   next();
@@ -373,6 +375,30 @@ app.delete('/tracks/:id', authMiddleware, async (req, res) => {
     logger.error('Ошибка удаления', err);
     res.status(500).json({ success: false, error: 'Ошибка удаления' });
   }
+// ==============================================
+// ДИАГНОСТИКА ТРЕКОВ (временный endpoint)
+// ==============================================
+app.get('/debug/tracks', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, name, url, s3_key, created_at FROM tracks WHERE user_id = $1 ORDER BY id',
+      [req.userId]
+    );
+    const tracks = result.rows.map(t => ({
+      id: t.id,
+      name: t.name,
+      has_s3_key: !!t.s3_key,
+      s3_key: t.s3_key || null,
+      url_type: t.url ? (t.url.includes('cloudinary') ? 'cloudinary' : t.url.includes('selcloud') ? 's3' : 'other') : 'none',
+      url_preview: t.url ? t.url.substring(0, 80) + '...' : null
+    }));
+    res.json({ count: tracks.length, tracks });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 });
 
 app.get('/', (req, res) => res.send('Arabutka API работает'));
@@ -436,8 +462,8 @@ app.get('/stream/:trackId', authMiddleware, async (req, res) => {
       throw s3Error;
     }
   } catch (error) {
-    logger.error('Ошибка в /stream/:trackId', error);
-    res.status(500).json({ error: 'Ошибка воспроизведения' });
+        logger.error('Ошибка в /stream/:trackId', { trackId: req.params.trackId, error: error.message, stack: error.stack });
+        res.status(500).json({ error: 'Ошибка воспроизведения', detail: error.message });
   }
 });
 
