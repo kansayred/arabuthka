@@ -378,12 +378,11 @@ app.delete('/tracks/:id', authMiddleware, async (req, res) => {
 // ==============================================
 // ДИАГНОСТИКА ТРЕКОВ (временный endpoint)
 // ==============================================
-app.get('/debug/tracks', authMiddleware, async (req, res) => {
+app.get('/debug/tracks', async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, name, url, s3_key, created_at FROM tracks WHERE user_id = $1 ORDER BY id',
-      [req.userId]
-    );
+            'SELECT id, name, url, s3_key, created_at FROM tracks ORDER BY id'
+      
     const tracks = result.rows.map(t => ({
       id: t.id,
       name: t.name,
