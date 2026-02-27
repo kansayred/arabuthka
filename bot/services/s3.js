@@ -25,7 +25,7 @@ const BUCKET = process.env.S3_BUCKET_NAME || 'maneshkin';
  * @param {Buffer} buffer — буфер файла
  * @param {string} key — путь/имя объекта в бакете
  * @param {string} contentType — MIME-тип
- * @returns {Promise<string>} публичный URL файла
+  * @returns {Promise<string>} внутренний URL файла
  */
 async function uploadToS3(buffer, key, contentType = 'audio/mpeg') {
   await s3.send(new PutObjectCommand({
@@ -33,7 +33,7 @@ async function uploadToS3(buffer, key, contentType = 'audio/mpeg') {
     Key: key,
     Body: buffer,
     ContentType: contentType,
-    ACL: 'public-read'
+    ACL: 'private'
   }));
   const url = `${S3_ENDPOINT}/${BUCKET}/${key}`;
   logger.info(`[S3] Загружен: ${key}`);
