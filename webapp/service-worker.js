@@ -1,7 +1,7 @@
 // Версия кэша — при обновлении кода меняем это значение,
 // чтобы Service Worker вычистил устаревший кэш у пользователей.
 // Формат: arabuthka-v{мажор}.{минор}.{дата}
-const CACHE_VERSION = '2.0.20260206';
+const CACHE_VERSION = '2.1.20260227';
 const CACHE_NAME = `arabuthka-${CACHE_VERSION}`;
 
 const urlsToCache = [
@@ -10,6 +10,11 @@ const urlsToCache = [
   '/style.css',
   '/app.js',
   '/mediaSession.js',
+    '/config.js',
+  '/utils.js',
+  '/audioPlayer.js',
+  '/playerUI.js',
+  '/searchMusic.js',
   '/manifest.json'
 ];
 
