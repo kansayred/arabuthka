@@ -10,44 +10,52 @@
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-    <!-- Декоративные элементы -->
+    <!-- Decorative blobs -->
     <div class="brush-decoration brush-top"></div>
     <div class="brush-decoration brush-bottom"></div>
 
     <div class="container">
-        <!-- Заголовок -->
         <header class="header fade-in">
             <h1 class="logo">
-                <span class="logo-icon">🎵</span>Арабутка
+                <i data-lucide="music" class="logo-icon-svg"></i>
+                Арабутка
             </h1>
         </header>
 
-        <!-- Загрузка -->
+        <!-- Upload -->
         <div class="upload-section fade-in">
             <label class="upload-btn">
-                <span>📁</span>
+                <i data-lucide="upload" style="width:18px;height:18px"></i>
                 Загрузить трек
                 <input type="file" id="fileInput" accept=".mp3,.wav,.ogg,.m4a" hidden>
             </label>
             <span id="uploadStatus"></span>
         </div>
 
-        <!-- Поиск и сортировка -->
+        <!-- Search -->
         <div class="search-section fade-in">
             <div class="search-box">
-                <span class="search-icon">🔍</span>
+                <i data-lucide="search" class="search-icon-svg"></i>
                 <input type="text" id="searchInput" placeholder="Найти трек..." autocomplete="off">
-                <button class="clear-btn" id="clearSearch">✕</button>
+                <button class="clear-btn" id="clearSearch">
+                    <i data-lucide="x" style="width:12px;height:12px"></i>
+                </button>
             </div>
             <div class="sort-buttons">
-                <button class="sort-btn active" data-sort="name">🅰️ По имени</button>
-                <button class="sort-btn" data-sort="date">📅 По дате</button>
+                <button class="sort-btn active" data-sort="name">
+                    <i data-lucide="arrow-down-a-z" style="width:14px;height:14px"></i> По имени
+                </button>
+                <button class="sort-btn" data-sort="date">
+                    <i data-lucide="calendar" style="width:14px;height:14px"></i> По дате
+                </button>
             </div>
         </div>
 
-        <!-- Плеер -->
+        <!-- Player -->
         <div class="player-section fade-in">
             <div class="cover-art no-cover" id="coverArt"></div>
             <div class="track-info">
@@ -60,30 +68,44 @@
                 <span class="time" id="duration">0:00</span>
             </div>
             <div class="controls">
-                <button class="control-btn" id="shuffleBtn">🔀</button>
-                <button class="control-btn" id="prevBtn">⏮️</button>
-                <button id="playBtn">▶️</button>
-                <button class="control-btn" id="nextBtn">⏭️</button>
-                <button class="control-btn" id="repeatBtn">🔁</button>
+                <button class="control-btn" id="shuffleBtn" onclick="toggleShuffle()">
+                    <i data-lucide="shuffle" style="width:18px;height:18px"></i>
+                </button>
+                <button class="control-btn" id="prevBtn" onclick="prevTrack()">
+                    <i data-lucide="skip-back" style="width:18px;height:18px"></i>
+                </button>
+                <button id="playBtn" onclick="togglePlay()">
+                    <i data-lucide="play" style="width:26px;height:26px"></i>
+                </button>
+                <button class="control-btn" id="nextBtn" onclick="nextTrack()">
+                    <i data-lucide="skip-forward" style="width:18px;height:18px"></i>
+                </button>
+                <button class="control-btn" id="repeatBtn" onclick="toggleRepeat()">
+                    <i data-lucide="repeat" style="width:18px;height:18px"></i>
+                </button>
             </div>
             <div class="volume-container">
-                <button id="muteBtn">🔊</button>
+                <button id="muteBtn" onclick="toggleMute()">
+                    <i data-lucide="volume-2" style="width:16px;height:16px"></i>
+                </button>
                 <input type="range" id="volumeBar" class="volume-bar" value="100" min="0" max="100">
             </div>
             <audio id="audioPlayer"></audio>
         </div>
 
-        <!-- Список треков -->
+        <!-- Track list -->
         <div class="track-list fade-in" id="trackList">
             <p>Загрузка...</p>
         </div>
 
-        <!-- Глобальный поиск -->
+        <!-- Global Search -->
         <div class="global-search-section fade-in">
-            <h2>🌍 Поиск музыки</h2>
+            <h2><i data-lucide="globe" style="width:20px;height:20px;vertical-align:middle"></i> Поиск музыки</h2>
             <div class="global-search-box">
                 <input type="text" id="globalSearchInput" placeholder="Исполнитель или трек..." autocomplete="off">
-                <button id="globalSearchBtn">🔍</button>
+                <button id="globalSearchBtn">
+                    <i data-lucide="search" style="width:18px;height:18px"></i>
+                </button>
             </div>
             <div id="globalSearchResults">
                 <p>Введите запрос для поиска</p>
@@ -97,19 +119,19 @@
     <!-- Bottom Navigation -->
     <nav class="bottom-nav">
         <button class="nav-item active" data-tab="home">
-            <span class="nav-icon">🏠</span>
+            <i data-lucide="home" class="nav-icon-svg"></i>
             <span>Главная</span>
         </button>
         <button class="nav-item" data-tab="library">
-            <span class="nav-icon">🎵</span>
+            <i data-lucide="library" class="nav-icon-svg"></i>
             <span>Библиотека</span>
         </button>
         <button class="nav-item" data-tab="search">
-            <span class="nav-icon">🔍</span>
+            <i data-lucide="search" class="nav-icon-svg"></i>
             <span>Поиск</span>
         </button>
         <button class="nav-item" data-tab="profile">
-            <span class="nav-icon">👤</span>
+            <i data-lucide="user" class="nav-icon-svg"></i>
             <span>Профиль</span>
         </button>
     </nav>
@@ -119,9 +141,12 @@
     <script src="audioPlayer.js"></script>
     <script src="playerUI.js"></script>
     <script src="searchMusic.js"></script>
-    <script src="mediaSession.js"></script>
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
     <script>
+        // Init Lucide icons after DOM ready
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) lucide.createIcons();
+        });
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/service-worker.js')
