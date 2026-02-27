@@ -59,6 +59,40 @@ let previousVolume = 1;
 let searchQuery = '';
 let sortMode = 'date';
 let allTracks = [];
+let currentObjectUrl = null; // для очистки Object URL
+
+// ===========================================
+// УТИЛИТЫ БЕЗОПАСНОСТИ
+// ===========================================
+
+// Защита от XSS при вставке пользовательских данных в HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Валидация URL обложки — только https и data:image
+function sanitizeCoverUrl(url) {
+    if (!url) return '';
+    try {
+        const parsed = new URL(url);
+        if (parsed.protocol === 'https:' || parsed.protocol === 'data:') {
+            return url;
+        }
+    } catch (e) {
+        // невалидный URL
+    }
+    return '';
+}
+
+// Очистка предыдущего Object URL
+function revokeCurrentObjectUrl() {
+    if (currentObjectUrl) {
+        URL.revokeObjectURL(currentObjectUrl);
+        currentObjectUrl = null;
+    }
+}
 
 // ===========================================
 // STICKY PLAYER
@@ -85,8 +119,9 @@ function initStickyPlayer() {
 function updateStickyPlayer(track) {
     if (!stickyPlayer) return;
     if (miniCover) {
-        if (track.cover) {
-            miniCover.style.backgroundImage = `url(${track.cover})`;
+        const coverUrl = sanitizeCoverUrl(track.cover);
+        if (coverUrl) {
+            miniCover.style.backgroundImage = `url(${coverUrl})`;
             miniCover.style.backgroundSize = 'cover';
             miniCover.classList.remove('no-cover');
         } else {
@@ -139,6 +174,7 @@ if (fileInput) {
         } catch (err) {
             uploadStatus.textContent = 'Ошибка загрузки';
         }
+
         fileInput.value = '';
     });
 }
@@ -151,21 +187,20 @@ async function loadTracks() {
         const res = await fetch(`${API_URL}/tracks`, { headers: authHeaders });
         if (!res.ok) {
             if (res.status === 401) {
-                trackList.innerHTML = '<p>⚠️ Откройте через Telegram</p>';
+                trackList.innerHTML = '<div class="empty-state">⚠️ Откройте через Telegram</div>';
                 return;
             }
             throw new Error(`HTTP ${res.status}`);
         }
-                // API теперь возвращает {tracks: [...], pagination: {...}}
+
         const data = await res.json();
-        // Обратная совместимость: если вернулся массив — используем как есть
         tracks = Array.isArray(data) ? data : data.tracks;
         allTracks = [...tracks];
         applySorting();
         renderTracks();
         if (isShuffled) generateShuffledIndices();
     } catch (err) {
-        trackList.innerHTML = `<p>❌ ${err.message}</p>`;
+        trackList.innerHTML = `<div class="empty-state">❌ ${escapeHtml(err.message)}</div>`;
     }
 }
 
@@ -173,7 +208,6 @@ async function loadTracks() {
 // СОРТИРОВКА И ФИЛЬТРАЦИЯ
 // ===========================================
 function applySorting() {
-    // Сначала фильтруем по поисковому запросу
     if (searchQuery) {
         const q = searchQuery.toLowerCase();
         tracks = allTracks.filter(t => t.name.toLowerCase().includes(q));
@@ -181,11 +215,9 @@ function applySorting() {
         tracks = [...allTracks];
     }
 
-    // Затем сортируем
     if (sortMode === 'name') {
         tracks.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
     } else {
-        // По дате — новые сверху
         tracks.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     }
 }
@@ -198,9 +230,9 @@ function renderTracks() {
 
     if (tracks.length === 0) {
         if (searchQuery) {
-            trackList.innerHTML = '<p>🔍 Ничего не найдено</p>';
+            trackList.innerHTML = '<div class="empty-state">🔍 Ничего не найдено</div>';
         } else {
-            trackList.innerHTML = '<p>🎵 Загрузи свой первый трек!</p>';
+            trackList.innerHTML = '<div class="empty-state">🎵 Загрузи свой первый трек!</div>';
         }
         return;
     }
@@ -209,27 +241,17 @@ function renderTracks() {
         const isActive = index === currentIndex;
         const isPlaying = isActive && !audio.paused;
 
-        // Эквалайзер-анимация для играющего трека
-        const equalizerHtml = isPlaying ? `
-            <div class="equalizer">
-                <div class="equalizer-bar"></div>
-                <div class="equalizer-bar"></div>
-                <div class="equalizer-bar"></div>
-                <div class="equalizer-bar"></div>
-            </div>` : '';
+        const equalizerHtml = isPlaying ? `<div class="equalizer"><span></span><span></span><span></span></div>` : '';
 
-        return `
-            <div class="track-item ${isActive ? 'active' : ''}" onclick="playTrack(${index})">
-                <div class="track-number">${index + 1}</div>
-                <div class="track-cover no-cover"></div>
-                <div class="track-info-item">
-                    <div class="track-name">${escapeHtml(track.name)}</div>
-                    <div class="track-artist-small">Арабутка</div>
-                </div>
-                ${equalizerHtml}
-                <button class="track-delete" onclick="event.stopPropagation(); deleteTrack(${track.id})">🗑️</button>
+        return `<div class="track-item ${isActive ? 'active' : ''}" onclick="playTrack(${index})">
+            <span class="track-number">${index + 1}</span>
+            <div class="track-info">
+                <div class="track-name">${escapeHtml(track.name)}</div>
+                <div class="track-artist">Арабутка</div>
             </div>
-        `;
+            ${equalizerHtml}
+            <button class="delete-btn" onclick="event.stopPropagation(); deleteTrack(${Number(track.id)})">🗑️</button>
+        </div>`;
     }).join('');
 }
 
@@ -238,29 +260,29 @@ function renderTracks() {
 // ===========================================
 async function playTrack(index) {
     if (index < 0 || index >= tracks.length) return;
-
     currentIndex = index;
     const track = tracks[currentIndex];
 
-        try {
-      const resp = await fetch(`${API_URL}/stream/${track.id}`, { headers: authHeaders });
-      const blob = await resp.blob();
-      audio.src = URL.createObjectURL(blob);
-      audio.play();
+    try {
+        const resp = await fetch(`${API_URL}/stream/${track.id}`, { headers: authHeaders });
+        const blob = await resp.blob();
+
+        // Очищаем предыдущий Object URL для предотвращения утечки памяти
+        revokeCurrentObjectUrl();
+        currentObjectUrl = URL.createObjectURL(blob);
+        audio.src = currentObjectUrl;
+        audio.play();
     } catch (err) {
-      console.error('Ошибка воспроизведения:', err);
+        console.error('Ошибка воспроизведения:', err);
     }
 
-    // Обновляем основной плеер
     if (trackTitle) trackTitle.textContent = track.name;
     if (trackArtist) trackArtist.textContent = 'Арабутка';
-
     updatePlayButton(true);
     updateCoverAnimation(true);
     updateStickyPlayer(track);
     renderTracks();
 
-    // Обновляем метаданные для экрана блокировки
     if (mediaSessionManager) {
         mediaSessionManager.updateMetadata({
             name: track.name,
@@ -273,7 +295,6 @@ async function playTrack(index) {
 
 function togglePlay() {
     if (!audio.src || tracks.length === 0) {
-        // Если ничего не выбрано — начинаем с первого трека
         if (tracks.length > 0) {
             playTrack(0);
         }
@@ -289,8 +310,8 @@ function togglePlay() {
 
 function nextTrack() {
     if (tracks.length === 0) return;
-
     let nextIndex;
+
     if (isShuffled && shuffledIndices.length > 0) {
         const pos = shuffledIndices.indexOf(currentIndex);
         const nextPos = (pos + 1) % shuffledIndices.length;
@@ -305,7 +326,6 @@ function nextTrack() {
 function prevTrack() {
     if (tracks.length === 0) return;
 
-    // Если прошло больше 3 секунд — перематываем в начало текущего трека
     if (audio.currentTime > 3) {
         audio.currentTime = 0;
         return;
@@ -352,7 +372,6 @@ function toggleShuffle() {
     isShuffled = !isShuffled;
     const btn = document.getElementById('shuffleBtn');
     if (btn) btn.classList.toggle('active', isShuffled);
-
     if (isShuffled) {
         generateShuffledIndices();
     }
@@ -360,7 +379,6 @@ function toggleShuffle() {
 
 function generateShuffledIndices() {
     shuffledIndices = tracks.map((_, i) => i);
-    // Алгоритм Фишера-Йейтса для честного перемешивания
     for (let i = shuffledIndices.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [shuffledIndices[i], shuffledIndices[j]] = [shuffledIndices[j], shuffledIndices[i]];
@@ -371,11 +389,9 @@ function toggleRepeat() {
     const modes = ['none', 'all', 'one'];
     const idx = modes.indexOf(repeatMode);
     repeatMode = modes[(idx + 1) % modes.length];
-
     const btn = document.getElementById('repeatBtn');
     if (btn) {
         btn.classList.toggle('active', repeatMode !== 'none');
-        // Разные иконки для разных режимов повтора
         btn.textContent = repeatMode === 'one' ? '🔂' : '🔁';
     }
 }
@@ -411,13 +427,6 @@ function updatePlayButton(isPlaying) {
     if (miniPlayBtn) miniPlayBtn.textContent = isPlaying ? '⏸️' : '▶️';
 }
 
-// Защита от XSS при вставке пользовательских данных в HTML
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
 // ===========================================
 // ОБРАБОТЧИКИ АУДИО-СОБЫТИЙ
 // ===========================================
@@ -435,14 +444,11 @@ audio.addEventListener('loadedmetadata', () => {
 
 audio.addEventListener('ended', () => {
     if (repeatMode === 'one') {
-        // Повтор одного трека — перемотать и играть заново
         audio.currentTime = 0;
         audio.play();
     } else if (repeatMode === 'all' || currentIndex < tracks.length - 1) {
-        // Повтор всех или есть ещё треки — переключить на следующий
         nextTrack();
     } else {
-        // Плейлист кончился — остановить
         updatePlayButton(false);
         updateCoverAnimation(false);
         if (mediaSessionManager) mediaSessionManager.updatePlaybackState('paused');
@@ -463,11 +469,16 @@ audio.addEventListener('pause', () => {
     if (mediaSessionManager) mediaSessionManager.updatePlaybackState('paused');
 });
 
+audio.addEventListener('error', () => {
+    const err = audio.error;
+    const msg = err ? `Ошибка аудио: code=${err.code}` : 'Неизвестная ошибка';
+    console.error(msg);
+    if (trackTitle) trackTitle.textContent = msg;
+});
+
 // ===========================================
 // ОБРАБОТЧИКИ UI-ЭЛЕМЕНТОВ
 // ===========================================
-
-// Перемотка через прогресс-бар
 if (progressBar) {
     progressBar.addEventListener('input', () => {
         if (!audio.duration) return;
@@ -475,18 +486,15 @@ if (progressBar) {
     });
 }
 
-// Регулировка громкости
 if (volumeBar) {
     volumeBar.addEventListener('input', () => {
         audio.volume = volumeBar.value / 100;
         if (muteBtn) {
-            muteBtn.textContent = audio.volume === 0 ? '🔇' :
-                                  audio.volume < 0.5 ? '🔉' : '🔊';
+            muteBtn.textContent = audio.volume === 0 ? '🔇' : audio.volume < 0.5 ? '🔉' : '🔊';
         }
     });
 }
 
-// Живой поиск по названию
 const searchInput = document.getElementById('searchInput');
 const clearSearch = document.getElementById('clearSearch');
 
@@ -509,7 +517,6 @@ if (clearSearch) {
     });
 }
 
-// Кнопки сортировки
 const sortByName = document.getElementById('sortByName');
 const sortByDate = document.getElementById('sortByDate');
 
@@ -535,10 +542,6 @@ if (sortByDate) {
 
 // ===========================================
 // ЭКСПОРТ В WINDOW
-// Нужен потому что app.js подключён как ES-модуль
-// (type="module"), а onclick в HTML не видит
-// функции из модуля — они живут в своём scope.
-// Поэтому вешаем их на window вручную.
 // ===========================================
 window.togglePlay = togglePlay;
 window.prevTrack = prevTrack;
@@ -552,7 +555,6 @@ window.deleteTrack = deleteTrack;
 // ===========================================
 // ИНИЦИАЛИЗАЦИЯ
 // ===========================================
-// Nav-bar — плавный скролл к секциям
 const navHome = document.getElementById('navHome');
 const navLibrary = document.getElementById('navLibrary');
 const navSearch = document.getElementById('navSearch');
@@ -567,46 +569,35 @@ if (navHome) navHome.addEventListener('click', () => {
     setActiveNav(navHome);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 });
+
 if (navLibrary) navLibrary.addEventListener('click', () => {
     setActiveNav(navLibrary);
     const trackSection = document.getElementById('trackList');
     if (trackSection) trackSection.scrollIntoView({ behavior: 'smooth' });
 });
+
 if (navSearch) navSearch.addEventListener('click', () => {
     setActiveNav(navSearch);
     const globalSection = document.getElementById('globalSearchSection');
     if (globalSection) {
-        globalSection.style.display = globalSection.style.display === 'none' ? 'block' : 'block';
+        globalSection.style.display = 'block';
         globalSection.scrollIntoView({ behavior: 'smooth' });
         const input = document.getElementById('globalSearchInput');
         if (input) setTimeout(() => input.focus(), 400);
     }
 });
+
 if (navProfile) navProfile.addEventListener('click', () => {
     setActiveNav(navProfile);
-    // Пока показываем информацию о пользователе из Telegram
     const user = tg.initDataUnsafe?.user;
     if (user) {
-        alert(`👤 ${user.first_name || ''} ${user.last_name || ''}\n🆔 ID: ${user.id}\n📊 Треков: ${tracks.length}`);
+        const name = escapeHtml(`${user.first_name || ''} ${user.last_name || ''}`.trim());
+        alert(`👤 ${name}\n🆔 ID: ${user.id}\n📊 Треков: ${tracks.length}`);
     }
 });
 
 initStickyPlayer();
 loadTracks();
-
-// === ДИАГНОСТИКА (временно) ===
-fetch(`${API_URL}/debug/tracks?initData=${encodeURIComponent(initData)}`)
-    .then(r => r.json())
-        .then(data => { document.title = `DB: ${data.count} треков, ${data.tracks?.map(t => t.url_type).join(',')}`; })
-    .catch(err => console.log('[DEBUG] Ошибка:', err));
-
-// === ОТЛАДКА АУДИО (временно) ===
-audio.addEventListener('error', (e) => {
-    const err = audio.error;
-    const msg = err ? `Ошибка аудио: code=${err.code}, msg=${err.message}` : 'Неизвестная ошибка';
-    document.title = msg;
-    if (trackTitle) trackTitle.textContent = msg;
-});
 
 // ===========================================
 // ГЛОБАЛЬНЫЙ ПОИСК МУЗЫКИ
@@ -622,49 +613,46 @@ audio.addEventListener('error', (e) => {
 
     async function performSearch(query) {
         if (!query || query.trim().length < 2) {
-            resultsContainer.innerHTML = '<p class="search-placeholder">Введите запрос для поиска</p>';
+            resultsContainer.innerHTML = '<div class="search-placeholder">Введите запрос для поиска</div>';
             return;
         }
 
         resultsContainer.innerHTML = '<div class="search-loading"></div>';
 
         try {
-                        const res = await fetch(`${API_URL}/api/search/all?q=${encodeURIComponent(query.trim())}`, {
+            const res = await fetch(`${API_URL}/api/search/all?q=${encodeURIComponent(query.trim())}`, {
                 headers: authHeaders
             });
             const data = await res.json();
             const results = data.results || data.tracks || data || [];
 
             if (!Array.isArray(results) || results.length === 0) {
-                resultsContainer.innerHTML = '<p class="search-placeholder">Ничего не найдено</p>';
+                resultsContainer.innerHTML = '<div class="search-placeholder">Ничего не найдено</div>';
                 return;
             }
 
             resultsContainer.innerHTML = results.map((track, i) => {
                 const title = escapeHtml(track.name || track.title || 'Без названия');
                 const artist = escapeHtml(track.artist || 'Неизвестный');
-                const cover = track.cover || '';
-                const coverHtml = cover
-                    ? `<img class="search-result-cover" src="${cover}" alt="">`
-                    : `<div class="search-result-cover"></div>`;
+                const coverUrl = sanitizeCoverUrl(track.cover);
+                const coverHtml = coverUrl
+                    ? `<img class="search-result-cover" src="${escapeHtml(coverUrl)}" alt="" loading="lazy">`
+                    : `<div class="search-result-cover no-cover"></div>`;
+
                 return `<div class="search-result-item">
                     ${coverHtml}
                     <div class="search-result-info">
                         <div class="search-result-title">${title}</div>
                         <div class="search-result-artist">${artist}</div>
                     </div>
-                    <div class="search-result-actions">
-                        <button class="search-result-btn play-btn" onclick="playSearchResult(${i})" title="Воспроизвести">▶️</button>
-                        ${!track.isDownloaded ? `<button class="search-result-btn" onclick="downloadSearchResult(${i})" title="Скачать">⬇️</button>` : ''}
-                    </div>
+                    <button class="search-result-btn play-btn" onclick="playSearchResult(${i})">▶️</button>
+                    ${!track.isDownloaded ? `<button class="search-result-btn" onclick="downloadSearchResult(${i})">⬇️</button>` : ''}
                 </div>`;
             }).join('');
 
-            // Сохраняем результаты для воспроизведения
             window._searchResults = results;
-
         } catch (err) {
-            resultsContainer.innerHTML = `<p class="search-placeholder">Ошибка поиска: ${escapeHtml(err.message)}</p>`;
+            resultsContainer.innerHTML = `<div class="search-placeholder">Ошибка поиска: ${escapeHtml(err.message)}</div>`;
         }
     }
 
@@ -679,7 +667,6 @@ audio.addEventListener('error', (e) => {
         }
     });
 
-    // Автопоиск с задержкой
     searchInput.addEventListener('input', () => {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => {
@@ -688,14 +675,16 @@ audio.addEventListener('error', (e) => {
     });
 })();
 
-// Воспроизведение трека из результатов поиска
 function playSearchResult(index) {
     const results = window._searchResults;
     if (!results || !results[index]) return;
     const track = results[index];
+
     if (track.url) {
+        revokeCurrentObjectUrl();
         audio.src = track.url;
         audio.play().catch(err => console.log('Ошибка:', err));
+
         if (trackTitle) trackTitle.textContent = track.name || track.title || 'Без названия';
         if (trackArtist) trackArtist.textContent = track.artist || 'Неизвестный';
         updatePlayButton(true);
@@ -703,15 +692,14 @@ function playSearchResult(index) {
         updateStickyPlayer(track);
     }
 }
+
 window.playSearchResult = playSearchResult;
 
-// Скачивание трека из результатов поиска в библиотеку
 async function downloadSearchResult(index) {
     const results = window._searchResults;
     if (!results || !results[index]) return;
     const track = results[index];
 
-    // Находим кнопку и показываем прогресс
     const btns = document.querySelectorAll('.search-result-item');
     const btn = btns[index]?.querySelector('.search-result-btn:not(.play-btn)');
     if (btn) {
@@ -722,10 +710,7 @@ async function downloadSearchResult(index) {
     try {
         const res = await fetch(`${API_URL}/api/search/download`, {
             method: 'POST',
-            headers: {
-                ...authHeaders,
-                'Content-Type': 'application/json'
-            },
+            headers: { ...authHeaders, 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 previewUrl: track.previewUrl || track.url,
                 title: track.title || track.name,
@@ -738,7 +723,6 @@ async function downloadSearchResult(index) {
                 btn.textContent = '✅';
                 btn.title = 'Добавлено';
             }
-            // Обновляем библиотеку
             loadTracks();
         } else {
             if (btn) btn.textContent = '❌';
@@ -749,4 +733,5 @@ async function downloadSearchResult(index) {
         console.error('Ошибка:', err);
     }
 }
+
 window.downloadSearchResult = downloadSearchResult;
