@@ -245,7 +245,7 @@ const upload = multer({
     const isMimeOk = ALLOWED_MIMES.includes(file.mimetype);
     const ext = '.' + file.originalname.split('.').pop().toLowerCase();
     const isExtOk = ALLOWED_EXTENSIONS.includes(ext);
-    if (isMimeOk || isExtOk) {
+    if (isMimeOk && isExtOk) {
       cb(null, true);
     } else {
       cb(new Error('Неподдерживаемый формат. Разрешены: MP3, WAV, OGG, M4A, AAC'));
@@ -500,6 +500,13 @@ app.get('/stream/:trackId', authMiddleware, async (req, res) => {
     if (!s3_key) {
       if (!url) return res.status(404).json({ error: 'Файл не найден в хранилище' });
       logger.warn(`[stream] Нет s3_key для трека ${trackId}, проксируем url`);
+            // SSRF-защита: проверяем URL перед проксированием
+      const parsedUrl = new URL(url);
+      const allowedHosts = ['selcloud.ru', 'cloudinary.com', 'res.cloudinary.com'];
+      if (!allowedHosts.some(h => parsedUrl.hostname.endsWith(h))) {
+        logger.error(`[stream] SSRF blocked: ${url}`);
+        return res.status(403).json({ error: 'Запрещённый URL' });
+      }
       const axiosRes = await axios.get(url, { responseType: 'stream' });
       res.setHeader('Content-Type', axiosRes.headers['content-type'] || 'audio/mpeg');
       res.setHeader('Accept-Ranges', 'bytes');
@@ -527,6 +534,13 @@ app.get('/stream/:trackId', authMiddleware, async (req, res) => {
       if (s3Error.name === 'NoSuchKey' || s3Error.name === 'AccessDenied') {
         if (!url) throw s3Error;
         logger.warn(`[stream] ${s3Error.name} для ${s3_key}, проксируем url`);
+                  // SSRF-защита: проверяем URL перед проксированием
+          const fallbackUrl = new URL(url);
+          const safeHosts = ['selcloud.ru', 'cloudinary.com', 'res.cloudinary.com'];
+          if (!safeHosts.some(h => fallbackUrl.hostname.endsWith(h))) {
+            logger.error(`[stream] SSRF blocked in fallback: ${url}`);
+            throw new Error('SSRF blocked');
+          }
         const axiosRes = await axios.get(url, { responseType: 'stream' });
         res.setHeader('Content-Type', axiosRes.headers['content-type'] || 'audio/mpeg');
         res.setHeader('Accept-Ranges', 'bytes');
