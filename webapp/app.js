@@ -243,7 +243,7 @@ function renderTracks() {
 
         const equalizerHtml = isPlaying ? `<div class="equalizer"><span></span><span></span><span></span></div>` : '';
 
-        return `<div class="track-item ${isActive ? 'active' : ''}" onclick="playTrack(${index})">
+        return `<div class="track-item ${isActive ? 'active' : ''}" data-swipe-index="${index}" onclick="playTrack(${index})">
             <span class="track-number">${index + 1}</span>
             <div class="track-info">
                 <div class="track-name">${escapeHtml(track.name)}</div>
