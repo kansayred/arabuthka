@@ -735,3 +735,128 @@ async function downloadSearchResult(index) {
 }
 
 window.downloadSearchResult = downloadSearchResult;
+
+
+// ===========================================
+// TOAST NOTIFICATIONS
+// ===========================================
+function showToast(message, duration = 2000) {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+    toast.textContent = message;
+    toast.classList.add('visible');
+    // Haptic feedback
+    if (tg.HapticFeedback) {
+        tg.HapticFeedback.notificationOccurred('success');
+    }
+    setTimeout(() => toast.classList.remove('visible'), duration);
+}
+window.showToast = showToast;
+
+// ===========================================
+// SWIPE GESTURES FOR TRACK ITEMS
+// ===========================================
+(function initSwipeGestures() {
+    const trackListEl = document.getElementById('trackList');
+    if (!trackListEl) return;
+
+    let startX = 0;
+    let startY = 0;
+    let currentEl = null;
+    let isDragging = false;
+    const THRESHOLD = 70;
+
+    trackListEl.addEventListener('touchstart', (e) => {
+        const item = e.target.closest('.track-item');
+        if (!item) return;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        currentEl = item;
+        isDragging = false;
+        item.classList.remove('snap-back');
+        item.classList.add('swiping');
+    }, { passive: true });
+
+    trackListEl.addEventListener('touchmove', (e) => {
+        if (!currentEl) return;
+        const dx = e.touches[0].clientX - startX;
+        const dy = e.touches[0].clientY - startY;
+        // Ignore vertical scrolling
+        if (!isDragging && Math.abs(dy) > Math.abs(dx)) {
+            currentEl = null;
+            return;
+        }
+        isDragging = true;
+        // Clamp between -120 and 120
+        const clampedDx = Math.max(-120, Math.min(120, dx));
+        currentEl.style.transform = `translateX(${clampedDx}px)`;
+    }, { passive: true });
+
+    trackListEl.addEventListener('touchend', () => {
+        if (!currentEl) return;
+        const transform = currentEl.style.transform;
+        const match = transform.match(/translateX\(([\-\d.]+)px\)/);
+        const dx = match ? parseFloat(match[1]) : 0;
+
+        currentEl.classList.remove('swiping');
+        currentEl.classList.add('snap-back');
+
+        if (dx > THRESHOLD) {
+            // Swipe right => Like / add to favorites
+            showToast('\u2764\ufe0f \u0414\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u043e \u0432 \u0438\u0437\u0431\u0440\u0430\u043d\u043d\u043e\u0435');
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+        } else if (dx < -THRESHOLD) {
+            // Swipe left => Delete
+            const index = currentEl.getAttribute('data-swipe-index');
+            if (index !== null && tracks[index]) {
+                deleteTrack(tracks[index].id);
+            }
+        }
+
+        currentEl.style.transform = 'translateX(0)';
+        currentEl = null;
+        isDragging = false;
+    }, { passive: true });
+})();
+
+// ===========================================
+// BOTTOM NAV WITH DATA-TAB
+// ===========================================
+(function initBottomNav() {
+    const navItems = document.querySelectorAll('.nav-item[data-tab]');
+    if (!navItems.length) return;
+
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            navItems.forEach(n => n.classList.remove('active'));
+            item.classList.add('active');
+
+            const tab = item.getAttribute('data-tab');
+            switch (tab) {
+                case 'home':
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    break;
+                case 'library':
+                    const tl = document.getElementById('trackList');
+                    if (tl) tl.scrollIntoView({ behavior: 'smooth' });
+                    break;
+                case 'search':
+                    const gs = document.querySelector('.global-search-section');
+                    if (gs) {
+                        gs.scrollIntoView({ behavior: 'smooth' });
+                        const inp = document.getElementById('globalSearchInput');
+                        if (inp) setTimeout(() => inp.focus(), 400);
+                    }
+                    break;
+                case 'profile':
+                    const user = tg.initDataUnsafe?.user;
+                    if (user) {
+                        showToast(`\ud83d\udc64 ${user.first_name || ''} \u2022 ${tracks.length} \u0442\u0440\u0435\u043a\u043e\u0432`);
+                    }
+                    break;
+            }
+
+            if (tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
+        });
+    });
+})();
