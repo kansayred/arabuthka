@@ -6,7 +6,7 @@
     <title>Арабутка</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -39,111 +39,94 @@
             <div class="search-box">
                 <span class="search-icon">🔍</span>
                 <input type="text" id="searchInput" placeholder="Найти трек..." autocomplete="off">
-                <button id="clearSearch" class="clear-btn" style="display: none;">✕</button>
+                <button class="clear-btn" id="clearSearch">✕</button>
             </div>
             <div class="sort-buttons">
-                <button id="sortByName" class="sort-btn">🅰️ По имени</button>
-                <button id="sortByDate" class="sort-btn active">📅 По дате</button>
+                <button class="sort-btn active" data-sort="name">🅰️ По имени</button>
+                <button class="sort-btn" data-sort="date">📅 По дате</button>
             </div>
         </div>
 
         <!-- Плеер -->
-        <section class="player-section fade-in-up">
-            <div id="coverArt" class="cover-art cover-spinning paused no-cover"></div>
-            
+        <div class="player-section fade-in">
+            <div class="cover-art no-cover" id="coverArt"></div>
             <div class="track-info">
-                <div id="trackTitle" class="track-title">Выбери трек</div>
-                <div id="trackArtist" class="track-artist">Арабутка</div>
+                <div class="track-title" id="trackTitle">Арабутка</div>
+                <div class="track-artist" id="trackArtist"></div>
             </div>
-
             <div class="progress-container">
-                <span id="currentTime" class="time">0:00</span>
+                <span class="time" id="currentTime">0:00</span>
                 <input type="range" id="progressBar" class="progress-bar" value="0" min="0" max="100">
-                <span id="duration" class="time">0:00</span>
+                <span class="time" id="duration">0:00</span>
             </div>
-
             <div class="controls">
-                <button id="shuffleBtn" class="control-btn" onclick="toggleShuffle()" title="Перемешать">🔀</button>
-                <button id="prevBtn" class="control-btn" onclick="prevTrack()" title="Назад">⏮️</button>
-                <button id="playBtn" onclick="togglePlay()" title="Воспроизвести">▶️</button>
-                <button id="nextBtn" class="control-btn" onclick="nextTrack()" title="Вперёд">⏭️</button>
-                <button id="repeatBtn" class="control-btn" onclick="toggleRepeat()" title="Повтор">🔁</button>
+                <button class="control-btn" id="shuffleBtn">🔀</button>
+                <button class="control-btn" id="prevBtn">⏮️</button>
+                <button id="playBtn">▶️</button>
+                <button class="control-btn" id="nextBtn">⏭️</button>
+                <button class="control-btn" id="repeatBtn">🔁</button>
             </div>
-
             <div class="volume-container">
-                <button id="muteBtn" onclick="toggleMute()">🔊</button>
+                <button id="muteBtn">🔊</button>
                 <input type="range" id="volumeBar" class="volume-bar" value="100" min="0" max="100">
             </div>
-        </section>
+            <audio id="audioPlayer"></audio>
+        </div>
 
         <!-- Список треков -->
-        <section class="track-list fade-in" id="trackList">
+        <div class="track-list fade-in" id="trackList">
             <p>Загрузка...</p>
-        </section>
+        </div>
 
-                <!-- Глобальный поиск музыки -->
-        <section class="global-search-section fade-in" id="globalSearchSection" style="display: none;">
-            <div class="global-search-header">
-                <h2>🌍 Поиск музыки</h2>
-            </div>
+        <!-- Глобальный поиск -->
+        <div class="global-search-section fade-in">
+            <h2>🌍 Поиск музыки</h2>
             <div class="global-search-box">
                 <input type="text" id="globalSearchInput" placeholder="Исполнитель или трек..." autocomplete="off">
                 <button id="globalSearchBtn">🔍</button>
             </div>
-            <div id="globalSearchResults" class="global-search-results">
-                <p class="search-placeholder">Введите запрос для поиска</p>
+            <div id="globalSearchResults">
+                <p>Введите запрос для поиска</p>
             </div>
-        </section>
-
-        <audio id="audioPlayer"></audio>
-    </div>
-
-    <!-- Sticky-плеер -->
-    <div class="sticky-player hidden" id="stickyPlayer">
-        <div class="mini-cover no-cover" id="miniCover"></div>
-        <div class="mini-info">
-            <div class="mini-title" id="miniTitle"></div>
-            <div class="mini-artist" id="miniArtist"></div>
-        </div>
-        <div class="mini-controls">
-            <button class="mini-btn" id="miniPlayBtn">▶️</button>
         </div>
     </div>
 
-    <!-- Волнистый Nav-bar -->
-    <nav class="wave-nav">
-        <svg class="wave-svg" viewBox="0 0 1440 50" preserveAspectRatio="none">
-            <path d="M0,50 C360,0 1080,0 1440,50 L1440,50 L0,50 Z"></path>
-        </svg>
-        <div class="nav-content">
-            <button class="nav-item active" id="navHome">
-                <span class="nav-icon">🏠</span>
-                <span class="nav-label">Главная</span>
-            </button>
-            <button class="nav-item" id="navLibrary">
-                <span class="nav-icon">🎵</span>
-                <span class="nav-label">Библиотека</span>
-            </button>
-            <button class="nav-item" id="navSearch">
-                <span class="nav-icon">🔍</span>
-                <span class="nav-label">Поиск</span>
-            </button>
-            <button class="nav-item" id="navProfile">
-                <span class="nav-icon">👤</span>
-                <span class="nav-label">Профиль</span>
-            </button>
-        </div>
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" data-tab="home">
+            <span class="nav-icon">🏠</span>
+            <span>Главная</span>
+        </button>
+        <button class="nav-item" data-tab="library">
+            <span class="nav-icon">🎵</span>
+            <span>Библиотека</span>
+        </button>
+        <button class="nav-item" data-tab="search">
+            <span class="nav-icon">🔍</span>
+            <span>Поиск</span>
+        </button>
+        <button class="nav-item" data-tab="profile">
+            <span class="nav-icon">👤</span>
+            <span>Профиль</span>
+        </button>
     </nav>
 
-    <script type="module" src="app.js"></script>
-    
-    <!-- Service Worker -->
+    <script src="config.js"></script>
+    <script src="utils.js"></script>
+    <script src="audioPlayer.js"></script>
+    <script src="playerUI.js"></script>
+    <script src="searchMusic.js"></script>
+    <script src="mediaSession.js"></script>
+    <script src="app.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/service-worker.js')
-                    .then(reg => console.log('✅ SW:', reg.scope))
-                    .catch(err => console.error('❌ SW:', err));
+                    .then(reg => console.log('SW:', reg.scope))
+                    .catch(err => console.error('SW:', err));
             });
         }
     </script>
