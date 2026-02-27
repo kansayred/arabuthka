@@ -219,9 +219,10 @@ router.post('/:id/tracks', async (req, res) => {
       return res.status(400).json({ error: 'Неверный ID плейлиста' });
     }
     const { trackId } = req.body;
+        const parsedTrackId = parseInt(trackId);
 
-    if (!trackId) {
-      return res.status(400).json({ error: 'trackId обязателен' });
+        if (!trackId || isNaN(parsedTrackId) || parsedTrackId < 1) {
+            return res.status(400).json({ error: 'trackId обязателен и должен быть целым числом' });
     }
 
     // Проверяем владельца плейлиста
