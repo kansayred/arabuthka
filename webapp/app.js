@@ -1,4 +1,4 @@
-// Арабутка — Театральный редизайн
+// Арабутка — Light Neon
 const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
@@ -34,13 +34,6 @@ const volumeBar = document.getElementById('volumeBar');
 const playBtn = document.getElementById('playBtn');
 const muteBtn = document.getElementById('muteBtn');
 
-// Sticky Player
-const stickyPlayer = document.getElementById('stickyPlayer');
-const miniCover = document.getElementById('miniCover');
-const miniTitle = document.getElementById('miniTitle');
-const miniArtist = document.getElementById('miniArtist');
-const miniPlayBtn = document.getElementById('miniPlayBtn');
-
 // Media Session
 let mediaSessionManager = null;
 if (typeof MediaSessionManager !== 'undefined' && MediaSessionManager.isSupported()) {
@@ -59,20 +52,17 @@ let previousVolume = 1;
 let searchQuery = '';
 let sortMode = 'date';
 let allTracks = [];
-let currentObjectUrl = null; // для очистки Object URL
+let currentObjectUrl = null;
 
 // ===========================================
 // УТИЛИТЫ БЕЗОПАСНОСТИ
 // ===========================================
-
-// Защита от XSS при вставке пользовательских данных в HTML
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
 }
 
-// Валидация URL обложки — только https и data:image
 function sanitizeCoverUrl(url) {
     if (!url) return '';
     try {
@@ -80,13 +70,10 @@ function sanitizeCoverUrl(url) {
         if (parsed.protocol === 'https:' || parsed.protocol === 'data:') {
             return url;
         }
-    } catch (e) {
-        // невалидный URL
-    }
+    } catch (e) {}
     return '';
 }
 
-// Очистка предыдущего Object URL
 function revokeCurrentObjectUrl() {
     if (currentObjectUrl) {
         URL.revokeObjectURL(currentObjectUrl);
@@ -95,42 +82,22 @@ function revokeCurrentObjectUrl() {
 }
 
 // ===========================================
-// STICKY PLAYER
+// LUCIDE ICON HELPERS
 // ===========================================
-function initStickyPlayer() {
-    if (!stickyPlayer) return;
-    const playerSection = document.querySelector('.player-section');
-    if (!playerSection) return;
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                stickyPlayer.classList.add('hidden');
-            } else if (tracks.length > 0 && !audio.paused) {
-                stickyPlayer.classList.remove('hidden');
-            }
-        });
-    }, { threshold: 0.1 });
-
-    observer.observe(playerSection);
-    if (miniPlayBtn) miniPlayBtn.addEventListener('click', togglePlay);
+function setLucideIcon(element, iconName) {
+    if (!element) return;
+    element.innerHTML = `<i data-lucide="${iconName}"></i>`;
+    if (window.lucide) lucide.createIcons({ nodes: [element] });
 }
 
-function updateStickyPlayer(track) {
-    if (!stickyPlayer) return;
-    if (miniCover) {
-        const coverUrl = sanitizeCoverUrl(track.cover);
-        if (coverUrl) {
-            miniCover.style.backgroundImage = `url(${coverUrl})`;
-            miniCover.style.backgroundSize = 'cover';
-            miniCover.classList.remove('no-cover');
-        } else {
-            miniCover.style.backgroundImage = '';
-            miniCover.classList.add('no-cover');
-        }
-    }
-    if (miniTitle) miniTitle.textContent = track.name;
-    if (miniArtist) miniArtist.textContent = track.artist || 'Арабутка';
+function updatePlayButton(isPlaying) {
+    setLucideIcon(playBtn, isPlaying ? 'pause' : 'play');
+}
+
+function updateMuteIcon(vol) {
+    if (!muteBtn) return;
+    const icon = vol === 0 ? 'volume-x' : vol < 0.5 ? 'volume-1' : 'volume-2';
+    setLucideIcon(muteBtn, icon);
 }
 
 // ===========================================
@@ -152,11 +119,9 @@ if (fileInput) {
     fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-
         uploadStatus.textContent = 'Загрузка...';
         const formData = new FormData();
         formData.append('track', file);
-
         try {
             const res = await fetch(`${API_URL}/upload`, {
                 method: 'POST',
@@ -174,7 +139,6 @@ if (fileInput) {
         } catch (err) {
             uploadStatus.textContent = 'Ошибка загрузки';
         }
-
         fileInput.value = '';
     });
 }
@@ -192,7 +156,6 @@ async function loadTracks() {
             }
             throw new Error(`HTTP ${res.status}`);
         }
-
         const data = await res.json();
         tracks = Array.isArray(data) ? data : data.tracks;
         allTracks = [...tracks];
@@ -214,7 +177,6 @@ function applySorting() {
     } else {
         tracks = [...allTracks];
     }
-
     if (sortMode === 'name') {
         tracks.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
     } else {
@@ -227,7 +189,6 @@ function applySorting() {
 // ===========================================
 function renderTracks() {
     if (!trackList) return;
-
     if (tracks.length === 0) {
         if (searchQuery) {
             trackList.innerHTML = '<div class="empty-state">🔍 Ничего не найдено</div>';
@@ -236,23 +197,23 @@ function renderTracks() {
         }
         return;
     }
-
     trackList.innerHTML = tracks.map((track, index) => {
         const isActive = index === currentIndex;
         const isPlaying = isActive && !audio.paused;
-
-        const equalizerHtml = isPlaying ? `<div class="equalizer"><span></span><span></span><span></span></div>` : '';
-
+        const equalizerHtml = isPlaying ? `<div class="equalizer"><div class="equalizer-bar"></div><div class="equalizer-bar"></div><div class="equalizer-bar"></div><div class="equalizer-bar"></div></div>` : '';
         return `<div class="track-item ${isActive ? 'active' : ''}" data-swipe-index="${index}" onclick="playTrack(${index})">
             <span class="track-number">${index + 1}</span>
-            <div class="track-info">
+            <div class="track-info-item">
                 <div class="track-name">${escapeHtml(track.name)}</div>
-                <div class="track-artist">Арабутка</div>
+                <div class="track-artist-small">Арабутка</div>
             </div>
             ${equalizerHtml}
-            <button class="delete-btn" onclick="event.stopPropagation(); deleteTrack(${Number(track.id)})">🗑️</button>
+            <button class="track-delete" onclick="event.stopPropagation(); deleteTrack(${Number(track.id)})">
+                <i data-lucide="trash-2" style="width:14px;height:14px"></i>
+            </button>
         </div>`;
     }).join('');
+    if (window.lucide) lucide.createIcons();
 }
 
 // ===========================================
@@ -262,12 +223,9 @@ async function playTrack(index) {
     if (index < 0 || index >= tracks.length) return;
     currentIndex = index;
     const track = tracks[currentIndex];
-
     try {
         const resp = await fetch(`${API_URL}/stream/${track.id}`, { headers: authHeaders });
         const blob = await resp.blob();
-
-        // Очищаем предыдущий Object URL для предотвращения утечки памяти
         revokeCurrentObjectUrl();
         currentObjectUrl = URL.createObjectURL(blob);
         audio.src = currentObjectUrl;
@@ -275,14 +233,11 @@ async function playTrack(index) {
     } catch (err) {
         console.error('Ошибка воспроизведения:', err);
     }
-
     if (trackTitle) trackTitle.textContent = track.name;
     if (trackArtist) trackArtist.textContent = 'Арабутка';
     updatePlayButton(true);
     updateCoverAnimation(true);
-    updateStickyPlayer(track);
     renderTracks();
-
     if (mediaSessionManager) {
         mediaSessionManager.updateMetadata({
             name: track.name,
@@ -300,7 +255,6 @@ function togglePlay() {
         }
         return;
     }
-
     if (audio.paused) {
         audio.play().catch(err => console.log('Ошибка воспроизведения:', err));
     } else {
@@ -311,7 +265,6 @@ function togglePlay() {
 function nextTrack() {
     if (tracks.length === 0) return;
     let nextIndex;
-
     if (isShuffled && shuffledIndices.length > 0) {
         const pos = shuffledIndices.indexOf(currentIndex);
         const nextPos = (pos + 1) % shuffledIndices.length;
@@ -319,18 +272,15 @@ function nextTrack() {
     } else {
         nextIndex = (currentIndex + 1) % tracks.length;
     }
-
     playTrack(nextIndex);
 }
 
 function prevTrack() {
     if (tracks.length === 0) return;
-
     if (audio.currentTime > 3) {
         audio.currentTime = 0;
         return;
     }
-
     let prevIndex;
     if (isShuffled && shuffledIndices.length > 0) {
         const pos = shuffledIndices.indexOf(currentIndex);
@@ -339,7 +289,6 @@ function prevTrack() {
     } else {
         prevIndex = (currentIndex - 1 + tracks.length) % tracks.length;
     }
-
     playTrack(prevIndex);
 }
 
@@ -348,7 +297,6 @@ function prevTrack() {
 // ===========================================
 async function deleteTrack(id) {
     if (!confirm('Удалить этот трек?')) return;
-
     try {
         const res = await fetch(`${API_URL}/tracks/${id}`, {
             method: 'DELETE',
@@ -392,7 +340,8 @@ function toggleRepeat() {
     const btn = document.getElementById('repeatBtn');
     if (btn) {
         btn.classList.toggle('active', repeatMode !== 'none');
-        btn.textContent = repeatMode === 'one' ? '🔂' : '🔁';
+        const iconName = repeatMode === 'one' ? 'repeat-1' : 'repeat';
+        setLucideIcon(btn, iconName);
     }
 }
 
@@ -404,11 +353,11 @@ function toggleMute() {
         previousVolume = audio.volume;
         audio.volume = 0;
         if (volumeBar) volumeBar.value = 0;
-        if (muteBtn) muteBtn.textContent = '🔇';
+        updateMuteIcon(0);
     } else {
         audio.volume = previousVolume;
         if (volumeBar) volumeBar.value = previousVolume * 100;
-        if (muteBtn) muteBtn.textContent = '🔊';
+        updateMuteIcon(previousVolume);
     }
 }
 
@@ -420,11 +369,6 @@ function formatTime(seconds) {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
-
-function updatePlayButton(isPlaying) {
-    if (playBtn) playBtn.textContent = isPlaying ? '⏸️' : '▶️';
-    if (miniPlayBtn) miniPlayBtn.textContent = isPlaying ? '⏸️' : '▶️';
 }
 
 // ===========================================
@@ -489,9 +433,7 @@ if (progressBar) {
 if (volumeBar) {
     volumeBar.addEventListener('input', () => {
         audio.volume = volumeBar.value / 100;
-        if (muteBtn) {
-            muteBtn.textContent = audio.volume === 0 ? '🔇' : audio.volume < 0.5 ? '🔉' : '🔊';
-        }
+        updateMuteIcon(audio.volume);
     });
 }
 
@@ -517,28 +459,16 @@ if (clearSearch) {
     });
 }
 
-const sortByName = document.getElementById('sortByName');
-const sortByDate = document.getElementById('sortByDate');
-
-if (sortByName) {
-    sortByName.addEventListener('click', () => {
-        sortMode = 'name';
-        sortByName.classList.add('active');
-        if (sortByDate) sortByDate.classList.remove('active');
+// Sort buttons via data-sort attribute
+document.querySelectorAll('.sort-btn[data-sort]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        sortMode = btn.getAttribute('data-sort');
+        document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
         applySorting();
         renderTracks();
     });
-}
-
-if (sortByDate) {
-    sortByDate.addEventListener('click', () => {
-        sortMode = 'date';
-        sortByDate.classList.add('active');
-        if (sortByName) sortByName.classList.remove('active');
-        applySorting();
-        renderTracks();
-    });
-}
+});
 
 // ===========================================
 // ЭКСПОРТ В WINDOW
@@ -555,48 +485,6 @@ window.deleteTrack = deleteTrack;
 // ===========================================
 // ИНИЦИАЛИЗАЦИЯ
 // ===========================================
-const navHome = document.getElementById('navHome');
-const navLibrary = document.getElementById('navLibrary');
-const navSearch = document.getElementById('navSearch');
-const navProfile = document.getElementById('navProfile');
-
-function setActiveNav(activeBtn) {
-    document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
-    if (activeBtn) activeBtn.classList.add('active');
-}
-
-if (navHome) navHome.addEventListener('click', () => {
-    setActiveNav(navHome);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-});
-
-if (navLibrary) navLibrary.addEventListener('click', () => {
-    setActiveNav(navLibrary);
-    const trackSection = document.getElementById('trackList');
-    if (trackSection) trackSection.scrollIntoView({ behavior: 'smooth' });
-});
-
-if (navSearch) navSearch.addEventListener('click', () => {
-    setActiveNav(navSearch);
-    const globalSection = document.getElementById('globalSearchSection');
-    if (globalSection) {
-        globalSection.style.display = 'block';
-        globalSection.scrollIntoView({ behavior: 'smooth' });
-        const input = document.getElementById('globalSearchInput');
-        if (input) setTimeout(() => input.focus(), 400);
-    }
-});
-
-if (navProfile) navProfile.addEventListener('click', () => {
-    setActiveNav(navProfile);
-    const user = tg.initDataUnsafe?.user;
-    if (user) {
-        const name = escapeHtml(`${user.first_name || ''} ${user.last_name || ''}`.trim());
-        alert(`👤 ${name}\n🆔 ID: ${user.id}\n📊 Треков: ${tracks.length}`);
-    }
-});
-
-initStickyPlayer();
 loadTracks();
 
 // ===========================================
@@ -606,7 +494,6 @@ loadTracks();
     const searchInput = document.getElementById('globalSearchInput');
     const searchBtn = document.getElementById('globalSearchBtn');
     const resultsContainer = document.getElementById('globalSearchResults');
-
     if (!searchInput || !searchBtn || !resultsContainer) return;
 
     let searchTimeout = null;
@@ -616,21 +503,17 @@ loadTracks();
             resultsContainer.innerHTML = '<div class="search-placeholder">Введите запрос для поиска</div>';
             return;
         }
-
         resultsContainer.innerHTML = '<div class="search-loading"></div>';
-
         try {
             const res = await fetch(`${API_URL}/api/search/all?q=${encodeURIComponent(query.trim())}`, {
                 headers: authHeaders
             });
             const data = await res.json();
             const results = data.results || data.tracks || data || [];
-
             if (!Array.isArray(results) || results.length === 0) {
                 resultsContainer.innerHTML = '<div class="search-placeholder">Ничего не найдено</div>';
                 return;
             }
-
             resultsContainer.innerHTML = results.map((track, i) => {
                 const title = escapeHtml(track.name || track.title || 'Без названия');
                 const artist = escapeHtml(track.artist || 'Неизвестный');
@@ -638,19 +521,22 @@ loadTracks();
                 const coverHtml = coverUrl
                     ? `<img class="search-result-cover" src="${escapeHtml(coverUrl)}" alt="" loading="lazy">`
                     : `<div class="search-result-cover no-cover"></div>`;
-
                 return `<div class="search-result-item">
                     ${coverHtml}
                     <div class="search-result-info">
                         <div class="search-result-title">${title}</div>
                         <div class="search-result-artist">${artist}</div>
                     </div>
-                    <button class="search-result-btn play-btn" onclick="playSearchResult(${i})">▶️</button>
-                    ${!track.isDownloaded ? `<button class="search-result-btn" onclick="downloadSearchResult(${i})">⬇️</button>` : ''}
+                    <button class="search-result-btn play-btn" onclick="playSearchResult(${i})">
+                        <i data-lucide="play" style="width:16px;height:16px"></i>
+                    </button>
+                    ${!track.isDownloaded ? `<button class="search-result-btn" onclick="downloadSearchResult(${i})">
+                        <i data-lucide="download" style="width:16px;height:16px"></i>
+                    </button>` : ''}
                 </div>`;
             }).join('');
-
             window._searchResults = results;
+            if (window.lucide) lucide.createIcons();
         } catch (err) {
             resultsContainer.innerHTML = `<div class="search-placeholder">Ошибка поиска: ${escapeHtml(err.message)}</div>`;
         }
@@ -679,34 +565,29 @@ function playSearchResult(index) {
     const results = window._searchResults;
     if (!results || !results[index]) return;
     const track = results[index];
-
     if (track.url) {
         revokeCurrentObjectUrl();
         audio.src = track.url;
         audio.play().catch(err => console.log('Ошибка:', err));
-
         if (trackTitle) trackTitle.textContent = track.name || track.title || 'Без названия';
         if (trackArtist) trackArtist.textContent = track.artist || 'Неизвестный';
         updatePlayButton(true);
         updateCoverAnimation(true);
-        updateStickyPlayer(track);
     }
 }
-
 window.playSearchResult = playSearchResult;
 
 async function downloadSearchResult(index) {
     const results = window._searchResults;
     if (!results || !results[index]) return;
     const track = results[index];
-
     const btns = document.querySelectorAll('.search-result-item');
     const btn = btns[index]?.querySelector('.search-result-btn:not(.play-btn)');
     if (btn) {
-        btn.textContent = '⏳';
+        btn.innerHTML = '<i data-lucide="loader" style="width:16px;height:16px;animation:spin 1s linear infinite"></i>';
         btn.disabled = true;
+        if (window.lucide) lucide.createIcons({ nodes: [btn] });
     }
-
     try {
         const res = await fetch(`${API_URL}/api/search/download`, {
             method: 'POST',
@@ -720,22 +601,20 @@ async function downloadSearchResult(index) {
         const data = await res.json();
         if (data.success) {
             if (btn) {
-                btn.textContent = '✅';
+                setLucideIcon(btn, 'check');
                 btn.title = 'Добавлено';
             }
             loadTracks();
         } else {
-            if (btn) btn.textContent = '❌';
+            if (btn) setLucideIcon(btn, 'x');
             console.error('Ошибка скачивания:', data.error);
         }
     } catch (err) {
-        if (btn) btn.textContent = '❌';
+        if (btn) setLucideIcon(btn, 'x');
         console.error('Ошибка:', err);
     }
 }
-
 window.downloadSearchResult = downloadSearchResult;
-
 
 // ===========================================
 // TOAST NOTIFICATIONS
@@ -745,7 +624,6 @@ function showToast(message, duration = 2000) {
     if (!toast) return;
     toast.textContent = message;
     toast.classList.add('visible');
-    // Haptic feedback
     if (tg.HapticFeedback) {
         tg.HapticFeedback.notificationOccurred('success');
     }
@@ -781,13 +659,11 @@ window.showToast = showToast;
         if (!currentEl) return;
         const dx = e.touches[0].clientX - startX;
         const dy = e.touches[0].clientY - startY;
-        // Ignore vertical scrolling
         if (!isDragging && Math.abs(dy) > Math.abs(dx)) {
             currentEl = null;
             return;
         }
         isDragging = true;
-        // Clamp between -120 and 120
         const clampedDx = Math.max(-120, Math.min(120, dx));
         currentEl.style.transform = `translateX(${clampedDx}px)`;
     }, { passive: true });
@@ -797,22 +673,17 @@ window.showToast = showToast;
         const transform = currentEl.style.transform;
         const match = transform.match(/translateX\(([\-\d.]+)px\)/);
         const dx = match ? parseFloat(match[1]) : 0;
-
         currentEl.classList.remove('swiping');
         currentEl.classList.add('snap-back');
-
         if (dx > THRESHOLD) {
-            // Swipe right => Like / add to favorites
-            showToast('\u2764\ufe0f \u0414\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u043e \u0432 \u0438\u0437\u0431\u0440\u0430\u043d\u043d\u043e\u0435');
+            showToast('❤️ Добавлено в избранное');
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         } else if (dx < -THRESHOLD) {
-            // Swipe left => Delete
             const index = currentEl.getAttribute('data-swipe-index');
             if (index !== null && tracks[index]) {
                 deleteTrack(tracks[index].id);
             }
         }
-
         currentEl.style.transform = 'translateX(0)';
         currentEl = null;
         isDragging = false;
@@ -830,7 +701,6 @@ window.showToast = showToast;
         item.addEventListener('click', () => {
             navItems.forEach(n => n.classList.remove('active'));
             item.classList.add('active');
-
             const tab = item.getAttribute('data-tab');
             switch (tab) {
                 case 'home':
@@ -851,11 +721,10 @@ window.showToast = showToast;
                 case 'profile':
                     const user = tg.initDataUnsafe?.user;
                     if (user) {
-                        showToast(`\ud83d\udc64 ${user.first_name || ''} \u2022 ${tracks.length} \u0442\u0440\u0435\u043a\u043e\u0432`);
+                        showToast(`👤 ${user.first_name || ''} • ${tracks.length} треков`);
                     }
                     break;
             }
-
             if (tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
         });
     });
