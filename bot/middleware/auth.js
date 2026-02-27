@@ -1,7 +1,7 @@
-// =============================================
+// ==============================================
 // МОДУЛЬ АВТОРИЗАЦИИ TELEGRAM
 // Проверка и валидация initData от Telegram WebApp
-// =============================================
+// ==============================================
 
 const crypto = require('crypto');
 const logger = require('../utils/logger');
@@ -33,6 +33,11 @@ function validateInitData(initData, botToken) {
             logger.warn('initData устарела (старше 24 часов)');
         return null;
       }
+      // Защита от подделки timestamp в будущем (+60с допуск на рассинхрон часов)
+      if (authTimestamp > now + 60) {
+        logger.warn('initData из будущего — возможна подделка timestamp');
+        return null;
+      }
     }
 
     // Сортируем параметры и формируем строку для проверки
@@ -52,21 +57,29 @@ function validateInitData(initData, botToken) {
       .update(sortedParams)
       .digest('hex');
 
-    if (calculatedHash !== hash) {
-            logger.warn('Неверная подпись initData');
+    // Timing-safe сравнение для защиты от timing-атак
+    const calcBuf = Buffer.from(calculatedHash, 'hex');
+    const hashBuf = Buffer.from(hash || '', 'hex');
+    if (calcBuf.length !== hashBuf.length || !crypto.timingSafeEqual(calcBuf, hashBuf)) {
+      logger.warn('Неверная подпись initData');
       return null;
     }
 
     // Извлекаем данные пользователя
     const userStr = params.get('user');
     if (userStr) {
-      const user = JSON.parse(decodeURIComponent(userStr));
-      return { user, authDate };
+      try {
+        const user = JSON.parse(decodeURIComponent(userStr));
+        return { user, authDate };
+      } catch (parseErr) {
+        logger.error('Ошибка парсинга user из initData', { error: parseErr.message });
+        return null;
+      }
     }
 
     return null;
   } catch (err) {
-          logger.error('Ошибка валидации initData', { error: err.message });
+    logger.error('Ошибка валидации initData', { error: err.message });
     return null;
   }
 }
@@ -78,7 +91,9 @@ function validateInitData(initData, botToken) {
  */
 function createAuthMiddleware(botToken) {
   return (req, res, next) => {
-    const initData = req.headers['x-telegram-init-data'] || req.query.initData;
+    // Только из заголовка — query string небезопасен (утечка в логи, referer, историю)
+    const initData = req.headers['x-telegram-init-data'];
+
     const validated = validateInitData(initData, botToken);
 
     if (!validated) {
@@ -91,8 +106,4 @@ function createAuthMiddleware(botToken) {
   };
 }
 
-module.exports = {
-  validateInitData,
-  createAuthMiddleware,
-  MAX_AUTH_AGE_SECONDS
-};
+module.exports = { validateInitData, createAuthMiddleware, MAX_AUTH_AGE_SECONDS };
