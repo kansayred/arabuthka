@@ -211,6 +211,16 @@ async function initDatabase(retries = 5, delay = 2000) {
       await pool.query('CREATE INDEX IF NOT EXISTS idx_playlists_user ON playlists(user_id)');
       await pool.query('CREATE INDEX IF NOT EXISTS idx_playlist_tracks_playlist ON playlist_tracks(playlist_id, position)');
       logger.info('Таблицы playlists и playlist_tracks готовы');
+
+            // Миграция: добавление полей метаданных треков (Issue #4, #5)
+            await pool.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS artist VARCHAR(255)');
+            await pool.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS album VARCHAR(255)');
+            await pool.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS genre VARCHAR(100)');
+            await pool.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS cover_url TEXT');
+            await pool.query('ALTER TABLE tracks ADD COLUMN IF NOT EXISTS duration INTEGER');
+            await pool.query('CREATE INDEX IF NOT EXISTS idx_tracks_artist ON tracks(artist)');
+            await pool.query('CREATE INDEX IF NOT EXISTS idx_tracks_album ON tracks(album)');
+      
       logger.info(`Таблица tracks готова (попытка ${attempt})`);
       return;
     } catch (err) {
@@ -352,6 +362,50 @@ app.get('/tracks', authMiddleware, async (req, res) => {
   } catch (error) {
     logger.error('Ошибка получения треков', error);
     res.status(500).json({ error: 'Не удалось получить треки' });
+  }
+});
+
+// ==============================================
+// РЕДАКТИРОВАНИЕ МЕТАДАННЫХ ТРЕКА (Issue #4)
+// ==============================================
+app.put('/tracks/:id', authMiddleware, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id) || id < 1) return res.status(400).json({ error: 'Неверный ID' });
+
+    const { name, artist, album, genre } = req.body;
+
+    // Проверка что трек принадлежит пользователю
+    const existing = await pool.query('SELECT id FROM tracks WHERE id = $1 AND user_id = $2', [id, req.userId]);
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ error: 'Трек не найден' });
+    }
+
+    // Динамическое построение SET-части запроса
+    const fields = [];
+    const values = [];
+    let paramIndex = 1;
+
+    if (name !== undefined) { fields.push(`name = $${paramIndex++}`); values.push(name); }
+    if (artist !== undefined) { fields.push(`artist = $${paramIndex++}`); values.push(artist); }
+    if (album !== undefined) { fields.push(`album = $${paramIndex++}`); values.push(album); }
+    if (genre !== undefined) { fields.push(`genre = $${paramIndex++}`); values.push(genre); }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: 'Нет полей для обновления' });
+    }
+
+    values.push(id);
+    const result = await pool.query(
+      `UPDATE tracks SET ${fields.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+      values
+    );
+
+    logger.userAction(req.userId, 'track_updated', { trackId: id, fields: Object.keys(req.body) });
+    res.json({ success: true, track: result.rows[0] });
+  } catch (err) {
+    logger.error('Ошибка обновления метаданных', err);
+    res.status(500).json({ error: 'Не удалось обновить трек' });
   }
 });
 
