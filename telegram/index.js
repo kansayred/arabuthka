@@ -24,9 +24,6 @@ logger.info('Telegram-бот: все переменные окружения п�
 const TelegramBot = require('node-telegram-bot-api');
 const express = require('express');
 
-// =============================================
-// ИМПОРТ ОБРАБОТЧИКОВ СКАЧИВАНИЯ МУЗЫКИ
-// =============================================
 // ВРЕМЕННО ОТКЛЮЧЕНО: скачивание до заключения контрактов с лейблами
 // const { handleDownload, handleSearch, handleDownloadCallback } = require('./handlers/downloadHandler');
 // const { handleSearchCommand, handleDownloadCommand } = require('./handlers/musicHandler');
@@ -38,8 +35,6 @@ const PORT = process.env.PORT || 3000;
 // =============================================
 // ОПРЕДЕЛЯЕМ РЕЖИМ РАБОТЫ
 // На Railway — webhook, локально — polling.
-// Webhook экономит ресурсы: бот не опрашивает Telegram,
-// а получает обновления push-уведомлениями.
 // =============================================
 const isProduction = !!process.env.RAILWAY_ENVIRONMENT;
 let bot;
@@ -73,108 +68,204 @@ app.get('/', (req, res) => {
 });
 
 // =============================================
-// КОМАНДЫ БОТА
+// РЕГИСТРАЦИЯ КОМАНД И MENU BUTTON
+// setChatMenuButton — кнопка «🎵 Плеер» рядом с полем ввода
+// setMyCommands — меню команд при нажатии «/»
 // =============================================
+async function setupBotInterface() {
+  try {
+    // Menu Button — кнопка WebApp рядом с полем ввода
+    await bot.setChatMenuButton({
+      menu_button: {
+        type: 'web_app',
+        text: '🎵 Плеер',
+        web_app: { url: webAppUrl }
+      }
+    });
+    logger.info('Menu Button установлен: 🎵 Плеер');
 
+    // Регистрация команд для меню «/»
+    await bot.setMyCommands([
+      { command: 'start', description: 'Запустить бота' },
+      { command: 'player', description: 'Открыть плеер' },
+      { command: 'about', description: 'О проекте Арабутка' },
+      { command: 'help', description: 'Помощь и справка' }
+    ]);
+    logger.info('Команды бота зарегистрированы');
+  } catch (err) {
+    logger.error('Ошибка настройки интерфейса бота', err);
+  }
+}
+
+// =============================================
+// КОМАНДА /start — приветствие
+// =============================================
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   const firstName = msg.from.first_name || 'друг';
 
   logger.botCommand(chatId, '/start', msg.from.username);
 
-  const welcomeMessage = `🎵 *Добро пожаловать в Arabuthka, ${firstName}!*
-Это твоя личная музыкальная библиотека в Telegram.
+  const welcomeMessage =
+`Привет, ${firstName} 👋
 
-📱 *Что умеет бот:*
-• Загружай свои треки
-• Слушай музыку прямо в Telegram
-• Управляй плейлистом
+Добро пожаловать в *Арабутку* — твой музыкальный мир внутри Telegram.
 
-Нажми кнопку ниже, чтобы открыть плеер 👇`;
+Здесь ты можешь загружать любимые треки, собирать плейлисты и слушать музыку без рекламы и ограничений — всё в одном месте.
+
+Нажми *«🎵 Плеер»* рядом с полем ввода или кнопку ниже — и вперёд 🎧`;
 
   bot.sendMessage(chatId, welcomeMessage, {
     parse_mode: 'Markdown',
     reply_markup: {
       inline_keyboard: [
         [{ text: '🎧 Открыть плеер', web_app: { url: webAppUrl } }],
-        [{ text: '❓ Помощь', callback_data: 'help' }]
+        [
+          { text: '💡 О проекте', callback_data: 'about' },
+          { text: '❓ Помощь', callback_data: 'help' }
+        ]
       ]
     }
   });
 });
 
+// =============================================
+// КОМАНДА /player — быстрый доступ к плееру
+// =============================================
+bot.onText(/\/player/, (msg) => {
+  logger.botCommand(msg.chat.id, '/player', msg.from.username);
+  bot.sendMessage(msg.chat.id, '🎧 Нажми, чтобы открыть плеер:', {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: '🎵 Открыть Арабутку', web_app: { url: webAppUrl } }]
+      ]
+    }
+  });
+});
+
+// =============================================
+// КОМАНДА /about — о проекте
+// Написано понятным языком для всех, включая
+// первых пользователей — маму и сестру.
+// =============================================
+bot.onText(/\/about/, (msg) => {
+  logger.botCommand(msg.chat.id, '/about', msg.from.username);
+  sendAboutMessage(msg.chat.id);
+});
+
+function sendAboutMessage(chatId) {
+  const aboutText =
+`🎵 *Что такое Арабутка?*
+
+Арабутка — это музыкальный сервис прямо в Telegram. Никаких отдельных приложений, всё работает здесь.
+
+*Зачем это нужно:*
+Музыка объединяет людей. Мы создаём место, где каждый может свободно слушать, хранить и делиться любимыми треками — просто и без лишних сложностей.
+
+*Что уже работает:*
+• Загрузка своих треков в личную библиотеку
+• Прослушивание музыки прямо в Telegram
+• Плейлисты для удобной организации
+
+*Что впереди:*
+• Умные рекомендации
+• Совместные плейлисты с друзьями
+• Подписка «Арамакс» с расширенными возможностями
+
+Проект развивается каждый день. Если есть идеи, пожелания или что-то не работает — обязательно напиши 💬
+
+📩 Обратная связь: @kansayred`;
+
+  bot.sendMessage(chatId, aboutText, {
+    parse_mode: 'Markdown',
+    disable_web_page_preview: true
+  });
+}
+
+// =============================================
+// КОМАНДА /help — расширенная справка
+// =============================================
 bot.onText(/\/help/, (msg) => {
   logger.botCommand(msg.chat.id, '/help', msg.from.username);
   sendHelpMessage(msg.chat.id);
 });
 
-bot.onText(/\/player/, (msg) => {
-  logger.botCommand(msg.chat.id, '/player', msg.from.username);
-  bot.sendMessage(msg.chat.id, '🎧 Открой плеер:', {
-    reply_markup: {
-      inline_keyboard: [
-        [{ text: '🎵 Открыть Arabuthka', web_app: { url: webAppUrl } }]
-      ]
-    }
-  });
-});
+function sendHelpMessage(chatId) {
+  const helpText =
+`📖 *Справка по Арабутке*
 
+*Команды:*
+/start — приветствие и главное меню
+/player — открыть музыкальный плеер
+/about — узнать о проекте
+/help — эта справка
+
+*Как слушать музыку:*
+1. Нажми *«🎵 Плеер»* — кнопка рядом с полем ввода
+2. Загрузи свои треки через плеер
+3. Слушай, создавай плейлисты, наслаждайся!
+
+*Кнопка «🎵 Плеер»* всегда под рукой — она находится слева от поля ввода сообщения.
+
+💬 Есть вопросы? Пиши: @kansayred`;
+
+  bot.sendMessage(chatId, helpText, {
+    parse_mode: 'Markdown',
+    disable_web_page_preview: true
+  });
+}
+
+// =============================================
+// ЗАГЛУШКИ ДЛЯ ОТКЛЮЧЁННЫХ КОМАНД
+// =============================================
 bot.onText(/\/download(.*)/, (msg) => {
   logger.botCommand(msg.chat.id, '/download', msg.from.username);
-  bot.sendMessage(msg.chat.id, '⚠️ Скачивание музыки временно недоступно.\n\nФункция будет восстановлена после заключения контрактов с лейблами.\n🎵 Пока вы можете загружать собственные треки через плеер.');
+  bot.sendMessage(msg.chat.id, '⚠️ Скачивание музыки временно недоступно.\n\nФункция будет восстановлена после заключения контрактов с лейблами.\n🎵 Пока ты можешь загружать собственные треки через плеер.');
 });
 
 bot.onText(/\/music(.*)/, (msg) => {
   logger.botCommand(msg.chat.id, '/music', msg.from.username);
-  bot.sendMessage(msg.chat.id, '⚠️ Скачивание музыки временно недоступно.\n🎵 Загружайте собственные треки через плеер.');
+  bot.sendMessage(msg.chat.id, '⚠️ Скачивание музыки временно недоступно.\n🎵 Загружай собственные треки через плеер.');
 });
 
 bot.onText(/\/search(.*)/, (msg) => {
   logger.botCommand(msg.chat.id, '/search', msg.from.username);
-  bot.sendMessage(msg.chat.id, '⚠️ Поиск музыки временно недоступен.\n🎵 Загружайте собственные треки через плеер.');
+  bot.sendMessage(msg.chat.id, '⚠️ Поиск музыки временно недоступен.\n🎵 Загружай собственные треки через плеер.');
 });
-
-// =============================================
-// ФУНКЦИЯ ПОМОЩИ
-// =============================================
-function sendHelpMessage(chatId) {
-  const helpText = `📖 *Справка по Arabuthka*
-
-*Команды:*
-/start — начать работу
-/player — открыть плеер
-/help — эта справка
-
-*Как пользоваться:*
-1. Открой плеер через кнопку
-2. Загрузи свои треки
-3. Слушай музыку!`;
-  bot.sendMessage(chatId, helpText, { parse_mode: 'Markdown' });
-}
 
 // =============================================
 // ОБРАБОТКА CALLBACK-КНОПОК
 // =============================================
 bot.on('callback_query', (query) => {
   const chatId = query.message.chat.id;
+  const data = query.data;
 
-  if (query.data === 'help') {
+  if (data === 'help') {
     logger.botCommand(chatId, 'callback:help', query.from.username);
     sendHelpMessage(chatId);
     bot.answerCallbackQuery(query.id);
+    return;
   }
 
-  if (query.data && query.data.startsWith('download_')) {
-    logger.botCommand(chatId, `callback:${query.data}`, query.from.username);
+  if (data === 'about') {
+    logger.botCommand(chatId, 'callback:about', query.from.username);
+    sendAboutMessage(chatId);
+    bot.answerCallbackQuery(query.id);
+    return;
+  }
+
+  if (data && data.startsWith('download_')) {
+    logger.botCommand(chatId, `callback:${data}`, query.from.username);
     bot.answerCallbackQuery(query.id, {
       text: '⚠️ Скачивание временно недоступно',
       show_alert: true
     });
+    return;
   }
 });
 
 // =============================================
-// ЗАПУСК СЕРВЕРА И WEBHOOK
+// ЗАПУСК СЕРВЕРА, WEBHOOK И НАСТРОЙКА ИНТЕРФЕЙСА
 // =============================================
 const server = app.listen(PORT, async () => {
   logger.info(`Telegram-бот запущен на порту ${PORT}`);
@@ -189,6 +280,9 @@ const server = app.listen(PORT, async () => {
       logger.error('Ошибка установки webhook', err);
     }
   }
+
+  // Настройка Menu Button и регистрация команд
+  await setupBotInterface();
 });
 
 // =============================================
