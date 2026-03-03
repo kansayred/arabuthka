@@ -235,6 +235,12 @@ async function playTrack(index) {
     }
     if (trackTitle) trackTitle.textContent = track.name;
     if (trackArtist) trackArtist.textContent = track.artist || 'Неизвестный исполнитель';
+        // Обновление обложки трека
+    if (coverArt) {
+        const coverUrl = sanitizeCoverUrl(track.cover_url);
+        coverArt.style.backgroundImage = coverUrl ? `url(${coverUrl})` : '';
+        coverArt.classList.toggle('has-cover', !!coverUrl);
+    }
     updatePlayButton(true);
     updateCoverAnimation(true);
     renderTracks();
