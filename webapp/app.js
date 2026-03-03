@@ -205,7 +205,7 @@ function renderTracks() {
             <span class="track-number">${index + 1}</span>
             <div class="track-info-item">
                 <div class="track-name">${escapeHtml(track.name)}</div>
-                <div class="track-artist-small">Арабутка</div>
+                <div class="track-artist-small">${escapeHtml(track.artist || 'Неизвестный исполнитель')}</div>
             </div>
             ${equalizerHtml}
             <button class="track-delete" onclick="event.stopPropagation(); deleteTrack(${Number(track.id)})">
@@ -234,15 +234,15 @@ async function playTrack(index) {
         console.error('Ошибка воспроизведения:', err);
     }
     if (trackTitle) trackTitle.textContent = track.name;
-    if (trackArtist) trackArtist.textContent = 'Арабутка';
+    if (trackArtist) trackArtist.textContent = track.artist || 'Неизвестный исполнитель';
     updatePlayButton(true);
     updateCoverAnimation(true);
     renderTracks();
     if (mediaSessionManager) {
         mediaSessionManager.updateMetadata({
             name: track.name,
-            artist: 'Arabuthka',
-            album: 'Моя музыка'
+            artist: track.artist || 'Арабутка',
+            album: track.album || 'Моя музыка'
         });
         mediaSessionManager.updatePlaybackState('playing');
     }
