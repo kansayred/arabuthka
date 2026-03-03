@@ -29,7 +29,7 @@ const express = require('express');
 // const { handleSearchCommand, handleDownloadCommand } = require('./handlers/musicHandler');
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
-const webAppUrl = process.env.WEBAPP_URL;
+const webAppUrl = process.env.WEBAPP_URL; const axios = require('axios'); const API_URL = process.env.API_URL || 'https://arabuthka-production.up.railway.app';
 const PORT = process.env.PORT || 3000;
 
 // =============================================
@@ -89,7 +89,7 @@ async function setupBotInterface() {
       { command: 'start', description: 'Запустить бота' },
       { command: 'player', description: 'Открыть плеер' },
       { command: 'about', description: 'О проекте Арабутка' },
-      { command: 'help', description: 'Помощь и справка' }
+      { command: 'help', description: 'Помощь и справка' },       { command: 'edit', description: 'Редактировать метаданные треков' },       { command: 'playlists', description: 'Мои плейлисты' }
     ]);
     logger.info('Команды бота зарегистрированы');
   } catch (err) {
@@ -220,6 +220,80 @@ function sendHelpMessage(chatId) {
   });
 }
 
+// =============================================
+// КОМАНДА /edit — редактирование метаданных треков
+// =============================================
+bot.onText(/\/edit(?:\s+(\d+))?/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from.id;
+  logger.botCommand(chatId, '/edit', msg.from.username);
+  const trackId = match && match[1] ? parseInt(match[1]) : null;
+  try {
+    const res = await axios.get(`${API_URL}/tracks`, { headers: { 'X-Telegram-User-Id': userId.toString() } });
+    const data = res.data;
+    const tracks = Array.isArray(data) ? data : (data.tracks || []);
+    if (!tracks.length) { bot.sendMessage(chatId, '📂 У тебя пока нет треков.\nЗагрузи музыку через плеер!'); return; }
+    if (trackId) {
+      const track = tracks.find(t => t.id === trackId);
+      if (!track) { bot.sendMessage(chatId, `❌ Трек с ID ${trackId} не найден.`); return; }
+      bot.sendMessage(chatId, `🎵 *${track.name}*\n\nТекущие данные:\n👤 Исполнитель: ${track.artist || 'не указан'}\n💿 Альбом: ${track.album || 'не указан'}\n🎸 Жанр: ${track.genre || 'не указан'}\n\nЧтобы изменить, отправь команду:\n/edit_artist ${trackId} Имя\n/edit_album ${trackId} Название\n/edit_genre ${trackId} Жанр`, { parse_mode: 'Markdown' });
+    } else {
+      const list = tracks.slice(0, 10).map((t, i) => `${i+1}. [${t.id}] ${t.name} — ${t.artist || 'без исполнителя'}`).join('\n');
+      bot.sendMessage(chatId, `🎵 *Мои треки* (последние 10):\n\n${list}\n\nИспользуй: /edit <ID> для редактирования`, { parse_mode: 'Markdown' });
+    }
+  } catch (err) {
+    logger.error('Ошибка /edit', err);
+    bot.sendMessage(chatId, '❌ Не удалось загрузить треки. Попробуй позже.');
+  }
+});
+bot.onText(/\/edit_artist (\d+) (.+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from.id;
+  const trackId = parseInt(match[1]); const artist = match[2];
+  try {
+    await axios.put(`${API_URL}/tracks/${trackId}`, { artist }, { headers: { 'X-Telegram-User-Id': userId.toString(), 'Content-Type': 'application/json' } });
+    bot.sendMessage(chatId, `✅ Исполнитель обновлён: *${artist}*`, { parse_mode: 'Markdown' });
+  } catch (err) { bot.sendMessage(chatId, '❌ Ошибка обновления.'); }
+});
+bot.onText(/\/edit_album (\d+) (.+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from.id;
+  const trackId = parseInt(match[1]); const album = match[2];
+  try {
+    await axios.put(`${API_URL}/tracks/${trackId}`, { album }, { headers: { 'X-Telegram-User-Id': userId.toString(), 'Content-Type': 'application/json' } });
+    bot.sendMessage(chatId, `✅ Альбом обновлён: *${album}*`, { parse_mode: 'Markdown' });
+  } catch (err) { bot.sendMessage(chatId, '❌ Ошибка обновления.'); }
+});
+bot.onText(/\/edit_genre (\d+) (.+)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from.id;
+  const trackId = parseInt(match[1]); const genre = match[2];
+  try {
+    await axios.put(`${API_URL}/tracks/${trackId}`, { genre }, { headers: { 'X-Telegram-User-Id': userId.toString(), 'Content-Type': 'application/json' } });
+    bot.sendMessage(chatId, `✅ Жанр обновлён: *${genre}*`, { parse_mode: 'Markdown' });
+  } catch (err) { bot.sendMessage(chatId, '❌ Ошибка обновления.'); }
+});
+// =============================================
+// КОМАНДА /playlists — управление плейлистами
+// =============================================
+bot.onText(/\/playlists/, async (msg) => {
+  const chatId = msg.chat.id;
+  const userId = msg.from.id;
+  logger.botCommand(chatId, '/playlists', msg.from.username);
+  try {
+    const res = await axios.get(`${API_URL}/playlists`, { headers: { 'X-Telegram-User-Id': userId.toString() } });
+    const playlists = res.data.playlists || res.data || [];
+    if (!playlists.length) {
+      bot.sendMessage(chatId, '🎵 У тебя пока нет плейлистов.\n\nПлейлисты можно создавать и управлять ими через плеер!', { reply_markup: { inline_keyboard: [[{ text: '🎧 Открыть плеер', web_app: { url: webAppUrl } }]] } });
+      return;
+    }
+    const list = playlists.map((p, i) => `${i+1}. *${p.name}* ${p.description ? '— ' + p.description : ''}`).join('\n');
+    bot.sendMessage(chatId, `📋 *Мои плейлисты* (${playlists.length}):\n\n${list}\n\nУправление плейлистами — в плеере 🎧`, { parse_mode: 'Markdown', reply_markup: { inline_keyboard: [[{ text: '🎧 Открыть плеер', web_app: { url: webAppUrl } }]] } });
+  } catch (err) {
+    logger.error('Ошибка /playlists', err);
+    bot.sendMessage(chatId, '❌ Не удалось загрузить плейлисты.');
+  }
+});
 // =============================================
 // ЗАГЛУШКИ ДЛЯ ОТКЛЮЧЁННЫХ КОМАНД
 // =============================================
