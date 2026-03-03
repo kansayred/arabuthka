@@ -29,13 +29,13 @@ The project is being prepared for its first round of investment.
 Telegram App
     |
     v
-[Telegram Bot]     [Web App (Vercel)]
-    |                      |
-    v                      v
+[Telegram Bot]      [Web App (Vercel)]
+    |                    |
+    v                    v
 [Express API Server (Railway)]
-    |              |
-    v              v
-[PostgreSQL]  [Selectel S3]
+    |                    |
+    v                    v
+[PostgreSQL]        [Selectel S3]
 ```
 
 **Three services:**
@@ -98,7 +98,6 @@ node index.js
 # Frontend — serve the webapp/ folder or deploy to Vercel
 ```
 
-
 ### Deployment
 
 #### Railway (Backend API)
@@ -133,27 +132,51 @@ node index.js
 
 ```
 arabuthka/
-|-- bot/                  # Express API server
-|   |-- server.js         # Main server file
+|-- bot/                        # Express API server
+|   |-- server.js               # Main server file
+|   |-- middleware/              # Middleware modules
+|   |   |-- auth.js             # Telegram InitData auth
+|   |   |-- errorHandler.js     # Error handling
+|   |   |-- rateLimit.js        # Rate limiting
+|   |-- services/               # Business logic
+|   |   |-- cobaltDownloader.js # Music download via Cobalt
+|   |   |-- musicSearch.js      # iTunes/Deezer search
+|   |   |-- libraryService.js   # User library management
+|   |   |-- validators.js       # Data validation
+|   |-- utils/                  # Utilities
+|   |   |-- logger.js           # Logging system
 |   |-- package.json
-|-- telegram/             # Telegram bot
-|   |-- index.js          # Bot logic
+|-- db/                         # Database
+|   |-- init.sql                # Schema initialization
+|-- telegram/                   # Telegram bot
+|   |-- index.js                # Bot entry point
+|   |-- handlers/               # Command handlers
+|   |   |-- musicHandler.js     # Music search & pagination
+|   |   |-- downloadHandler.js  # Track download
+|   |-- services/               # Bot services
+|   |   |-- musicService.js     # Music search API
+|   |   |-- libraryService.js   # Library management
 |   |-- package.json
-|-- webapp/               # Frontend (Vercel)
-|   |-- index.html        # Main page
-|   |-- app.js            # Player logic
-|   |-- mediaSession.js   # Lock screen controls
-|   |-- service-worker.js # PWA offline support
-|   |-- style.css         # Styles
-|   |-- manifest.json     # PWA manifest
-|-- docs/                 # Documentation
-|-- .env.example          # Environment variables template
+|-- webapp/                     # Frontend (Vercel)
+|   |-- index.html              # Main page
+|   |-- app.js                  # Player logic
+|   |-- mediaSession.js         # Lock screen controls
+|   |-- service-worker.js       # PWA offline support
+|   |-- style.css               # Styles
+|   |-- manifest.json           # PWA manifest
+|-- docs/                       # Documentation
+|-- .env.example                # Environment variables template
+|-- CONTRIBUTING.md             # Contribution guide
 |-- README.md
+|-- vercel.json                 # Vercel config
 ```
 
 ## Roadmap
 
 - [x] Lock screen and notification controls (PWA mode)
+- [x] Telegram bot commands (/start, /about, /help, /search)
+- [x] Menu Button (WebApp) — quick player access
+- [x] Inline keyboard & callback handlers
 - [ ] Track standardization system ("Lopasti i Zhernova" rules)
 - [ ] Recommendation algorithm "Delamain"
 - [ ] Multi-language support (EN, RU)
@@ -187,7 +210,6 @@ This project is proprietary. All rights reserved.
 ## Author
 
 **Arabuthka Team**
-
 
 ## Backend Модули
 
@@ -238,6 +260,7 @@ This project is proprietary. All rights reserved.
 
 - [CONTRIBUTING.md](CONTRIBUTING.md) — гайд по внесению изменений
 - [bot/.env.example](bot/.env.example) — шаблон переменных окружения
+
 ---
 
 *Built with care in Samara, Russia*
