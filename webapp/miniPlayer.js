@@ -35,11 +35,6 @@
   var touchStartY = 0, touchDeltaY = 0;
   var fsSeeking = false;
 
-  function haptic(type) {
-    var tg = window.Telegram && window.Telegram.WebApp;
-    if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred(type || 'light');
-  }
-
   function safeCover(url) {
     if (!url) return '';
     try { var p = new URL(url); if (p.protocol === 'https:' || p.protocol === 'data:') return url; } catch (e) {}
@@ -132,7 +127,7 @@
   function openFullscreen() {
     isOpen = true;
     fsEl.classList.add('open');
-    haptic('medium');
+    window.Utils.haptic('medium');
     document.body.style.overflow = 'hidden';
     syncShuffleRepeatState();
     updateDuration();
@@ -143,7 +138,7 @@
     isOpen = false;
     fsEl.classList.remove('open');
     fsEl.style.transform = '';
-    haptic('light');
+    window.Utils.haptic('light');
     document.body.style.overflow = '';
   }
 

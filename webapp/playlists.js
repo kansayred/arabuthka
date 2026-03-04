@@ -14,7 +14,6 @@
     return (tg && tg.initData) ? { 'X-Telegram-Init-Data': tg.initData } : {};
   }
   function esc(t) { var d = document.createElement('div'); d.textContent = t || ''; return d.innerHTML; }
-  function haptic(type) { var tg = window.Telegram && window.Telegram.WebApp; if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred(type || 'light'); }
   function toast(msg) { if (typeof window.showToast === 'function') window.showToast(msg); }
 
   // ========== PlaylistManager ==========
@@ -156,7 +155,7 @@
     function onOk() {
       var name = input.value.trim(); if (!name) return;
       close();
-      self.create(name).then(function() { toast('\u2705 Плейлист создан'); haptic('light'); self.loadAndRender(); })
+      self.create(name).then(function() { toast('\u2705 Плейлист создан'); window.Utils.haptic('light'); self.loadAndRender(); })
         .catch(function(err) { toast('\u274c Ошибка: ' + err.message); });
     }
     okBtn.addEventListener('click', onOk);
@@ -169,7 +168,7 @@
     var self = this;
     var tg = window.Telegram && window.Telegram.WebApp;
     function doDelete() {
-      self.remove(id).then(function() { toast('\uD83D\uDDD1\uFE0F Плейлист удалён'); haptic('medium'); self.loadAndRender(); })
+      self.remove(id).then(function() { toast('\uD83D\uDDD1\uFE0F Плейлист удалён'); window.Utils.haptic('medium'); self.loadAndRender(); })
         .catch(function(err) { toast('\u274c Ошибка: ' + err.message); });
     }
     if (tg && tg.showConfirm) tg.showConfirm('Удалить плейлист?', function(ok) { if (ok) doDelete(); });

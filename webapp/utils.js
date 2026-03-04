@@ -129,6 +129,15 @@ const Utils = {
      */
     sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
+    },
+
+    /**
+     * Тактильная обратная связь через Telegram WebApp
+     * @param {string} type - 'light' | 'medium' | 'heavy' | 'rigid' | 'soft'
+     */
+    haptic(type) {
+        var tg = window.Telegram && window.Telegram.WebApp;
+        if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred(type || 'light');
     }
 };
 
