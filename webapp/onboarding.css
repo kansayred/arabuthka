@@ -1,0 +1,101 @@
+/* ===========================================
+   ARABUTHKA — ONBOARDING
+   2 шага с автоскрытием
+   =========================================== */
+
+.onboarding-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--ara-duration-layout, 350ms) ease-out;
+  pointer-events: none;
+}
+.onboarding-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.onboarding-card {
+  background: var(--bg-card, #fff);
+  border-radius: var(--ara-radius-modal, 16px);
+  padding: var(--ara-space-2xl, 32px) var(--ara-space-xl, 24px);
+  max-width: 320px;
+  width: 90%;
+  text-align: center;
+  box-shadow: var(--ara-shadow-elevated);
+  transform: translateY(20px);
+  transition: transform var(--ara-duration-layout, 350ms) ease-out;
+}
+.onboarding-overlay.visible .onboarding-card {
+  transform: translateY(0);
+}
+
+.onboarding-icon {
+  font-size: 48px;
+  margin-bottom: var(--ara-space-lg, 16px);
+}
+
+.onboarding-title {
+  font-family: var(--font-heading, 'Space Grotesk', sans-serif);
+  font-size: var(--ara-font-title, 20px);
+  font-weight: var(--ara-fw-bold, 700);
+  color: var(--text-primary, #1A1A2E);
+  margin-bottom: var(--ara-space-sm, 8px);
+}
+
+.onboarding-text {
+  font-size: var(--ara-font-body, 14px);
+  color: var(--text-secondary, #6B6B8D);
+  line-height: var(--ara-lh-body, 1.43);
+  margin-bottom: var(--ara-space-xl, 24px);
+}
+
+.onboarding-dots {
+  display: flex;
+  gap: var(--ara-space-sm, 8px);
+  justify-content: center;
+  margin-bottom: var(--ara-space-lg, 16px);
+}
+.onboarding-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted, #9B9BB5);
+  transition: background var(--ara-duration-micro, 200ms) ease-out;
+}
+.onboarding-dot.active {
+  background: var(--ara-accent, #00C9A7);
+}
+
+.onboarding-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gradient, linear-gradient(135deg, #00C9A7, #00B4D8));
+  color: #fff;
+  border: none;
+  border-radius: var(--ara-radius-pill, 50px);
+  padding: var(--ara-space-md, 12px) var(--ara-space-xl, 24px);
+  font-size: var(--ara-font-body, 14px);
+  font-weight: var(--ara-fw-semibold, 600);
+  cursor: pointer;
+  min-height: var(--ara-touch-min, 44px);
+  transition: transform var(--ara-duration-micro, 200ms) ease-out;
+}
+.onboarding-btn:active { transform: scale(0.95); }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-overlay,
+  .onboarding-card {
+    transition: none;
+  }
+}
