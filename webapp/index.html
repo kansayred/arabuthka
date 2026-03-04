@@ -16,123 +16,123 @@
 </head>
 <body>
     <!-- Decorative blobs -->
-    <div class="brush-decoration brush-top"></div>
-    <div class="brush-decoration brush-bottom"></div>
+    <div class="brush-decoration brush-top" aria-hidden="true"></div>
+    <div class="brush-decoration brush-bottom" aria-hidden="true"></div>
 
     <div class="container">
         <header class="header fade-in">
             <h1 class="logo">
-                <i data-lucide="music" class="logo-icon-svg"></i>
+                <i data-lucide="music" class="logo-icon-svg" aria-hidden="true"></i>
                 Арабутка
             </h1>
         </header>
 
         <!-- Upload -->
         <div class="upload-section fade-in">
-            <label class="upload-btn">
-                <i data-lucide="upload" style="width:18px;height:18px"></i>
+            <label class="upload-btn" aria-label="Загрузить трек">
+                <i data-lucide="upload" style="width:18px;height:18px" aria-hidden="true"></i>
                 Загрузить трек
-                <input type="file" id="fileInput" accept=".mp3,.wav,.ogg,.m4a" hidden>
+                <input type="file" id="fileInput" accept=".mp3,.wav,.ogg,.m4a" hidden aria-label="Выбрать аудиофайл">
             </label>
-            <span id="uploadStatus"></span>
+            <span id="uploadStatus" aria-live="polite"></span>
         </div>
 
         <!-- Search -->
         <div class="search-section fade-in">
             <div class="search-box">
-                <i data-lucide="search" class="search-icon-svg"></i>
-                <input type="text" id="searchInput" placeholder="Найти трек..." autocomplete="off">
-                <button class="clear-btn" id="clearSearch">
-                    <i data-lucide="x" style="width:12px;height:12px"></i>
+                <i data-lucide="search" class="search-icon-svg" aria-hidden="true"></i>
+                <input type="text" id="searchInput" placeholder="Найти трек..." autocomplete="off" aria-label="Поиск по библиотеке">
+                <button class="clear-btn" id="clearSearch" aria-label="Очистить поиск">
+                    <i data-lucide="x" style="width:12px;height:12px" aria-hidden="true"></i>
                 </button>
             </div>
-            <div class="sort-buttons">
-                <button class="sort-btn active" data-sort="name">
-                    <i data-lucide="arrow-down-a-z" style="width:14px;height:14px"></i> По имени
+            <div class="sort-buttons" role="group" aria-label="Сортировка">
+                <button class="sort-btn active" data-sort="name" aria-label="Сортировка по имени">
+                    <i data-lucide="arrow-down-a-z" style="width:14px;height:14px" aria-hidden="true"></i> По имени
                 </button>
-                <button class="sort-btn" data-sort="date">
-                    <i data-lucide="calendar" style="width:14px;height:14px"></i> По дате
+                <button class="sort-btn" data-sort="date" aria-label="Сортировка по дате">
+                    <i data-lucide="calendar" style="width:14px;height:14px" aria-hidden="true"></i> По дате
                 </button>
             </div>
         </div>
 
         <!-- Player -->
-        <div class="player-section fade-in">
-            <div class="cover-art no-cover" id="coverArt"></div>
+        <div class="player-section fade-in" role="region" aria-label="Плеер">
+            <div class="cover-art no-cover" id="coverArt" role="img" aria-label="Обложка трека"></div>
             <div class="track-info">
                 <div class="track-title" id="trackTitle">Арабутка</div>
                 <div class="track-artist" id="trackArtist"></div>
             </div>
             <div class="progress-container">
                 <span class="time" id="currentTime">0:00</span>
-                <input type="range" id="progressBar" class="progress-bar" value="0" min="0" max="100">
+                <input type="range" id="progressBar" class="progress-bar" value="0" min="0" max="100" aria-label="Прогресс воспроизведения">
                 <span class="time" id="duration">0:00</span>
             </div>
-            <div class="controls">
-                <button class="control-btn" id="shuffleBtn" onclick="toggleShuffle()">
-                    <i data-lucide="shuffle" style="width:18px;height:18px"></i>
+            <div class="controls" role="group" aria-label="Управление плеером">
+                <button class="control-btn" id="shuffleBtn" onclick="toggleShuffle()" aria-label="Перемешать">
+                    <i data-lucide="shuffle" style="width:18px;height:18px" aria-hidden="true"></i>
                 </button>
-                <button class="control-btn" id="prevBtn" onclick="prevTrack()">
-                    <i data-lucide="skip-back" style="width:18px;height:18px"></i>
+                <button class="control-btn" id="prevBtn" onclick="prevTrack()" aria-label="Предыдущий трек">
+                    <i data-lucide="skip-back" style="width:18px;height:18px" aria-hidden="true"></i>
                 </button>
-                <button id="playBtn" onclick="togglePlay()">
-                    <i data-lucide="play" style="width:26px;height:26px"></i>
+                <button id="playBtn" onclick="togglePlay()" aria-label="Воспроизвести">
+                    <i data-lucide="play" style="width:26px;height:26px" aria-hidden="true"></i>
                 </button>
-                <button class="control-btn" id="nextBtn" onclick="nextTrack()">
-                    <i data-lucide="skip-forward" style="width:18px;height:18px"></i>
+                <button class="control-btn" id="nextBtn" onclick="nextTrack()" aria-label="Следующий трек">
+                    <i data-lucide="skip-forward" style="width:18px;height:18px" aria-hidden="true"></i>
                 </button>
-                <button class="control-btn" id="repeatBtn" onclick="toggleRepeat()">
-                    <i data-lucide="repeat" style="width:18px;height:18px"></i>
+                <button class="control-btn" id="repeatBtn" onclick="toggleRepeat()" aria-label="Повтор">
+                    <i data-lucide="repeat" style="width:18px;height:18px" aria-hidden="true"></i>
                 </button>
             </div>
             <div class="volume-container">
-                <button id="muteBtn" onclick="toggleMute()">
-                    <i data-lucide="volume-2" style="width:16px;height:16px"></i>
+                <button id="muteBtn" onclick="toggleMute()" aria-label="Звук">
+                    <i data-lucide="volume-2" style="width:16px;height:16px" aria-hidden="true"></i>
                 </button>
-                <input type="range" id="volumeBar" class="volume-bar" value="100" min="0" max="100">
+                <input type="range" id="volumeBar" class="volume-bar" value="100" min="0" max="100" aria-label="Громкость">
             </div>
             <audio id="audioPlayer"></audio>
         </div>
 
         <!-- Track list -->
-        <div class="track-list fade-in" id="trackList">
+        <div class="track-list fade-in" id="trackList" role="list" aria-label="Список треков">
             <p>Загрузка...</p>
         </div>
 
         <!-- Global Search -->
         <div class="global-search-section fade-in">
-            <h2><i data-lucide="globe" style="width:20px;height:20px;vertical-align:middle"></i> Поиск музыки</h2>
+            <h2><i data-lucide="globe" style="width:20px;height:20px;vertical-align:middle" aria-hidden="true"></i> Поиск музыки</h2>
             <div class="global-search-box">
-                <input type="text" id="globalSearchInput" placeholder="Исполнитель или трек..." autocomplete="off">
-                <button id="globalSearchBtn">
-                    <i data-lucide="search" style="width:18px;height:18px"></i>
+                <input type="text" id="globalSearchInput" placeholder="Исполнитель или трек..." autocomplete="off" aria-label="Глобальный поиск музыки">
+                <button id="globalSearchBtn" aria-label="Найти">
+                    <i data-lucide="search" style="width:18px;height:18px" aria-hidden="true"></i>
                 </button>
             </div>
-            <div id="globalSearchResults">
+            <div id="globalSearchResults" aria-live="polite">
                 <p>Введите запрос для поиска</p>
             </div>
         </div>
     </div>
 
     <!-- Toast -->
-    <div class="toast" id="toast"></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <!-- Bottom Navigation -->
-    <nav class="bottom-nav">
-        <button class="nav-item active" data-tab="home">
-            <i data-lucide="home" class="nav-icon-svg"></i>
+    <nav class="bottom-nav" aria-label="Основная навигация">
+        <button class="nav-item active" data-tab="home" aria-label="Главная">
+            <i data-lucide="home" class="nav-icon-svg" aria-hidden="true"></i>
             <span>Главная</span>
         </button>
-        <button class="nav-item" data-tab="library">
-            <i data-lucide="library" class="nav-icon-svg"></i>
+        <button class="nav-item" data-tab="library" aria-label="Библиотека">
+            <i data-lucide="library" class="nav-icon-svg" aria-hidden="true"></i>
             <span>Библиотека</span>
         </button>
-        <button class="nav-item" data-tab="search">
-            <i data-lucide="search" class="nav-icon-svg"></i>
+        <button class="nav-item" data-tab="search" aria-label="Поиск">
+            <i data-lucide="search" class="nav-icon-svg" aria-hidden="true"></i>
             <span>Поиск</span>
         </button>
-        <button class="nav-item" data-tab="profile">
-            <i data-lucide="user" class="nav-icon-svg"></i>
+        <button class="nav-item" data-tab="profile" aria-label="Профиль">
+            <i data-lucide="user" class="nav-icon-svg" aria-hidden="true"></i>
             <span>Профиль</span>
         </button>
     </nav>
