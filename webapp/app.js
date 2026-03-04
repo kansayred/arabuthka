@@ -3,7 +3,6 @@ const tg = window.Telegram.WebApp;
 tg.ready();
 tg.expand();
 
-// Media Session API
 import { MediaSessionManager } from './mediaSession.js';
 
 const API_URL = (window.Config && window.Config.api && window.Config.api.baseUrl) || 'https://arabuthka-production.up.railway.app';
@@ -19,7 +18,9 @@ if (!userId) {
 
 const authHeaders = { 'X-Telegram-Init-Data': initData };
 
-// DOM элементы
+// ===========================================
+// DOM ЭЛЕМЕНТЫ
+// ===========================================
 const audio = document.getElementById('audioPlayer');
 const trackTitle = document.getElementById('trackTitle');
 const trackArtist = document.getElementById('trackArtist');
@@ -34,7 +35,9 @@ const volumeBar = document.getElementById('volumeBar');
 const playBtn = document.getElementById('playBtn');
 const muteBtn = document.getElementById('muteBtn');
 
-// Media Session
+// ===========================================
+// MEDIA SESSION
+// ===========================================
 let mediaSessionManager = null;
 if (typeof MediaSessionManager !== 'undefined' && MediaSessionManager.isSupported()) {
     mediaSessionManager = new MediaSessionManager(audio);
@@ -42,16 +45,26 @@ if (typeof MediaSessionManager !== 'undefined' && MediaSessionManager.isSupporte
     mediaSessionManager.onNext(nextTrack);
 }
 
-// Состояние приложения
-let tracks = [];
-let currentIndex = 0;
-let isShuffled = false;
-let repeatMode = 'none'; // none, all, one
-let shuffledIndices = [];
-let previousVolume = 1;
+// ===========================================
+// СОСТОЯНИЕ ПРИЛОЖЕНИЯ
+// ===========================================
+
+// Display state (отображение списка)
+let tracks = [];       // текущий отфильтрованный/отсортированный список
+let allTracks = [];    // все треки с сервера
 let searchQuery = '';
 let sortMode = 'date';
-let allTracks = [];
+
+// Queue state (очередь воспроизведения — отдельна от display)
+let queue = [];           // массив треков в очереди
+let queueIndex = -1;      // текущая позиция в очереди (-1 = ничего не играет)
+let unshuffledQueue = []; // копия очереди до shuffle (для отмены)
+let unshuffledIndex = 0;
+
+// Player state
+let isShuffled = false;
+let repeatMode = 'none'; // none, all, one
+let previousVolume = 1;
 let currentObjectUrl = null;
 
 // ===========================================
@@ -67,9 +80,7 @@ function sanitizeCoverUrl(url) {
     if (!url) return '';
     try {
         const parsed = new URL(url);
-        if (parsed.protocol === 'https:' || parsed.protocol === 'data:') {
-            return url;
-        }
+        if (parsed.protocol === 'https:' || parsed.protocol === 'data:') return url;
     } catch (e) {}
     return '';
 }
@@ -79,6 +90,13 @@ function revokeCurrentObjectUrl() {
         URL.revokeObjectURL(currentObjectUrl);
         currentObjectUrl = null;
     }
+}
+
+function formatTime(seconds) {
+    if (!seconds || isNaN(seconds)) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
 // ===========================================
@@ -100,16 +118,89 @@ function updateMuteIcon(vol) {
     setLucideIcon(muteBtn, icon);
 }
 
-// ===========================================
-// АНИМАЦИЯ ОБЛОЖКИ
-// ===========================================
 function updateCoverAnimation(isPlaying) {
     if (!coverArt) return;
-    if (isPlaying) {
-        coverArt.classList.remove('paused');
-    } else {
-        coverArt.classList.add('paused');
+    coverArt.classList.toggle('paused', !isPlaying);
+}
+
+function haptic(type = 'light') {
+    if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred(type);
+}
+
+// ===========================================
+// ОЧЕРЕДЬ ВОСПРОИЗВЕДЕНИЯ (QUEUE)
+// Отделена от display-списка: фильтрация/сортировка
+// не ломает порядок воспроизведения.
+// ===========================================
+
+/** Заменить очередь и начать воспроизведение с позиции startIndex */
+function setQueue(trackList, startIndex = 0) {
+    queue = trackList.map(t => ({ ...t }));
+    queueIndex = startIndex;
+    unshuffledQueue = [...queue];
+    unshuffledIndex = startIndex;
+    if (isShuffled) {
+        shuffleQueueKeepCurrent();
     }
+}
+
+/** Fisher-Yates shuffle, текущий трек остаётся на позиции 0 */
+function shuffleQueueKeepCurrent() {
+    if (queue.length <= 1) return;
+    const current = queue[queueIndex];
+    const rest = queue.filter((_, i) => i !== queueIndex);
+    for (let i = rest.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [rest[i], rest[j]] = [rest[j], rest[i]];
+    }
+    queue = [current, ...rest];
+    queueIndex = 0;
+}
+
+/** Добавить трек в конец очереди */
+function addToQueue(track) {
+    queue.push({ ...track });
+    showToast(`➕ ${track.name} добавлен в очередь`);
+    haptic('light');
+}
+
+/** Вставить трек сразу после текущего («следующий») */
+function playNextInQueue(track) {
+    const insertAt = queueIndex >= 0 ? queueIndex + 1 : 0;
+    queue.splice(insertAt, 0, { ...track });
+    showToast(`▶️ ${track.name} — следующий`);
+    haptic('light');
+}
+
+/** Удалить трек из очереди по индексу */
+function removeFromQueue(index) {
+    if (index < 0 || index >= queue.length || index === queueIndex) return;
+    queue.splice(index, 1);
+    if (index < queueIndex) queueIndex--;
+}
+
+/** Очистить очередь (кроме текущего трека) */
+function clearQueue() {
+    if (queueIndex >= 0 && queueIndex < queue.length) {
+        const current = queue[queueIndex];
+        queue = [current];
+        queueIndex = 0;
+    } else {
+        queue = [];
+        queueIndex = -1;
+    }
+    showToast('🗑️ Очередь очищена');
+}
+
+/** Получить текущий трек из очереди */
+function getCurrentQueueTrack() {
+    return (queueIndex >= 0 && queueIndex < queue.length) ? queue[queueIndex] : null;
+}
+
+/** ID текущего трека (для подсветки в списке) */
+function getActiveTrackId() {
+    const t = getCurrentQueueTrack();
+    return t ? t.id : null;
 }
 
 // ===========================================
@@ -157,23 +248,26 @@ async function loadTracks() {
             throw new Error(`HTTP ${res.status}`);
         }
         const data = await res.json();
-        tracks = Array.isArray(data) ? data : data.tracks;
-        allTracks = [...tracks];
+        const loaded = Array.isArray(data) ? data : data.tracks;
+        allTracks = [...loaded];
         applySorting();
         renderTracks();
-        if (isShuffled) generateShuffledIndices();
     } catch (err) {
         trackList.innerHTML = `<div class="empty-state">❌ ${escapeHtml(err.message)}</div>`;
     }
 }
 
 // ===========================================
-// СОРТИРОВКА И ФИЛЬТРАЦИЯ
+// СОРТИРОВКА И ФИЛЬТРАЦИЯ (display only)
 // ===========================================
 function applySorting() {
     if (searchQuery) {
         const q = searchQuery.toLowerCase();
-        tracks = allTracks.filter(t => t.name.toLowerCase().includes(q));
+        tracks = allTracks.filter(t =>
+            t.name.toLowerCase().includes(q) ||
+            (t.artist && t.artist.toLowerCase().includes(q)) ||
+            (t.album && t.album.toLowerCase().includes(q))
+        );
     } else {
         tracks = [...allTracks];
     }
@@ -190,17 +284,18 @@ function applySorting() {
 function renderTracks() {
     if (!trackList) return;
     if (tracks.length === 0) {
-        if (searchQuery) {
-            trackList.innerHTML = '<div class="empty-state">🔍 Ничего не найдено</div>';
-        } else {
-            trackList.innerHTML = '<div class="empty-state">🎵 Загрузи свой первый трек!</div>';
-        }
+        trackList.innerHTML = searchQuery
+            ? '<div class="empty-state">🔍 Ничего не найдено</div>'
+            : '<div class="empty-state">🎵 Загрузи свой первый трек!</div>';
         return;
     }
+    const activeId = getActiveTrackId();
     trackList.innerHTML = tracks.map((track, index) => {
-        const isActive = index === currentIndex;
+        const isActive = track.id === activeId;
         const isPlaying = isActive && !audio.paused;
-        const equalizerHtml = isPlaying ? `<div class="equalizer"><div class="equalizer-bar"></div><div class="equalizer-bar"></div><div class="equalizer-bar"></div><div class="equalizer-bar"></div></div>` : '';
+        const equalizerHtml = isPlaying
+            ? '<div class="equalizer"><div class="equalizer-bar"></div><div class="equalizer-bar"></div><div class="equalizer-bar"></div><div class="equalizer-bar"></div></div>'
+            : '';
         return `<div class="track-item ${isActive ? 'active' : ''}" data-swipe-index="${index}" onclick="playTrack(${index})">
             <span class="track-number">${index + 1}</span>
             <div class="track-info-item">
@@ -219,12 +314,14 @@ function renderTracks() {
 // ===========================================
 // ВОСПРОИЗВЕДЕНИЕ
 // ===========================================
-async function playTrack(index) {
-    if (index < 0 || index >= tracks.length) return;
-    currentIndex = index;
-    const track = tracks[currentIndex];
+
+/** Начать воспроизведение из очереди (текущий queueIndex) */
+async function playFromQueue() {
+    const track = getCurrentQueueTrack();
+    if (!track) return;
     try {
         const resp = await fetch(`${API_URL}/stream/${track.id}`, { headers: authHeaders });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const blob = await resp.blob();
         revokeCurrentObjectUrl();
         currentObjectUrl = URL.createObjectURL(blob);
@@ -232,10 +329,12 @@ async function playTrack(index) {
         audio.play();
     } catch (err) {
         console.error('Ошибка воспроизведения:', err);
+        if (trackTitle) trackTitle.textContent = '❌ Ошибка загрузки';
+        return;
     }
+    // Обновить UI
     if (trackTitle) trackTitle.textContent = track.name;
     if (trackArtist) trackArtist.textContent = track.artist || 'Неизвестный исполнитель';
-        // Обновление обложки трека
     if (coverArt) {
         const coverUrl = sanitizeCoverUrl(track.cover_url);
         coverArt.style.backgroundImage = coverUrl ? `url(${coverUrl})` : '';
@@ -244,6 +343,8 @@ async function playTrack(index) {
     updatePlayButton(true);
     updateCoverAnimation(true);
     renderTracks();
+    haptic('light');
+    // Media Session
     if (mediaSessionManager) {
         mediaSessionManager.updateMetadata({
             name: track.name,
@@ -254,8 +355,15 @@ async function playTrack(index) {
     }
 }
 
+/** Клик по треку в списке — установить очередь из текущего display, играть с index */
+async function playTrack(index) {
+    if (index < 0 || index >= tracks.length) return;
+    setQueue(tracks, index);
+    await playFromQueue();
+}
+
 function togglePlay() {
-    if (!audio.src || tracks.length === 0) {
+    if (!audio.src || queue.length === 0) {
         if (tracks.length > 0) {
             playTrack(0);
         }
@@ -269,33 +377,42 @@ function togglePlay() {
 }
 
 function nextTrack() {
-    if (tracks.length === 0) return;
-    let nextIndex;
-    if (isShuffled && shuffledIndices.length > 0) {
-        const pos = shuffledIndices.indexOf(currentIndex);
-        const nextPos = (pos + 1) % shuffledIndices.length;
-        nextIndex = shuffledIndices[nextPos];
-    } else {
-        nextIndex = (currentIndex + 1) % tracks.length;
+    if (queue.length === 0) return;
+    if (repeatMode === 'one') {
+        audio.currentTime = 0;
+        audio.play();
+        return;
     }
-    playTrack(nextIndex);
+    if (queueIndex < queue.length - 1) {
+        queueIndex++;
+    } else if (repeatMode === 'all') {
+        queueIndex = 0;
+    } else {
+        // Конец очереди, repeat off
+        updatePlayButton(false);
+        updateCoverAnimation(false);
+        if (mediaSessionManager) mediaSessionManager.updatePlaybackState('paused');
+        return;
+    }
+    playFromQueue();
 }
 
 function prevTrack() {
-    if (tracks.length === 0) return;
+    if (queue.length === 0) return;
+    // Если прошло больше 3с — перемотать в начало
     if (audio.currentTime > 3) {
         audio.currentTime = 0;
         return;
     }
-    let prevIndex;
-    if (isShuffled && shuffledIndices.length > 0) {
-        const pos = shuffledIndices.indexOf(currentIndex);
-        const prevPos = (pos - 1 + shuffledIndices.length) % shuffledIndices.length;
-        prevIndex = shuffledIndices[prevPos];
+    if (queueIndex > 0) {
+        queueIndex--;
+    } else if (repeatMode === 'all') {
+        queueIndex = queue.length - 1;
     } else {
-        prevIndex = (currentIndex - 1 + tracks.length) % tracks.length;
+        audio.currentTime = 0;
+        return;
     }
-    playTrack(prevIndex);
+    playFromQueue();
 }
 
 // ===========================================
@@ -310,6 +427,11 @@ async function deleteTrack(id) {
         });
         const data = await res.json();
         if (data.success) {
+            // Удалить из очереди тоже
+            const qIdx = queue.findIndex(t => t.id === id);
+            if (qIdx >= 0 && qIdx !== queueIndex) {
+                removeFromQueue(qIdx);
+            }
             loadTracks();
         } else {
             alert('Ошибка удаления: ' + (data.error || 'Неизвестно'));
@@ -327,16 +449,25 @@ function toggleShuffle() {
     const btn = document.getElementById('shuffleBtn');
     if (btn) btn.classList.toggle('active', isShuffled);
     if (isShuffled) {
-        generateShuffledIndices();
+        // Сохраняем оригинал и шафлим
+        unshuffledQueue = [...queue];
+        unshuffledIndex = queueIndex;
+        shuffleQueueKeepCurrent();
+    } else {
+        // Восстанавливаем оригинальный порядок
+        const currentTrack = getCurrentQueueTrack();
+        if (unshuffledQueue.length > 0) {
+            queue = [...unshuffledQueue];
+            // Найти текущий трек в оригинальном порядке
+            if (currentTrack) {
+                const idx = queue.findIndex(t => t.id === currentTrack.id);
+                queueIndex = idx >= 0 ? idx : unshuffledIndex;
+            } else {
+                queueIndex = unshuffledIndex;
+            }
+        }
     }
-}
-
-function generateShuffledIndices() {
-    shuffledIndices = tracks.map((_, i) => i);
-    for (let i = shuffledIndices.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffledIndices[i], shuffledIndices[j]] = [shuffledIndices[j], shuffledIndices[i]];
-    }
+    haptic('light');
 }
 
 function toggleRepeat() {
@@ -346,9 +477,9 @@ function toggleRepeat() {
     const btn = document.getElementById('repeatBtn');
     if (btn) {
         btn.classList.toggle('active', repeatMode !== 'none');
-        const iconName = repeatMode === 'one' ? 'repeat-1' : 'repeat';
-        setLucideIcon(btn, iconName);
+        setLucideIcon(btn, repeatMode === 'one' ? 'repeat-1' : 'repeat');
     }
+    haptic('light');
 }
 
 // ===========================================
@@ -365,16 +496,6 @@ function toggleMute() {
         if (volumeBar) volumeBar.value = previousVolume * 100;
         updateMuteIcon(previousVolume);
     }
-}
-
-// ===========================================
-// УТИЛИТЫ
-// ===========================================
-function formatTime(seconds) {
-    if (!seconds || isNaN(seconds)) return '0:00';
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
 // ===========================================
@@ -396,7 +517,7 @@ audio.addEventListener('ended', () => {
     if (repeatMode === 'one') {
         audio.currentTime = 0;
         audio.play();
-    } else if (repeatMode === 'all' || currentIndex < tracks.length - 1) {
+    } else if (repeatMode === 'all' || queueIndex < queue.length - 1) {
         nextTrack();
     } else {
         updatePlayButton(false);
@@ -429,13 +550,31 @@ audio.addEventListener('error', () => {
 // ===========================================
 // ОБРАБОТЧИКИ UI-ЭЛЕМЕНТОВ
 // ===========================================
+
+// Прогресс-бар: seeking
 if (progressBar) {
+    let isSeeking = false;
+
+    progressBar.addEventListener('mousedown', () => { isSeeking = true; });
+    progressBar.addEventListener('touchstart', () => { isSeeking = true; }, { passive: true });
+
     progressBar.addEventListener('input', () => {
         if (!audio.duration) return;
-        audio.currentTime = (progressBar.value / 100) * audio.duration;
+        const seekTime = (progressBar.value / 100) * audio.duration;
+        if (currentTimeEl) currentTimeEl.textContent = formatTime(seekTime);
     });
+
+    function commitSeek() {
+        if (!isSeeking || !audio.duration) return;
+        audio.currentTime = (progressBar.value / 100) * audio.duration;
+        isSeeking = false;
+    }
+    progressBar.addEventListener('mouseup', commitSeek);
+    progressBar.addEventListener('touchend', commitSeek);
+    progressBar.addEventListener('change', commitSeek);
 }
 
+// Громкость
 if (volumeBar) {
     volumeBar.addEventListener('input', () => {
         audio.volume = volumeBar.value / 100;
@@ -443,6 +582,7 @@ if (volumeBar) {
     });
 }
 
+// Локальный поиск (фильтрация списка, не меняет очередь!)
 const searchInput = document.getElementById('searchInput');
 const clearSearch = document.getElementById('clearSearch');
 
@@ -465,7 +605,7 @@ if (clearSearch) {
     });
 }
 
-// Sort buttons via data-sort attribute
+// Сортировка (только display, очередь не трогаем)
 document.querySelectorAll('.sort-btn[data-sort]').forEach(btn => {
     btn.addEventListener('click', () => {
         sortMode = btn.getAttribute('data-sort');
@@ -487,6 +627,9 @@ window.toggleRepeat = toggleRepeat;
 window.toggleMute = toggleMute;
 window.playTrack = playTrack;
 window.deleteTrack = deleteTrack;
+window.addToQueue = addToQueue;
+window.playNextInQueue = playNextInQueue;
+window.clearQueue = clearQueue;
 
 // ===========================================
 // ИНИЦИАЛИЗАЦИЯ
@@ -526,7 +669,7 @@ loadTracks();
                 const coverUrl = sanitizeCoverUrl(track.cover);
                 const coverHtml = coverUrl
                     ? `<img class="search-result-cover" src="${escapeHtml(coverUrl)}" alt="" loading="lazy">`
-                    : `<div class="search-result-cover no-cover"></div>`;
+                    : '<div class="search-result-cover no-cover"></div>';
                 return `<div class="search-result-item">
                     ${coverHtml}
                     <div class="search-result-info">
@@ -548,22 +691,13 @@ loadTracks();
         }
     }
 
-    searchBtn.addEventListener('click', () => {
-        performSearch(searchInput.value);
-    });
-
+    searchBtn.addEventListener('click', () => performSearch(searchInput.value));
     searchInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            performSearch(searchInput.value);
-        }
+        if (e.key === 'Enter') { e.preventDefault(); performSearch(searchInput.value); }
     });
-
     searchInput.addEventListener('input', () => {
         clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            performSearch(searchInput.value);
-        }, 600);
+        searchTimeout = setTimeout(() => performSearch(searchInput.value), 600);
     });
 })();
 
@@ -606,10 +740,7 @@ async function downloadSearchResult(index) {
         });
         const data = await res.json();
         if (data.success) {
-            if (btn) {
-                setLucideIcon(btn, 'check');
-                btn.title = 'Добавлено';
-            }
+            if (btn) { setLucideIcon(btn, 'check'); btn.title = 'Добавлено'; }
             loadTracks();
         } else {
             if (btn) setLucideIcon(btn, 'x');
@@ -630,9 +761,7 @@ function showToast(message, duration = 2000) {
     if (!toast) return;
     toast.textContent = message;
     toast.classList.add('visible');
-    if (tg.HapticFeedback) {
-        tg.HapticFeedback.notificationOccurred('success');
-    }
+    if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
     setTimeout(() => toast.classList.remove('visible'), duration);
 }
 window.showToast = showToast;
@@ -665,13 +794,9 @@ window.showToast = showToast;
         if (!currentEl) return;
         const dx = e.touches[0].clientX - startX;
         const dy = e.touches[0].clientY - startY;
-        if (!isDragging && Math.abs(dy) > Math.abs(dx)) {
-            currentEl = null;
-            return;
-        }
+        if (!isDragging && Math.abs(dy) > Math.abs(dx)) { currentEl = null; return; }
         isDragging = true;
-        const clampedDx = Math.max(-120, Math.min(120, dx));
-        currentEl.style.transform = `translateX(${clampedDx}px)`;
+        currentEl.style.transform = `translateX(${Math.max(-120, Math.min(120, dx))}px)`;
     }, { passive: true });
 
     trackListEl.addEventListener('touchend', () => {
@@ -682,8 +807,11 @@ window.showToast = showToast;
         currentEl.classList.remove('swiping');
         currentEl.classList.add('snap-back');
         if (dx > THRESHOLD) {
-            showToast('❤️ Добавлено в избранное');
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+            // Свайп вправо — добавить в очередь
+            const index = currentEl.getAttribute('data-swipe-index');
+            if (index !== null && tracks[index]) {
+                addToQueue(tracks[index]);
+            }
         } else if (dx < -THRESHOLD) {
             const index = currentEl.getAttribute('data-swipe-index');
             if (index !== null && tracks[index]) {
@@ -727,7 +855,7 @@ window.showToast = showToast;
                 case 'profile':
                     const user = tg.initDataUnsafe?.user;
                     if (user) {
-                        showToast(`👤 ${user.first_name || ''} • ${tracks.length} треков`);
+                        showToast(`👤 ${user.first_name || ''} • ${allTracks.length} треков`);
                     }
                     break;
             }
@@ -735,3 +863,18 @@ window.showToast = showToast;
         });
     });
 })();
+
+// ===========================================
+// KEYBOARD SHORTCUTS (для desktop/devtools)
+// ===========================================
+document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    switch (e.code) {
+        case 'Space': e.preventDefault(); togglePlay(); break;
+        case 'ArrowRight': e.preventDefault(); nextTrack(); break;
+        case 'ArrowLeft': e.preventDefault(); prevTrack(); break;
+        case 'KeyS': if (!e.ctrlKey) toggleShuffle(); break;
+        case 'KeyR': if (!e.ctrlKey) toggleRepeat(); break;
+        case 'KeyM': toggleMute(); break;
+    }
+});
