@@ -28,40 +28,29 @@ class MediaSessionManager {
     // Определяем, запущено ли приложение внутри Telegram WebView
     detectTelegramWebView() {
         const isTelegram = window.Telegram && window.Telegram.WebApp;
-        if (isTelegram) {
-            console.log('📱 Обнаружен Telegram WebView');
-            console.log('ℹ️ Media Session может работать ограниченно в Telegram.');
-            console.log('💡 Для полной поддержки — установи приложение на главный экран');
-        }
         return !!isTelegram;
     }
 
     // Запуск Media Session API
     init() {
         if (!('mediaSession' in navigator)) {
-            console.warn('❌ Media Session API не поддерживается этим браузером');
             return;
         }
 
-        console.log('✅ Media Session API доступен');
-        
         // Проверим, реально ли работает setActionHandler
         try {
             // Кнопка «играть»
             navigator.mediaSession.setActionHandler('play', () => {
-                console.log('▶️ Media Session: play');
                 this.audio.play();
             });
 
             // Кнопка «пауза»
             navigator.mediaSession.setActionHandler('pause', () => {
-                console.log('⏸️ Media Session: pause');
                 this.audio.pause();
             });
 
             // Кнопка «предыдущий трек»
             navigator.mediaSession.setActionHandler('previoustrack', () => {
-                console.log('⏮️ Media Session: previous');
                 if (this.onPreviousCallback) {
                     this.onPreviousCallback();
                 }
@@ -69,7 +58,6 @@ class MediaSessionManager {
 
             // Кнопка «следующий трек»
             navigator.mediaSession.setActionHandler('nexttrack', () => {
-                console.log('⏭️ Media Session: next');
                 if (this.onNextCallback) {
                     this.onNextCallback();
                 }
@@ -78,14 +66,12 @@ class MediaSessionManager {
             // Перемотка на конкретный момент
             navigator.mediaSession.setActionHandler('seekto', (details) => {
                 if (details.seekTime && this.audio.duration) {
-                    console.log('⏩ Media Session: seek to', details.seekTime);
                     this.audio.currentTime = details.seekTime;
                 }
             });
 
-            console.log('✅ Все обработчики Media Session установлены');
         } catch (error) {
-            console.warn('⚠️ Ошибка при установке обработчиков Media Session:', error);
+            // Игнорируем ошибки при установке обработчиков
         }
 
         // Обновляем позицию при воспроизведении (не слишком часто)
@@ -123,10 +109,8 @@ class MediaSessionManager {
                     { src: coverUrl, sizes: '512x512', type: 'image/png' },
                 ],
             });
-
-            console.log('🎵 Метаданные обновлены:', track.name);
         } catch (error) {
-            console.warn('⚠️ Ошибка при обновлении метаданных:', error);
+            // Игнорируем ошибки при обновлении метаданных
         }
 
         this.updatePositionState();
@@ -155,7 +139,6 @@ class MediaSessionManager {
 
         try {
             navigator.mediaSession.playbackState = state;
-            console.log('🔄 Playback state:', state);
         } catch (error) {
             // Игнорируем ошибки
         }
@@ -191,7 +174,6 @@ class MediaSessionManager {
             navigator.mediaSession.setActionHandler('previoustrack', null);
             navigator.mediaSession.setActionHandler('nexttrack', null);
             navigator.mediaSession.setActionHandler('seekto', null);
-            console.log('🧹 Media Session очищен');
         } catch (error) {
             // Игнорируем ошибки при очистке
         }

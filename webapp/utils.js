@@ -65,7 +65,7 @@ const Utils = {
             localStorage.setItem(key, JSON.stringify(data));
             return true;
         } catch (e) {
-            console.error('Storage save error:', e);
+            /* storage error */
             return false;
         }
     },
@@ -78,7 +78,7 @@ const Utils = {
             const item = localStorage.getItem(key);
             return item ? JSON.parse(item) : defaultValue;
         } catch (e) {
-            console.error('Storage load error:', e);
+            /* storage error */
             return defaultValue;
         }
     },
@@ -141,7 +141,6 @@ const Utils = {
                 Telegram.WebApp.HapticFeedback.impactOccurred(type || 'light');
             }
         } catch (e) {
-            console.warn('Haptic feedback unavailable');
         }
     }
 };

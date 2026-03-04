@@ -276,9 +276,7 @@
         });
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(reg => console.log('SW:', reg.scope))
-                    .catch(err => console.error('SW:', err));
+                navigator.serviceWorker.register('/service-worker.js').catch(() => {});
             });
         }
     </script>

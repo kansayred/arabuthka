@@ -44,7 +44,7 @@
 }
 
 .onboarding-title {
-  font-family: var(--font-heading, 'Space Grotesk', sans-serif);
+  font-family: var(--font-heading, 'Inter', sans-serif);
   font-size: var(--ara-font-title, 20px);
   font-weight: var(--ara-fw-bold, 700);
   color: var(--text-primary, #1A1A2E);

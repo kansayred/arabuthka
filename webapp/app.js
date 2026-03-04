@@ -168,7 +168,7 @@ async function playTrack(index) {
 }
 function togglePlay() {
     if (!audio.src || !queue.length) { if (tracks.length) playTrack(0); return; }
-    if (audio.paused) audio.play().catch(e => console.log(e)); else audio.pause();
+    if (audio.paused) audio.play().catch(() => {}); else audio.pause();
 }
 function nextTrack() {
     if (!queue.length) return;
