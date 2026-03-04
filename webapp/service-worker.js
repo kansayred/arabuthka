@@ -1,24 +1,17 @@
-// Версия кэша — при обновлении кода меняем это значение,
-// чтобы Service Worker вычистил устаревший кэш у пользователей.
-// Формат: arabuthka-v{мажор}.{минор}.{дата}
-const CACHE_VERSION = '2.1.20260227';
+// Service Worker — Арабутка v2.2.20260304
+const CACHE_VERSION = '2.2.20260304';
 const CACHE_NAME = `arabuthka-${CACHE_VERSION}`;
 
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/style.css',
-  '/app.js',
-  '/mediaSession.js',
-    '/config.js',
-  '/utils.js',
-  '/audioPlayer.js',
-  '/playerUI.js',
-  '/searchMusic.js',
+  '/', '/index.html',
+  '/style.css', '/design-tokens.css', '/components.css',
+  '/miniPlayer.css', '/onboarding.css', '/ui-extras.css', '/dialogs.css',
+  '/app.js', '/app-ui.js', '/mediaSession.js', '/config.js',
+  '/searchMusic.js', '/playlists.js', '/miniPlayer.js',
+  '/gradients.js', '/onboarding.js', '/network.js',
   '/manifest.json'
 ];
 
-// Установка Service Worker и кэширование файлов
 self.addEventListener('install', (event) => {
   console.log(`[SW] Установка версии ${CACHE_VERSION}`);
   event.waitUntil(
@@ -31,11 +24,9 @@ self.addEventListener('install', (event) => {
         console.error('[SW] Ошибка кэширования:', error);
       })
   );
-  // Активировать новый SW сразу, не ждать закрытия вкладок
   self.skipWaiting();
 });
 
-// Активация — удаляем все кэши от предыдущих версий
 self.addEventListener('activate', (event) => {
   console.log(`[SW] Активация версии ${CACHE_VERSION}`);
   event.waitUntil(
@@ -50,38 +41,30 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
-  // Берём под контроль все открытые вкладки
   self.clients.claim();
 });
 
-// Обработка запросов: сеть с fallback на кэш
-// API-запросы и запросы к другим доменам не кэшируем
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Не трогаем запросы к API (Railway), к другим доменам и не-GET запросы
-  if (url.origin !== self.location.origin ||
-      event.request.method !== 'GET') {
+  // Не кэшируем API-запросы, чужие домены и не-GET запросы
+  if (url.origin !== self.location.origin || event.request.method !== 'GET') {
     return;
   }
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Проверяем что ответ валидный перед кэшированием
         if (!response || response.status !== 200 || response.type !== 'basic') {
           return response;
         }
-
         const responseToCache = response.clone();
         caches.open(CACHE_NAME).then((cache) => {
           cache.put(event.request, responseToCache);
         });
-
         return response;
       })
       .catch(() => {
-        // Сеть недоступна — отдаём из кэша
         return caches.match(event.request);
       })
   );

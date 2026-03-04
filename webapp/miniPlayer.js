@@ -1,6 +1,6 @@
 /**
- * MiniPlayer — Sticky mini-player + full-screen
- * Интеграция с queue из app.js
+ * MiniPlayer — Sticky mini-player + fullscreen overlay
+ * Reads queue from window.getCurrentQueueTrack (app.js export)
  */
 (function() {
   'use strict';
@@ -19,10 +19,10 @@
   var fsCover = fsEl.querySelector('.fs-cover');
   var fsTitle = fsEl.querySelector('.fs-title');
   var fsArtist = fsEl.querySelector('.fs-artist');
+  var fsCloseBar = fsEl.querySelector('.fs-close-bar');
 
   var isOpen = false;
-  var touchStartY = 0;
-  var touchDeltaY = 0;
+  var touchStartY = 0, touchDeltaY = 0;
 
   function haptic(type) {
     var tg = window.Telegram && window.Telegram.WebApp;
@@ -31,23 +31,13 @@
 
   function safeCover(url) {
     if (!url) return '';
-    try {
-      var p = new URL(url);
-      if (p.protocol === 'https:' || p.protocol === 'data:') return url;
-    } catch (e) { /* */ }
+    try { var p = new URL(url); if (p.protocol === 'https:' || p.protocol === 'data:') return url; } catch (e) {}
     return '';
   }
 
-  // Обновить mini-player из текущего трека
   function updateMiniPlayer() {
-    var track = null;
-    if (typeof window.getCurrentQueueTrack === 'function') {
-      track = window.getCurrentQueueTrack();
-    }
-    if (!track) {
-      miniEl.classList.remove('visible');
-      return;
-    }
+    var track = (typeof window.getCurrentQueueTrack === 'function') ? window.getCurrentQueueTrack() : null;
+    if (!track) { miniEl.classList.remove('visible'); return; }
 
     miniEl.classList.add('visible');
     if (miniTitle) miniTitle.textContent = track.name || 'Без названия';
@@ -55,59 +45,43 @@
 
     var coverUrl = safeCover(track.cover_url);
     if (miniCover) {
-      miniCover.innerHTML = coverUrl
-        ? '<img src="' + coverUrl + '" alt="">' : '';
+      miniCover.innerHTML = coverUrl ? '<img src="' + coverUrl + '" alt="">' : '';
       miniCover.classList.toggle('no-cover', !coverUrl);
     }
-
-    // Full-screen тоже
     if (fsTitle) fsTitle.textContent = track.name || 'Без названия';
     if (fsArtist) fsArtist.textContent = track.artist || '';
-    if (fsCover) {
-      fsCover.innerHTML = coverUrl
-        ? '<img src="' + coverUrl + '" alt="">' : '';
-    }
+    if (fsCover) fsCover.innerHTML = coverUrl ? '<img src="' + coverUrl + '" alt="">' : '';
   }
 
-  // Прогресс
   function updateProgress() {
     if (!audio || !audio.duration || !miniProgress) return;
-    var pct = (audio.currentTime / audio.duration) * 100;
-    miniProgress.style.width = pct + '%';
+    miniProgress.style.width = ((audio.currentTime / audio.duration) * 100) + '%';
   }
 
-  // Play/pause кнопка
   function updatePlayIcon() {
     if (!miniPlayBtn || !window.lucide) return;
-    var icon = audio && !audio.paused ? 'pause' : 'play';
-    miniPlayBtn.innerHTML =
-      '<i data-lucide="' + icon + '" style="width:18px;height:18px" aria-hidden="true"></i>';
+    var icon = (audio && !audio.paused) ? 'pause' : 'play';
+    miniPlayBtn.innerHTML = '<i data-lucide="' + icon + '" style="width:18px;height:18px" aria-hidden="true"></i>';
     lucide.createIcons({ nodes: [miniPlayBtn] });
   }
 
-  // Открыть full-screen
   function openFullscreen() {
-    isOpen = true;
-    fsEl.classList.add('open');
-    haptic('medium');
+    isOpen = true; fsEl.classList.add('open'); haptic('medium');
     document.body.style.overflow = 'hidden';
   }
 
-  // Закрыть full-screen
   function closeFullscreen() {
-    isOpen = false;
-    fsEl.classList.remove('open');
-    fsEl.style.transform = '';
-    haptic('light');
+    isOpen = false; fsEl.classList.remove('open'); fsEl.style.transform = ''; haptic('light');
     document.body.style.overflow = '';
   }
 
-  // События
+  // Click mini-player body → open fullscreen
   miniEl.addEventListener('click', function(e) {
     if (e.target.closest('.mini-player-play')) return;
     openFullscreen();
   });
 
+  // Mini play/pause button
   if (miniPlayBtn) {
     miniPlayBtn.addEventListener('click', function(e) {
       e.stopPropagation();
@@ -115,47 +89,35 @@
     });
   }
 
-  // Свайп вниз — закрыть full-screen
+  // Click close-bar → close fullscreen
+  if (fsCloseBar) {
+    fsCloseBar.addEventListener('click', closeFullscreen);
+  }
+
+  // Swipe down to close fullscreen
   fsEl.addEventListener('touchstart', function(e) {
-    touchStartY = e.touches[0].clientY;
-    touchDeltaY = 0;
+    touchStartY = e.touches[0].clientY; touchDeltaY = 0;
   }, { passive: true });
 
   fsEl.addEventListener('touchmove', function(e) {
     touchDeltaY = e.touches[0].clientY - touchStartY;
-    if (touchDeltaY > 0) {
-      fsEl.style.transform = 'translateY(' + touchDeltaY + 'px)';
-    }
+    if (touchDeltaY > 0) fsEl.style.transform = 'translateY(' + touchDeltaY + 'px)';
   }, { passive: true });
 
   fsEl.addEventListener('touchend', function() {
-    if (touchDeltaY > 120) {
-      closeFullscreen();
-    } else {
-      fsEl.style.transform = '';
-    }
+    if (touchDeltaY > 120) closeFullscreen();
+    else fsEl.style.transform = '';
   }, { passive: true });
 
-  // Слушаем аудио-события
+  // Audio events
   if (audio) {
-    audio.addEventListener('play', function() {
-      updateMiniPlayer();
-      updatePlayIcon();
-    });
+    audio.addEventListener('play', function() { updateMiniPlayer(); updatePlayIcon(); });
     audio.addEventListener('pause', updatePlayIcon);
     audio.addEventListener('timeupdate', updateProgress);
-    audio.addEventListener('loadedmetadata', function() {
-      updateMiniPlayer();
-      updatePlayIcon();
-    });
+    audio.addEventListener('loadedmetadata', function() { updateMiniPlayer(); updatePlayIcon(); });
   }
 
-  // Периодическая проверка
   setInterval(updateMiniPlayer, 1000);
 
-  window.MiniPlayer = {
-    update: updateMiniPlayer,
-    open: openFullscreen,
-    close: closeFullscreen
-  };
+  window.MiniPlayer = { update: updateMiniPlayer, open: openFullscreen, close: closeFullscreen };
 })();
