@@ -1,5 +1,5 @@
 // Арабутка — app-ui.js (UI helpers, search, sort, swipe, nav, keyboard)
-// Task 9: Time-of-day greeting + recently played
+// Task 10: Staggered animations, index-based delays
 
 // --- UTILITIES ---
 export function escapeHtml(text) {
@@ -35,6 +35,7 @@ export function updateMuteIcon(vol) {
 export function updateCoverAnimation(isPlaying) {
     const coverArt = document.getElementById('coverArt'); if (!coverArt) return;
     coverArt.classList.toggle('paused', !isPlaying);
+    coverArt.classList.toggle('playing', isPlaying);
 }
 
 // --- STATE ACCESSORS ---
@@ -179,13 +180,14 @@ export function renderTracks() {
     const activeId = getActiveTrackId();
     const visible = tracks.slice(0, _visibleCount);
     const hasMore = tracks.length > _visibleCount;
+    // Each track-item gets --i CSS variable for staggered animation
     trackList.innerHTML = visible.map((track, index) => {
         const isActive = track.id === activeId;
         const isPlaying = isActive && !audio.paused;
         const eq = isPlaying
             ? '<div class="equalizer"><div class="equalizer-bar"></div><div class="equalizer-bar"></div><div class="equalizer-bar"></div><div class="equalizer-bar"></div></div>'
             : '';
-        return `<div class="track-item ${isActive ? 'active' : ''}" data-swipe-index="${index}" onclick="playTrack(${index})">
+        return `<div class="track-item ${isActive ? 'active' : ''}" data-swipe-index="${index}" style="--i: ${index}" onclick="playTrack(${index})">
             <span class="track-number">${index + 1}</span>
             <div class="track-info-item">
                 <div class="track-name">${escapeHtml(track.name)}</div>

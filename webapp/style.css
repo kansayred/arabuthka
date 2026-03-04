@@ -1,7 +1,7 @@
 /* ===========================================
    ARABUTHKA — MAIN STYLES v2
    Dark premium music player
-   Layout & spacing refinement + recently played (Task 9)
+   Animations & micro-interactions (Task 10)
    =========================================== */
 :root {
   --bg-primary: #0D0D0D;
@@ -74,6 +74,49 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* PAGE TRANSITIONS */
+.section-page {
+  display: none;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.section-page.active {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* KEYFRAME ANIMATIONS */
+@keyframes fadeInItem {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes albumPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* ALBUM COVER PULSE — playing state */
+.cover-art.playing {
+  animation: albumPulse 3s ease-in-out infinite;
+}
+
+/* STAGGERED TRACK LIST ANIMATION */
+.track-item {
+  opacity: 0;
+  animation: fadeInItem 0.3s ease forwards;
+  animation-delay: calc(var(--i, 0) * 50ms);
+}
+
+/* BUTTON PRESS — all buttons */
+button:active,
+.upload-btn:active,
+.sort-btn:active,
+.nav-item:active {
+  transform: scale(0.96);
+}
+
 /* HEADER */
 .header { text-align: center; padding: 24px 0 16px; }
 .logo {
@@ -125,7 +168,6 @@ body {
   min-height: var(--ara-touch-min, 44px);
 }
 .upload-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-neon-strong); }
-.upload-btn:active { transform: translateY(0); }
 .upload-btn svg { stroke: #fff; }
 #uploadStatus { display: block; margin-top: 10px; font-size: var(--ara-font-caption, 13px); color: var(--text-secondary); }
 
@@ -184,6 +226,11 @@ body {
 .sort-btn.active svg { stroke: #fff; }
 .sort-btn svg { stroke: currentColor; }
 
+/* PROGRESS BAR TRANSITION */
+.progress-bar {
+  transition: width 0.5s ease;
+}
+
 /* BOTTOM NAV */
 .bottom-nav {
   position: fixed; bottom: 0; left: 0; right: 0;
@@ -229,8 +276,6 @@ body {
 /* UTILITIES */
 .hidden { display: none !important; }
 .header-hidden { display: none !important; }
-.section-page { display: none; }
-.section-page.active { display: block; }
 .empty-state { text-align: center; color: var(--text-muted); padding: 28px; font-size: var(--ara-font-body, 15px); }
 
 /* ACCESSIBILITY */
@@ -310,7 +355,7 @@ body {
   text-overflow: ellipsis;
 }
 
-/* Reduced motion */
+/* Reduced motion — disable ALL new animations */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -322,4 +367,9 @@ body {
   .brush-decoration { display: none; }
   .equalizer-bar { animation: none; }
   .cover-art { transition: none; }
+  .cover-art.playing { animation: none; }
+  .track-item { animation: none; opacity: 1; transform: none; }
+  .section-page { transition: none; }
+  .progress-bar { transition: none; }
+  .recently-played-item { transition: none; }
 }
