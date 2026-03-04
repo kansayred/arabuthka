@@ -2,11 +2,17 @@
  * Onboarding — 2 шага, показ один раз
  * localStorage: onboarding_done
  * Автоскрытие через 5 секунд
+ * Fix: Also check for Telegram context — skip onboarding outside Telegram
  */
 (function() {
   'use strict';
 
+  // Don't show onboarding if already completed
   if (localStorage.getItem('onboarding_done')) return;
+
+  // Don't show onboarding outside Telegram — the app won't work anyway
+  var tg = window.Telegram && window.Telegram.WebApp;
+  if (!tg || !tg.initDataUnsafe || !tg.initDataUnsafe.user) return;
 
   var steps = [
     {
@@ -24,7 +30,7 @@
   var currentStep = 0;
   var autoHideTimer = null;
 
-  // Создание DOM
+  // С\u043e\u0437\u0434\u0430\u043d\u0438\u0435 DOM
   var overlay = document.createElement('div');
   overlay.className = 'onboarding-overlay';
   overlay.setAttribute('role', 'dialog');
@@ -83,7 +89,7 @@
     }, 5000);
   }
 
-  // Инициализация
+  // И\u043d\u0438\u0446\u0438\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u044f
   document.body.appendChild(overlay);
   render();
   requestAnimationFrame(function() {
@@ -91,7 +97,7 @@
   });
   startAutoHide();
 
-  // Клик на overlay закрывает
+  // \u041a\u043b\u0438\u043a \u043d\u0430 overlay \u0437\u0430\u043a\u0440\u044b\u0432\u0430\u0435\u0442
   overlay.addEventListener('click', function(e) {
     if (e.target === overlay) close();
   });
