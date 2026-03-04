@@ -1,134 +1,159 @@
-/* dialogs.css v2 — Custom dialog/bottom-sheet — dark theme */
+/* ===========================================
+   ARABUTHKA — DIALOGS v3
+   Диалоги, bottom-sheet, модальные окна.
+   Философия: чистые поверхности, мягкие тени, токены.
+   =========================================== */
 
+/* === ОВЕРЛЕЙ === */
 .dialog-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 2500;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    padding: 0 0 env(safe-area-inset-bottom, 0);
-    animation: dialogFadeIn 0.2s ease;
+  position: fixed;
+  inset: 0;
+  z-index: 2500;
+  background: var(--ara-overlay);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 0 env(safe-area-inset-bottom, 0);
+  animation: dialogFadeIn var(--ara-duration-fast) var(--ara-ease);
 }
 
 @keyframes dialogFadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
+/* === ЛИСТ === */
 .dialog-sheet {
-    width: 100%;
-    max-width: 480px;
-    background: var(--bg-card, #1E1E2A);
-    border-radius: 24px 24px 0 0;
-    padding: 24px 20px 32px;
-    box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.3);
-    animation: sheetSlideUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  width: 100%;
+  max-width: 480px;
+  background: var(--ara-bg-card);
+  border-radius: var(--ara-radius-xl) var(--ara-radius-xl) 0 0;
+  padding: var(--ara-space-6) var(--ara-space-5) var(--ara-space-8);
+  box-shadow: var(--ara-shadow-xl);
+  animation: sheetSlideUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @keyframes sheetSlideUp {
-    from { transform: translateY(100%); }
-    to   { transform: translateY(0); }
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
 }
 
 .dialog-sheet h3 {
-    margin: 0 0 16px;
-    font-family: var(--font-heading);
-    font-size: var(--ara-font-subtitle, 16px);
-    font-weight: 700;
-    color: var(--text-primary);
-    text-align: center;
+  margin: 0 0 var(--ara-space-4);
+  font-family: var(--ara-font-display);
+  font-size: var(--ara-text-md);
+  font-weight: var(--ara-weight-bold);
+  color: var(--ara-text);
+  text-align: center;
 }
 
+/* === ИНПУТ === */
 .dialog-sheet input[type="text"] {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 12px 14px;
-    border-radius: var(--radius-xs, 10px);
-    border: 1.5px solid var(--border);
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    font-size: var(--ara-font-body, 14px);
-    font-family: var(--font-body);
-    outline: none;
-    transition: border-color 0.15s;
-    margin-bottom: 16px;
-    min-height: var(--ara-touch-min, 44px);
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--ara-space-3) var(--ara-space-4);
+  border-radius: var(--ara-radius-md);
+  border: 1.5px solid var(--ara-border);
+  background: var(--ara-bg-input);
+  color: var(--ara-text);
+  font-size: var(--ara-text-base);
+  font-family: var(--ara-font);
+  outline: none;
+  transition: border-color var(--ara-duration-fast) var(--ara-ease);
+  margin-bottom: var(--ara-space-4);
+  min-height: var(--ara-touch-min);
+}
+
+.dialog-sheet input[type="text"]::placeholder {
+  color: var(--ara-text-muted);
 }
 
 .dialog-sheet input[type="text"]:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-glow);
+  border-color: var(--ara-accent);
+  background: var(--ara-bg-card);
+  box-shadow: 0 0 0 3px var(--ara-accent-glow);
 }
 
+/* === КНОПКИ === */
 .dialog-actions {
-    display: flex;
-    gap: 10px;
+  display: flex;
+  gap: var(--ara-space-3);
 }
 
 .dialog-btn {
-    flex: 1;
-    padding: 12px;
-    border: none;
-    border-radius: var(--radius-xs, 10px);
-    font-size: var(--ara-font-body, 14px);
-    font-weight: 600;
-    font-family: var(--font-body);
-    cursor: pointer;
-    transition: opacity 0.15s, transform 0.1s;
-    min-height: var(--ara-touch-min, 44px);
+  flex: 1;
+  padding: var(--ara-space-3);
+  border: none;
+  border-radius: var(--ara-radius-md);
+  font-size: var(--ara-text-base);
+  font-weight: var(--ara-weight-semibold);
+  font-family: var(--ara-font);
+  cursor: pointer;
+  transition: all var(--ara-duration-fast) var(--ara-ease);
+  min-height: var(--ara-touch-min);
 }
 
 .dialog-btn:active {
-    transform: scale(0.97);
-    opacity: 0.85;
+  transform: scale(0.97);
+  opacity: 0.85;
 }
 
 .dialog-cancel {
-    background: var(--bg-secondary);
-    color: var(--text-secondary);
-    border: 1.5px solid var(--border);
+  background: var(--ara-bg-secondary);
+  color: var(--ara-text-secondary);
+  border: 1.5px solid var(--ara-border);
+}
+
+.dialog-cancel:hover {
+  border-color: var(--ara-border-strong);
 }
 
 .dialog-ok {
-    background: var(--gradient);
-    color: #fff;
-    box-shadow: var(--shadow-neon);
+  background: var(--ara-accent);
+  color: var(--ara-text-inverse);
 }
 
-/* === Add Track to Playlist === */
+.dialog-ok:hover {
+  background: var(--ara-accent-hover);
+}
+
+/* === ДОБАВЛЕНИЕ ТРЕКА В ПЛЕЙЛИСТ === */
 .add-track-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: background 0.15s;
+  display: flex;
+  align-items: center;
+  gap: var(--ara-space-3);
+  padding: var(--ara-space-3);
+  border-radius: var(--ara-radius-sm);
+  cursor: pointer;
+  transition: background var(--ara-duration-fast) var(--ara-ease);
+  min-height: var(--ara-touch-comfortable);
 }
+
 .add-track-item:hover {
-    background: var(--bg-secondary, #1A1A1A);
+  background: var(--ara-accent-subtle);
 }
+
 .add-track-item input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    accent-color: var(--accent, #E8A87C);
-    flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  accent-color: var(--ara-accent);
+  flex-shrink: 0;
 }
+
 .add-track-name {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text-primary, #F5F5F5);
-    flex: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  font-size: var(--ara-text-base);
+  font-weight: var(--ara-weight-medium);
+  color: var(--ara-text);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
 .add-track-artist {
-    font-size: 12px;
-    color: var(--text-secondary, #8A8A9A);
-    flex-shrink: 0;
+  font-size: var(--ara-text-sm);
+  color: var(--ara-text-secondary);
+  flex-shrink: 0;
 }
