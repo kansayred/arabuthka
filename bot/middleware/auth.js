@@ -138,13 +138,12 @@ function validateBotSecret(req, botToken) {
  */
 function createAuthMiddleware(botToken) {
   return (req, res, next) => {
-    // Способ 1: WebApp initData
-    const initData = req.headers['x-telegram-init-data'];
+      // Способ 1: WebApp initData (из header или query param для стриминга)
+      const initData = req.headers['x-telegram-init-data'] || req.query.init_data;
     if (initData) {
       const validated = validateInitData(initData, botToken);
       if (validated) {
-        req.telegramUser = validated.user;
-        req.userId = validated.user.id;
+req.userId = validated.user.id;
         return next();
       }
     }
