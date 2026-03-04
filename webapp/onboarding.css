@@ -1,98 +1,105 @@
 /* ===========================================
-   ARABUTHKA — ONBOARDING v2
-   2 steps with auto-hide
+   ARABUTHKA — ONBOARDING v3
+   2 шага, auto-hide.
+   Философия: чистые поверхности, токены.
    =========================================== */
 
 .onboarding-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background: var(--ara-overlay);
   z-index: 3000;
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: opacity var(--ara-duration-layout, 350ms) ease-out;
+  transition: opacity var(--ara-duration-normal) var(--ara-ease);
   pointer-events: none;
 }
+
 .onboarding-overlay.visible {
   opacity: 1;
   pointer-events: auto;
 }
 
 .onboarding-card {
-  background: var(--bg-card, #fff);
-  border-radius: var(--ara-radius-modal, 20px);
-  padding: var(--ara-space-2xl, 32px) var(--ara-space-xl, 24px);
+  background: var(--ara-bg-card);
+  border-radius: var(--ara-radius-xl);
+  padding: var(--ara-space-8) var(--ara-space-6);
   max-width: 320px;
   width: 90%;
   text-align: center;
-  box-shadow: var(--ara-shadow-elevated);
+  box-shadow: var(--ara-shadow-xl);
   transform: translateY(20px);
-  transition: transform var(--ara-duration-layout, 350ms) ease-out;
+  transition: transform var(--ara-duration-normal) var(--ara-ease);
 }
+
 .onboarding-overlay.visible .onboarding-card {
   transform: translateY(0);
 }
 
 .onboarding-icon {
   font-size: 48px;
-  margin-bottom: var(--ara-space-lg, 16px);
+  margin-bottom: var(--ara-space-4);
 }
 
 .onboarding-title {
-  font-family: var(--font-heading, 'Inter', sans-serif);
-  font-size: var(--ara-font-title, 20px);
-  font-weight: var(--ara-fw-bold, 700);
-  color: var(--text-primary, #1A1A2E);
-  margin-bottom: var(--ara-space-sm, 8px);
+  font-family: var(--ara-font-display);
+  font-size: var(--ara-text-xl);
+  font-weight: var(--ara-weight-bold);
+  color: var(--ara-text);
+  margin-bottom: var(--ara-space-2);
 }
 
 .onboarding-text {
-  font-size: var(--ara-font-body, 14px);
-  color: var(--text-secondary, #6B6B8D);
-  line-height: var(--ara-lh-body, 1.43);
-  margin-bottom: var(--ara-space-xl, 24px);
+  font-size: var(--ara-text-base);
+  color: var(--ara-text-secondary);
+  line-height: 1.5;
+  margin-bottom: var(--ara-space-6);
 }
 
 .onboarding-dots {
   display: flex;
-  gap: var(--ara-space-sm, 8px);
+  gap: var(--ara-space-2);
   justify-content: center;
-  margin-bottom: var(--ara-space-lg, 16px);
+  margin-bottom: var(--ara-space-4);
 }
+
 .onboarding-dot {
   width: 8px;
   height: 8px;
-  border-radius: 50%;
-  background: var(--text-muted, #9B9BB5);
-  transition: background var(--ara-duration-micro, 200ms) ease-out;
+  border-radius: var(--ara-radius-full);
+  background: var(--ara-text-muted);
+  transition: background var(--ara-duration-fast) var(--ara-ease);
 }
+
 .onboarding-dot.active {
-  background: var(--ara-accent, #7C3AED);
+  background: var(--ara-accent);
 }
 
 .onboarding-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--gradient, linear-gradient(135deg, #7C3AED, #A78BFA));
-  color: #fff;
+  background: var(--ara-accent);
+  color: var(--ara-text-inverse);
   border: none;
-  border-radius: var(--ara-radius-pill, 50px);
-  padding: var(--ara-space-md, 12px) var(--ara-space-xl, 24px);
-  font-size: var(--ara-font-body, 14px);
-  font-weight: var(--ara-fw-semibold, 600);
+  border-radius: var(--ara-radius-full);
+  padding: var(--ara-space-3) var(--ara-space-6);
+  font-size: var(--ara-text-base);
+  font-weight: var(--ara-weight-semibold);
+  font-family: var(--ara-font);
   cursor: pointer;
-  min-height: var(--ara-touch-min, 44px);
-  transition: transform var(--ara-duration-micro, 200ms) ease-out;
+  min-height: var(--ara-touch-min);
+  transition: transform var(--ara-duration-fast) var(--ara-ease);
 }
+
+.onboarding-btn:hover {
+  background: var(--ara-accent-hover);
+}
+
 .onboarding-btn:active { transform: scale(0.95); }
 
-/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .onboarding-overlay,
   .onboarding-card {
