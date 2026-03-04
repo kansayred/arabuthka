@@ -126,6 +126,52 @@ function logError(message, error) {
 // =============================================
 
 // ---------------------------------------------
+// GET /api/search?q=...&limit=50
+// Поиск треков в БД по name, artist, album (ILIKE)
+// Параметризованный запрос, лимит 50
+// ---------------------------------------------
+router.get('/search', searchRateLimiter, async (req, res) => {
+  try {
+    const { q, limit = MAX_LIMIT } = req.query;
+
+    const validation = validateSearchQuery(q);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.error });
+    }
+
+    const validatedLimit = validateLimit(limit);
+    const searchPattern = `%${escapeLike(validation.query)}%`;
+
+    const result = await pool.query(
+      `SELECT id, name, url, s3_key, artist, album, genre, cover_url, duration, created_at
+       FROM tracks
+       WHERE name ILIKE $1
+          OR artist ILIKE $1
+          OR album ILIKE $1
+       ORDER BY created_at DESC
+       LIMIT $2`,
+      [searchPattern, validatedLimit]
+    );
+
+    logInfo('Поиск треков в БД', {
+      query: validation.query,
+      found: result.rows.length,
+      limit: validatedLimit
+    });
+
+    res.json({
+      success: true,
+      query: validation.query,
+      count: result.rows.length,
+      tracks: result.rows
+    });
+  } catch (error) {
+    logError('Ошибка поиска треков в БД', error);
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+  }
+});
+
+// ---------------------------------------------
 // Поиск по всем трекам (скачанные + доступные)
 // ---------------------------------------------
 router.get('/search/all', authMiddleware, searchRateLimiter, async (req, res) => {
