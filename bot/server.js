@@ -373,7 +373,25 @@ app.put('/tracks/:id', authMiddleware, async (req, res) => {
     const id = parseInt(req.params.id);
     if (isNaN(id) || id < 1) return res.status(400).json({ error: 'Неверный ID' });
 
-    const { name, artist, album, genre } = req.body;
+    const { name, artist, album, genre, cover_url, duration } = req.body;
+
+        // Валидация и санитизация входных данных
+    const MAX_NAME = 255, MAX_ARTIST = 255, MAX_ALBUM = 255, MAX_GENRE = 100;
+    if (name !== undefined && typeof name === 'string' && name.trim().length > MAX_NAME) {
+      return res.status(400).json({ error: `Название не должно превышать ${MAX_NAME} символов` });
+    }
+    if (artist !== undefined && typeof artist === 'string' && artist.trim().length > MAX_ARTIST) {
+      return res.status(400).json({ error: `Исполнитель не должен превышать ${MAX_ARTIST} символов` });
+    }
+    if (album !== undefined && typeof album === 'string' && album.trim().length > MAX_ALBUM) {
+      return res.status(400).json({ error: `Альбом не должен превышать ${MAX_ALBUM} символов` });
+    }
+    if (genre !== undefined && typeof genre === 'string' && genre.trim().length > MAX_GENRE) {
+      return res.status(400).json({ error: `Жанр не должен превышать ${MAX_GENRE} символов` });
+    }
+    if (duration !== undefined && (typeof duration !== 'number' || duration < 0 || !Number.isInteger(duration))) {
+      return res.status(400).json({ error: 'Длительность должна быть целым неотрицательным числом (секунды)' });
+    }
 
     // Проверка что трек принадлежит пользователю
     const existing = await pool.query('SELECT id FROM tracks WHERE id = $1 AND user_id = $2', [id, req.userId]);
@@ -386,11 +404,12 @@ app.put('/tracks/:id', authMiddleware, async (req, res) => {
     const values = [];
     let paramIndex = 1;
 
-    if (name !== undefined) { fields.push(`name = $${paramIndex++}`); values.push(name); }
-    if (artist !== undefined) { fields.push(`artist = $${paramIndex++}`); values.push(artist); }
-    if (album !== undefined) { fields.push(`album = $${paramIndex++}`); values.push(album); }
-    if (genre !== undefined) { fields.push(`genre = $${paramIndex++}`); values.push(genre); }
-
+    if (name !== undefined) { fields.push(`name = $${paramIndex++}`); values.push(name.trim()); }
+    if (artist !== undefined) { fields.push(`artist = $${paramIndex++}`); values.push(artist.trim()); }
+    if (album !== undefined) { fields.push(`album = $${paramIndex++}`); values.push(album.trim()); }
+    if (genre !== undefined) { fields.push(`genre = $${paramIndex++}`); values.push(genre.trim()); }
+    if (cover_url !== undefined) { fields.push(`cover_url = $${paramIndex++}`); values.push(cover_url); }
+    if (duration !== undefined) { fields.push(`duration = $${paramIndex++}`); values.push(duration); }
     if (fields.length === 0) {
       return res.status(400).json({ error: 'Нет полей для обновления' });
     }

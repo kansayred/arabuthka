@@ -29,7 +29,9 @@ const express = require('express');
 // const { handleSearchCommand, handleDownloadCommand } = require('./handlers/musicHandler');
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
-const webAppUrl = process.env.WEBAPP_URL; const axios = require('axios'); const API_URL = process.env.API_URL || 'https://arabuthka-production.up.railway.app';
+const webAppUrl = process.env.WEBAPP_URL;
+const axios = require('axios');
+const API_URL = process.env.API_URL || 'https://arabuthka-production.up.railway.app';
 const PORT = process.env.PORT || 3000;
 
 // =============================================
@@ -89,7 +91,9 @@ async function setupBotInterface() {
       { command: 'start', description: 'Запустить бота' },
       { command: 'player', description: 'Открыть плеер' },
       { command: 'about', description: 'О проекте Арабутка' },
-      { command: 'help', description: 'Помощь и справка' },       { command: 'edit', description: 'Редактировать метаданные треков' },       { command: 'playlists', description: 'Мои плейлисты' }
+            { command: 'help', description: 'Помощь и справка' },
+      { command: 'edit', description: 'Редактировать метаданные треков' },
+      { command: 'playlists', description: 'Мои плейлисты' }
     ]);
     logger.info('Команды бота зарегистрированы');
   } catch (err) {
@@ -223,7 +227,7 @@ function sendHelpMessage(chatId) {
 // =============================================
 // КОМАНДА /edit — редактирование метаданных треков
 // =============================================
-bot.onText(/\/edit(?:\s+(\d+))?/, async (msg, match) => {
+bot.onText(/\/edit(?:\s+(\d+))?$/, async (msg, match) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   logger.botCommand(chatId, '/edit', msg.from.username);
