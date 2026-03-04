@@ -143,6 +143,34 @@
             <div class="fs-title">Нет трека</div>
             <div class="fs-artist"></div>
         </div>
+
+        <!-- Fullscreen Progress -->
+        <div class="fs-progress-container">
+            <input type="range" id="fsProgressBar" class="fs-progress-bar" value="0" min="0" max="100" aria-label="Прогресс воспроизведения">
+            <div class="fs-time-row">
+                <span class="fs-time" id="fsCurrentTime">0:00</span>
+                <span class="fs-time" id="fsDuration">0:00</span>
+            </div>
+        </div>
+
+        <!-- Fullscreen Controls -->
+        <div class="fs-controls" role="group" aria-label="Управление полноэкранным плеером">
+            <button class="fs-ctrl-btn fs-shuffle-btn" id="fsShuffleBtn" aria-label="Перемешать">
+                <i data-lucide="shuffle" style="width:18px;height:18px" aria-hidden="true"></i>
+            </button>
+            <button class="fs-ctrl-btn fs-prev-btn" id="fsPrevBtn" aria-label="Предыдущий трек">
+                <i data-lucide="skip-back" style="width:22px;height:22px" aria-hidden="true"></i>
+            </button>
+            <button class="fs-play-btn" id="fsPlayBtn" aria-label="Воспроизвести / Пауза">
+                <i data-lucide="play" style="width:28px;height:28px" aria-hidden="true"></i>
+            </button>
+            <button class="fs-ctrl-btn fs-next-btn" id="fsNextBtn" aria-label="Следующий трек">
+                <i data-lucide="skip-forward" style="width:22px;height:22px" aria-hidden="true"></i>
+            </button>
+            <button class="fs-ctrl-btn fs-repeat-btn" id="fsRepeatBtn" aria-label="Повтор">
+                <i data-lucide="repeat" style="width:18px;height:18px" aria-hidden="true"></i>
+            </button>
+        </div>
     </div>
 
     <!-- Toast -->
