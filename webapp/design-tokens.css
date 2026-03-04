@@ -19,6 +19,18 @@
   --ara-accent: #00C9A7;
   --ara-surface-elevated: rgba(255, 255, 255, 0.92);
 
+  /* === Градиентные пресеты === */
+  --ara-preset-default-start: #00C9A7;
+  --ara-preset-default-end: #00B4D8;
+  --ara-preset-warm-start: #FF6B35;
+  --ara-preset-warm-end: #F7C948;
+  --ara-preset-cold-start: #4158D0;
+  --ara-preset-cold-end: #C850C0;
+  --ara-preset-neon-start: #08F7FE;
+  --ara-preset-neon-end: #FE53BB;
+  --ara-preset-sunset-start: #FA709A;
+  --ara-preset-sunset-end: #FEE140;
+
   /* === Типографика === */
   --ara-font-family: -apple-system, 'SF Pro', 'Helvetica Neue',
     'Manrope', 'Inter', sans-serif;
