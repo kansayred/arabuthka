@@ -136,8 +136,13 @@ const Utils = {
      * @param {string} type - 'light' | 'medium' | 'heavy' | 'rigid' | 'soft'
      */
     haptic(type) {
-        var tg = window.Telegram && window.Telegram.WebApp;
-        if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred(type || 'light');
+        try {
+            if (window.Telegram?.WebApp?.HapticFeedback) {
+                Telegram.WebApp.HapticFeedback.impactOccurred(type || 'light');
+            }
+        } catch (e) {
+            console.warn('Haptic feedback unavailable');
+        }
     }
 };
 

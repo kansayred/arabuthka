@@ -28,7 +28,7 @@
     <div class="brush-decoration brush-bottom" aria-hidden="true"></div>
 
     <div class="container">
-        <header class="header fade-in">
+        <header class="header fade-in" id="appHeader">
             <h1 class="logo">
                 <i data-lucide="music" class="logo-icon-svg" aria-hidden="true"></i>
                 Арабутка
@@ -221,6 +221,18 @@
         </div>
     </div>
 
+    <!-- Add Tracks to Playlist Dialog -->
+    <div class="dialog-overlay" id="addTracksDialog" style="display:none" role="dialog" aria-modal="true" aria-label="Добавить треки">
+        <div class="dialog-sheet">
+            <h3>Добавить треки</h3>
+            <div id="addTracksListContainer" style="max-height:50vh;overflow-y:auto;margin-bottom:16px;"></div>
+            <div class="dialog-actions">
+                <button class="dialog-btn dialog-cancel" id="addTracksDialogCancel">Отмена</button>
+                <button class="dialog-btn dialog-ok" id="addTracksDialogOk">Добавить</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Bottom Navigation -->
     <nav class="bottom-nav" aria-label="Основная навигация">
         <button class="nav-item active" data-tab="home" aria-label="Главная">
@@ -243,6 +255,7 @@
 
     <script src="config.js"></script>
     <script src="tg-theme.js"></script>
+    <script src="utils.js"></script>
     <script src="network.js"></script>
     <script src="searchMusic.js"></script>
     <script src="playlists.js"></script>
