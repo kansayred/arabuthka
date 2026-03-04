@@ -1,0 +1,100 @@
+/* dialogs.css — Custom dialog/bottom-sheet for playlist creation */
+
+.dialog-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2500;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0 0 env(safe-area-inset-bottom, 0);
+    animation: dialogFadeIn 0.2s ease;
+}
+
+@keyframes dialogFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.dialog-sheet {
+    width: 100%;
+    max-width: 480px;
+    background: var(--bg-card, #fff);
+    border-radius: 20px 20px 0 0;
+    padding: 24px 20px 32px;
+    box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.12);
+    animation: sheetSlideUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes sheetSlideUp {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+}
+
+.dialog-sheet h3 {
+    margin: 0 0 16px;
+    font-family: var(--font-heading);
+    font-size: var(--ara-font-subtitle, 16px);
+    font-weight: 700;
+    color: var(--text-primary);
+    text-align: center;
+}
+
+.dialog-sheet input[type="text"] {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    border-radius: var(--radius-xs, 8px);
+    border: 1.5px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: var(--ara-font-body, 14px);
+    font-family: var(--font-body);
+    outline: none;
+    transition: border-color 0.15s;
+    margin-bottom: 16px;
+    min-height: var(--ara-touch-min, 44px);
+}
+
+.dialog-sheet input[type="text"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.dialog-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.dialog-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: var(--radius-xs, 8px);
+    font-size: var(--ara-font-body, 14px);
+    font-weight: 600;
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    min-height: var(--ara-touch-min, 44px);
+}
+
+.dialog-btn:active {
+    transform: scale(0.97);
+    opacity: 0.85;
+}
+
+.dialog-cancel {
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+
+.dialog-ok {
+    background: var(--gradient);
+    color: #fff;
+    box-shadow: var(--shadow-neon);
+}

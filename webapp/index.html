@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>Арабутка</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="onboarding.css">
     <link rel="stylesheet" href="ui-extras.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="dialogs.css">
     <link rel="manifest" href="manifest.json">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- Lucide Icons -->
@@ -36,7 +37,7 @@
             <label class="upload-btn" aria-label="Загрузить трек">
                 <i data-lucide="upload" style="width:18px;height:18px" aria-hidden="true"></i>
                 Загрузить трек
-                <input type="file" id="fileInput" accept=".mp3,.wav,.ogg,.m4a" hidden aria-label="Выбрать аудиофайл">
+                <input type="file" id="fileInput" accept=".mp3,.wav,.ogg,.m4a,.aac" hidden aria-label="Выбрать аудиофайл">
             </label>
             <span id="uploadStatus" aria-live="polite"></span>
         </div>
@@ -51,10 +52,10 @@
                 </button>
             </div>
             <div class="sort-buttons" role="group" aria-label="Сортировка">
-                <button class="sort-btn active" data-sort="name" aria-label="Сортировка по имени">
+                <button class="sort-btn" data-sort="name" aria-label="Сортировка по имени">
                     <i data-lucide="arrow-down-a-z" style="width:14px;height:14px" aria-hidden="true"></i> По имени
                 </button>
-                <button class="sort-btn" data-sort="date" aria-label="Сортировка по дате">
+                <button class="sort-btn active" data-sort="date" aria-label="Сортировка по дате">
                     <i data-lucide="calendar" style="width:14px;height:14px" aria-hidden="true"></i> По дате
                 </button>
             </div>
@@ -103,6 +104,9 @@
             <p>Загрузка...</p>
         </div>
 
+        <!-- Playlists -->
+        <div class="playlists-section section-page fade-in" id="playlistsSection" role="region" aria-label="Плейлисты"></div>
+
         <!-- Global Search -->
         <div class="global-search-section fade-in">
             <h2><i data-lucide="globe" style="width:20px;height:20px;vertical-align:middle" aria-hidden="true"></i> Поиск музыки</h2>
@@ -144,6 +148,18 @@
     <!-- Toast -->
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+    <!-- Playlist Dialog (custom bottom-sheet) -->
+    <div class="dialog-overlay" id="playlistDialog" style="display:none" role="dialog" aria-modal="true" aria-label="Новый плейлист">
+        <div class="dialog-sheet">
+            <h3>Новый плейлист</h3>
+            <input type="text" id="playlistNameInput" placeholder="Название..." autocomplete="off" aria-label="Название плейлиста">
+            <div class="dialog-actions">
+                <button class="dialog-btn dialog-cancel" id="playlistDialogCancel">Отмена</button>
+                <button class="dialog-btn dialog-ok" id="playlistDialogOk">Создать</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Bottom Navigation -->
     <nav class="bottom-nav" aria-label="Основная навигация">
         <button class="nav-item active" data-tab="home" aria-label="Главная">
@@ -165,10 +181,7 @@
     </nav>
 
     <script src="config.js"></script>
-    <script src="utils.js"></script>
     <script src="network.js"></script>
-    <script src="audioPlayer.js"></script>
-    <script src="playerUI.js"></script>
     <script src="searchMusic.js"></script>
     <script src="playlists.js"></script>
     <script src="miniPlayer.js"></script>
@@ -176,7 +189,6 @@
     <script src="onboarding.js"></script>
     <script type="module" src="app.js"></script>
     <script>
-        // Init Lucide icons after DOM ready
         document.addEventListener('DOMContentLoaded', () => {
             if (window.lucide) lucide.createIcons();
         });
