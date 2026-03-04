@@ -1,15 +1,16 @@
 /* ===========================================
    TG DARK MODE OVERRIDES v2
+   App is dark-mode-first — minimal overrides needed.
    Applied when body.tg-dark is set by tg-theme.js
    =========================================== */
+
+/* Dark is already the default — these just reinforce dark colors
+   in case Telegram injects a light theme */
 body.tg-dark .bottom-nav {
-  background: rgba(26, 26, 46, 0.88);
-}
-body.tg-dark .upload-btn {
-  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.2);
+  background: var(--glass-bg);
 }
 body.tg-dark .track-item:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.04);
 }
 body.tg-dark .toast {
   background: var(--bg-secondary);
@@ -22,7 +23,7 @@ body.tg-dark input[type="range"] {
   color: var(--text-primary);
 }
 body.tg-dark .dialog-sheet {
-  background: var(--bg-primary);
+  background: var(--bg-card);
   border-color: var(--border);
 }
 body.tg-dark .control-btn {

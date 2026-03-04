@@ -1,6 +1,6 @@
 /* ===========================================
    ARABUTHKA — PLAYER & TRACK LIST v2
-   Extracted from style.css for ≤300-line rule
+   Dark theme
    =========================================== */
 
 /* PLAYER */
@@ -63,8 +63,8 @@
 }
 .control-btn:hover { color: var(--text-primary); border-color: var(--border-accent); background: var(--bg-card-hover); }
 .control-btn:active { transform: scale(0.92); }
-.control-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: var(--shadow-neon); }
-.control-btn.active svg { stroke: #fff; }
+.control-btn.active { background: var(--accent); color: #0D0D0D; border-color: var(--accent); box-shadow: var(--shadow-neon); }
+.control-btn.active svg { stroke: #0D0D0D; }
 .control-btn svg { stroke: currentColor; }
 #playBtn {
   width: 64px; height: 64px; background: var(--gradient); border: none;
@@ -118,7 +118,7 @@ audio { display: none; }
   display: flex; align-items: center; justify-content: center;
   font-size: var(--ara-font-caption, 12px); font-weight: 600; color: var(--text-muted); flex-shrink: 0;
 }
-.track-item.active .track-number { background: var(--accent); color: #fff; }
+.track-item.active .track-number { background: var(--accent); color: #0D0D0D; }
 .track-cover {
   width: 46px; height: 46px; border-radius: var(--radius-xs); flex-shrink: 0;
   background: var(--gradient-subtle); display: flex; align-items: center;
@@ -146,7 +146,7 @@ audio { display: none; }
   display: flex; align-items: center; justify-content: center;
 }
 .track-item:hover .track-delete { opacity: 1; }
-.track-delete:hover { background: rgba(244, 63, 94, 0.1); color: var(--accent-secondary); }
+.track-delete:hover { background: rgba(212, 165, 229, 0.12); color: var(--accent-secondary); }
 
 /* Equalizer */
 .equalizer { display: flex; align-items: flex-end; gap: 2px; height: 20px; margin-left: auto; padding-right: 6px; }

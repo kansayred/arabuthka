@@ -1,10 +1,10 @@
-/* dialogs.css v2 — Custom dialog/bottom-sheet */
+/* dialogs.css v2 — Custom dialog/bottom-sheet — dark theme */
 
 .dialog-overlay {
     position: fixed;
     inset: 0;
     z-index: 2500;
-    background: rgba(0, 0, 0, 0.45);
+    background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
     display: flex;
@@ -22,10 +22,10 @@
 .dialog-sheet {
     width: 100%;
     max-width: 480px;
-    background: var(--bg-card, #fff);
+    background: var(--bg-card, #1E1E2A);
     border-radius: 24px 24px 0 0;
     padding: 24px 20px 32px;
-    box-shadow: 0 -8px 40px rgba(124, 58, 237, 0.1);
+    box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.3);
     animation: sheetSlideUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 
@@ -110,18 +110,18 @@
     transition: background 0.15s;
 }
 .add-track-item:hover {
-    background: var(--bg-secondary, #F3F0FF);
+    background: var(--bg-secondary, #1A1A1A);
 }
 .add-track-item input[type="checkbox"] {
     width: 20px;
     height: 20px;
-    accent-color: var(--accent, #7C3AED);
+    accent-color: var(--accent, #E8A87C);
     flex-shrink: 0;
 }
 .add-track-name {
     font-size: 14px;
     font-weight: 500;
-    color: var(--text-primary, #1A1A2E);
+    color: var(--text-primary, #F5F5F5);
     flex: 1;
     white-space: nowrap;
     overflow: hidden;
@@ -129,6 +129,6 @@
 }
 .add-track-artist {
     font-size: 12px;
-    color: var(--text-secondary, #6B6B8D);
+    color: var(--text-secondary, #8A8A9A);
     flex-shrink: 0;
 }

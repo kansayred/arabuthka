@@ -1,6 +1,6 @@
 /* ===========================================
    ARABUTHKA — COMPONENTS v2
-   UI components on design tokens
+   UI components on design tokens — dark theme
    =========================================== */
 
 /* === BUTTONS === */
@@ -10,7 +10,7 @@
   justify-content: center;
   gap: var(--ara-space-sm, 8px);
   background: var(--tg-theme-button-color, var(--ara-accent));
-  color: var(--tg-theme-button-text-color, #fff);
+  color: var(--tg-theme-button-text-color, #0D0D0D);
   border: none;
   border-radius: var(--ara-radius-btn, 12px);
   padding: var(--ara-space-md, 12px) var(--ara-space-lg, 16px);
@@ -35,9 +35,9 @@
   align-items: center;
   justify-content: center;
   gap: var(--ara-space-sm, 8px);
-  background: var(--tg-theme-secondary-bg-color, #F3F0FF);
-  color: var(--tg-theme-text-color, #1A1A2E);
-  border: 1.5px solid rgba(0, 0, 0, 0.06);
+  background: var(--tg-theme-secondary-bg-color, #1A1A1A);
+  color: var(--tg-theme-text-color, #F5F5F5);
+  border: 1.5px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--ara-radius-btn, 12px);
   padding: var(--ara-space-md, 12px) var(--ara-space-lg, 16px);
   font-family: var(--ara-font-family);
@@ -48,8 +48,8 @@
   transition: all var(--ara-duration-micro, 200ms) ease-out;
 }
 .btn-secondary:hover {
-  background: rgba(124, 58, 237, 0.04);
-  border-color: rgba(124, 58, 237, 0.15);
+  background: rgba(232, 168, 124, 0.06);
+  border-color: rgba(232, 168, 124, 0.2);
 }
 .btn-secondary:active {
   transform: scale(0.97);
@@ -61,7 +61,7 @@
   justify-content: center;
   background: transparent;
   border: none;
-  color: var(--tg-theme-hint-color, #6B6B8D);
+  color: var(--tg-theme-hint-color, #8A8A9A);
   width: var(--ara-touch-min, 44px);
   height: var(--ara-touch-min, 44px);
   border-radius: 50%;
@@ -69,8 +69,8 @@
   transition: all var(--ara-duration-micro, 200ms) ease-out;
 }
 .btn-icon:hover {
-  background: rgba(124, 58, 237, 0.06);
-  color: var(--tg-theme-text-color, #1A1A2E);
+  background: rgba(232, 168, 124, 0.08);
+  color: var(--tg-theme-text-color, #F5F5F5);
 }
 .btn-icon:active {
   transform: scale(0.9);
@@ -83,11 +83,11 @@
 
 /* === CARDS & SURFACES === */
 .card {
-  background: var(--tg-theme-bg-color, #fff);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: var(--bg-card, #1E1E2A);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--ara-radius-card, 16px);
   padding: var(--ara-space-lg, 16px);
-  box-shadow: 0 2px 12px rgba(124, 58, 237, 0.04);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
   transition: box-shadow var(--ara-duration-micro, 200ms) ease-out;
 }
 .card:hover {
@@ -95,7 +95,7 @@
 }
 
 .surface-elevated {
-  background: var(--ara-surface-elevated, rgba(255, 255, 255, 0.92));
+  background: var(--ara-surface-elevated, rgba(30, 30, 42, 0.92));
   border-radius: var(--ara-radius-card, 16px);
   box-shadow: var(--ara-shadow-elevated);
   backdrop-filter: blur(24px);
@@ -104,7 +104,7 @@
 
 /* === TRACK ITEM ON DESIGN TOKENS === */
 .track-item {
-  background: var(--tg-theme-secondary-bg-color, #F3F0FF);
+  background: var(--bg-card, #1E1E2A);
   padding: var(--ara-space-md, 12px) var(--ara-space-md, 14px);
   margin-bottom: var(--ara-space-sm, 8px);
   border-radius: var(--ara-radius-card, 16px);
@@ -117,16 +117,16 @@
   min-height: var(--ara-touch-min, 44px);
 }
 .track-item:hover {
-  background: rgba(124, 58, 237, 0.04);
-  border-color: rgba(124, 58, 237, 0.08);
+  background: rgba(232, 168, 124, 0.04);
+  border-color: rgba(232, 168, 124, 0.1);
 }
 .track-item.active {
   background: linear-gradient(
     135deg,
-    rgba(124, 58, 237, 0.06),
-    rgba(167, 139, 250, 0.06)
+    rgba(232, 168, 124, 0.08),
+    rgba(212, 165, 229, 0.08)
   );
-  border-color: rgba(124, 58, 237, 0.25);
+  border-color: rgba(232, 168, 124, 0.25);
 }
 
 /* === ICONS === */

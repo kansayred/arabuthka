@@ -1,40 +1,40 @@
 /* ===========================================
    ARABUTHKA — DESIGN TOKENS v2
-   Moodboard-inspired: vibrant minimalism
+   Dark premium: warm peach + lavender accent
    =========================================== */
 
 :root {
-  /* === Telegram ThemeParams (fallbacks) === */
-  --tg-theme-bg-color: #ffffff;
-  --tg-theme-text-color: #1A1A2E;
-  --tg-theme-hint-color: #6B6B8D;
-  --tg-theme-link-color: #7C3AED;
-  --tg-theme-button-color: #7C3AED;
-  --tg-theme-button-text-color: #ffffff;
-  --tg-theme-secondary-bg-color: #F3F0FF;
+  /* === Telegram ThemeParams (fallbacks — dark) === */
+  --tg-theme-bg-color: #0D0D0D;
+  --tg-theme-text-color: #F5F5F5;
+  --tg-theme-hint-color: #8A8A9A;
+  --tg-theme-link-color: #E8A87C;
+  --tg-theme-button-color: #E8A87C;
+  --tg-theme-button-text-color: #0D0D0D;
+  --tg-theme-secondary-bg-color: #1A1A1A;
 
   /* === Фирменная палитра Арабутки v2 === */
-  --ara-gradient-start: #7C3AED;
-  --ara-gradient-end: #A78BFA;
-  --ara-accent: #7C3AED;
-  --ara-surface-elevated: rgba(255, 255, 255, 0.92);
+  --ara-gradient-start: #E8A87C;
+  --ara-gradient-end: #D4A5E5;
+  --ara-accent: #E8A87C;
+  --ara-surface-elevated: rgba(30, 30, 42, 0.92);
 
   /* === Градиентные пресеты === */
-  --ara-preset-default-start: #7C3AED;
-  --ara-preset-default-end: #A78BFA;
-  --ara-preset-warm-start: #F97316;
-  --ara-preset-warm-end: #FBBF24;
-  --ara-preset-cold-start: #6366F1;
-  --ara-preset-cold-end: #EC4899;
+  --ara-preset-default-start: #E8A87C;
+  --ara-preset-default-end: #D4A5E5;
+  --ara-preset-warm-start: #E8A87C;
+  --ara-preset-warm-end: #F7C948;
+  --ara-preset-cold-start: #7B8CDE;
+  --ara-preset-cold-end: #D4A5E5;
   --ara-preset-neon-start: #06B6D4;
-  --ara-preset-neon-end: #F43F5E;
-  --ara-preset-sunset-start: #F472B6;
+  --ara-preset-neon-end: #D4A5E5;
+  --ara-preset-sunset-start: #E8A87C;
   --ara-preset-sunset-end: #FDE68A;
 
   /* === Типографика === */
-  --ara-font-family: 'Manrope', -apple-system, 'SF Pro',
-    'Helvetica Neue', 'Inter', sans-serif;
-  --ara-font-heading: 'Space Grotesk', -apple-system, 'SF Pro',
+  --ara-font-family: 'Inter', -apple-system, 'SF Pro',
+    'Helvetica Neue', sans-serif;
+  --ara-font-heading: 'Inter', -apple-system, 'SF Pro',
     'Helvetica Neue', sans-serif;
 
   /* Масштаб: caption → body → subtitle → title → hero */
@@ -76,8 +76,8 @@
   --ara-radius-avatar: 50%;
   --ara-radius-pill: 50px;
 
-  /* === Тени (softer, more depth) === */
-  --ara-shadow-elevated: 0 4px 24px rgba(124, 58, 237, 0.08);
+  /* === Тени (dark depth) === */
+  --ara-shadow-elevated: 0 4px 24px rgba(0, 0, 0, 0.3);
 
   /* === Touch targets === */
   --ara-touch-min: 44px;

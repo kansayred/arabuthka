@@ -1,36 +1,41 @@
 /* ===========================================
    ARABUTHKA — MAIN STYLES v2
-   Vibrant minimalism, moodboard-inspired
+   Dark premium music player
    =========================================== */
 :root {
-  --bg-primary: #FFFFFF;
-  --bg-secondary: #F3F0FF;
-  --bg-card: #FFFFFF;
-  --bg-card-hover: #EDE9FE;
-  --bg-elevated: #FAFAFF;
-  --accent: #7C3AED;
-  --accent-dark: #6D28D9;
-  --accent-glow: rgba(124, 58, 237, 0.18);
-  --accent-secondary: #F43F5E;
-  --gradient: linear-gradient(135deg, #7C3AED, #A78BFA);
-  --gradient-hot: linear-gradient(135deg, #F43F5E, #FB7185);
-  --gradient-subtle: linear-gradient(135deg, rgba(124,58,237,0.06), rgba(167,139,250,0.06));
-  --gradient-bg: linear-gradient(180deg, #FAFAFF 0%, #F3F0FF 40%, #FFF5FB 100%);
-  --text-primary: #1A1A2E;
-  --text-secondary: #6B6B8D;
-  --text-muted: #9B9BB5;
-  --border: rgba(0, 0, 0, 0.06);
-  --border-accent: rgba(124, 58, 237, 0.25);
+  --bg-primary: #0D0D0D;
+  --bg-secondary: #1A1A1A;
+  --bg-card: #1E1E2A;
+  --bg-card-hover: #2A2A3A;
+  --bg-elevated: #1A1A2A;
+  --accent: #E8A87C;
+  --accent-dark: #D4966A;
+  --accent-glow: rgba(232, 168, 124, 0.18);
+  --accent-secondary: #D4A5E5;
+  --gradient: linear-gradient(135deg, #E8A87C, #D4A5E5);
+  --gradient-hot: linear-gradient(135deg, #D4A5E5, #E8A87C);
+  --gradient-subtle: linear-gradient(135deg, rgba(232,168,124,0.06), rgba(212,165,229,0.06));
+  --gradient-bg: linear-gradient(180deg, #0D0D0D 0%, #12121E 40%, #0D0D0D 100%);
+  --text-primary: #F5F5F5;
+  --text-secondary: #8A8A9A;
+  --text-muted: #5A5A6A;
+  --border: rgba(255, 255, 255, 0.06);
+  --border-accent: rgba(232, 168, 124, 0.25);
   --radius: 20px;
   --radius-sm: 14px;
   --radius-xs: 10px;
   --transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
-  --font-heading: 'Space Grotesk', 'Inter', sans-serif;
-  --font-body: 'Manrope', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --shadow-soft: 0 2px 16px rgba(124, 58, 237, 0.04);
-  --shadow-card: 0 4px 24px rgba(124, 58, 237, 0.06);
-  --shadow-neon: 0 4px 20px rgba(124, 58, 237, 0.15);
-  --shadow-neon-strong: 0 6px 30px rgba(124, 58, 237, 0.25);
+  --font-heading: 'Inter', -apple-system, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --shadow-soft: 0 2px 16px rgba(0, 0, 0, 0.2);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
+  --shadow-neon: 0 4px 20px rgba(232, 168, 124, 0.15);
+  --shadow-neon-strong: 0 6px 30px rgba(232, 168, 124, 0.25);
+  --glass-bg: rgba(30, 30, 42, 0.7);
+  --glass-blur: blur(20px);
+  --accent-gradient: linear-gradient(135deg, #E8A87C, #D4A5E5);
+  --accent-solid: #E8A87C;
+  --border-subtle: rgba(255, 255, 255, 0.06);
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; }
@@ -181,13 +186,13 @@ body {
 /* BOTTOM NAV */
 .bottom-nav {
   position: fixed; bottom: 0; left: 0; right: 0;
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-  border-top: 1px solid var(--border);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+  border-top: 1px solid var(--border-subtle);
   display: flex; justify-content: space-around;
   padding: 8px 0 env(safe-area-inset-bottom, 8px);
   z-index: 1000;
-  box-shadow: 0 -2px 24px rgba(124, 58, 237, 0.04);
+  box-shadow: 0 -2px 24px rgba(0,0,0,0.3);
 }
 .nav-item {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
@@ -233,7 +238,7 @@ body {
 #uploadStatus,
 .empty-state,
 .nav-item {
-  color: #6B6B8D;
+  color: #8A8A9A;
 }
 :focus-visible {
   outline: 2px solid var(--accent);

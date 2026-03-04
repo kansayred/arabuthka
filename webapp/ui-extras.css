@@ -1,6 +1,6 @@
 /* ===========================================
    ARABUTHKA — SKELETON LOADERS v2
-   Used by network.js, searchMusic.js
+   Dark theme — Used by network.js, searchMusic.js
    =========================================== */
 .skeleton {
   background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-card-hover) 50%, var(--bg-secondary) 75%);

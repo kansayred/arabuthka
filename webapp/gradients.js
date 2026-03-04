@@ -7,11 +7,11 @@
   'use strict';
 
   var presets = {
-    default: { start: '#00C9A7', end: '#00B4D8' },
-    warm:    { start: '#FF6B35', end: '#F7C948' },
-    cold:    { start: '#4158D0', end: '#C850C0' },
-    neon:    { start: '#08F7FE', end: '#FE53BB' },
-    sunset:  { start: '#FA709A', end: '#FEE140' }
+    default: { start: '#E8A87C', end: '#D4A5E5' },
+    warm:    { start: '#E8A87C', end: '#F7C948' },
+    cold:    { start: '#7B8CDE', end: '#D4A5E5' },
+    neon:    { start: '#06B6D4', end: '#D4A5E5' },
+    sunset:  { start: '#E8A87C', end: '#FDE68A' }
   };
 
   var root = document.documentElement;
