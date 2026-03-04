@@ -204,6 +204,12 @@ function switchTab(tab) {
     }
     _currentTab = tab;
 
+    // Toggle header visibility - only show on home tab
+    const appHeader = document.getElementById('appHeader');
+    if (appHeader) {
+        appHeader.classList.toggle('header-hidden', tab !== 'home');
+    }
+
     // Hide all section-pages, show active one
     document.querySelectorAll('.section-page[data-tab]').forEach(page => {
         page.classList.toggle('active', page.getAttribute('data-tab') === tab);

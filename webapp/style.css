@@ -222,6 +222,7 @@ body {
 
 /* UTILITIES */
 .hidden { display: none !important; }
+.header-hidden { display: none !important; }
 .section-page { display: none; }
 .section-page.active { display: block; }
 .empty-state { text-align: center; color: var(--text-muted); padding: 28px; font-size: var(--ara-font-body, 14px); }
