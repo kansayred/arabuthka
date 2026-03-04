@@ -1,6 +1,7 @@
 /* ===========================================
    ARABUTHKA — MAIN STYLES v2
    Dark premium music player
+   Card & component redesign (Task 8)
    =========================================== */
 :root {
   --bg-primary: #0D0D0D;
@@ -48,7 +49,7 @@ body {
   padding-bottom: 100px;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
-  font-size: var(--ara-font-body, 14px);
+  font-size: var(--ara-font-body, 15px);
   line-height: var(--ara-lh-body, 1.43);
 }
 .container { max-width: 100%; padding: 16px; position: relative; z-index: 1; }
@@ -83,7 +84,7 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  letter-spacing: -0.5px;
+  letter-spacing: var(--ara-ls-hero, -0.02em);
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -116,7 +117,7 @@ body {
   padding: 12px 28px;
   border-radius: 50px;
   cursor: pointer;
-  font-size: var(--ara-font-body, 14px);
+  font-size: var(--ara-font-body, 15px);
   font-weight: 700;
   transition: all var(--transition);
   border: none;
@@ -145,16 +146,16 @@ body {
   width: 100%;
   padding: 12px 16px 12px 44px;
   background: var(--bg-secondary);
-  border: 1.5px solid var(--border);
-  border-radius: 50px;
+  border: 1px solid transparent;
+  border-radius: 14px;
   color: var(--text-primary);
   font-family: var(--font-body);
-  font-size: var(--ara-font-body, 14px);
+  font-size: var(--ara-font-body, 15px);
   outline: none;
   transition: all var(--transition);
   min-height: var(--ara-touch-min, 44px);
 }
-#searchInput::placeholder { color: var(--text-muted); }
+#searchInput::placeholder { color: var(--text-muted); opacity: 0.6; }
 #searchInput:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
 .clear-btn {
   position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
@@ -198,12 +199,12 @@ body {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
   padding: 6px 12px; background: none; border: none;
   color: var(--text-muted); font-size: 10px; font-family: var(--font-body);
-  cursor: pointer; transition: all var(--transition); position: relative;
+  cursor: pointer; transition: all 0.2s var(--transition); position: relative;
   min-width: var(--ara-touch-min, 44px);
   min-height: var(--ara-touch-min, 44px);
 }
-.nav-icon-svg { width: 22px; height: 22px; stroke: currentColor; }
-.nav-item.active { color: var(--accent); }
+.nav-icon-svg { width: 24px; height: 24px; stroke: currentColor; }
+.nav-item.active { color: var(--accent-solid); }
 .nav-item.active::after {
   content: ''; position: absolute; top: -8px; left: 50%;
   transform: translateX(-50%); width: 20px; height: 3px;
@@ -230,7 +231,7 @@ body {
 .header-hidden { display: none !important; }
 .section-page { display: none; }
 .section-page.active { display: block; }
-.empty-state { text-align: center; color: var(--text-muted); padding: 28px; font-size: var(--ara-font-body, 14px); }
+.empty-state { text-align: center; color: var(--text-muted); padding: 28px; font-size: var(--ara-font-body, 15px); }
 
 /* ACCESSIBILITY */
 .track-artist-small,
@@ -245,7 +246,7 @@ body {
   outline-offset: 2px;
 }
 .nav-item span {
-  font-size: var(--ara-font-caption, 12px);
+  font-size: var(--ara-font-caption, 13px);
 }
 
 /* Reduced motion */

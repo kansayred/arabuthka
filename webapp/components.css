@@ -1,6 +1,7 @@
 /* ===========================================
    ARABUTHKA — COMPONENTS v2
    UI components on design tokens — dark theme
+   Card & component redesign (Task 8)
    =========================================== */
 
 /* === BUTTONS === */
@@ -15,7 +16,7 @@
   border-radius: var(--ara-radius-btn, 12px);
   padding: var(--ara-space-md, 12px) var(--ara-space-lg, 16px);
   font-family: var(--ara-font-family);
-  font-size: var(--ara-font-body, 14px);
+  font-size: var(--ara-font-body, 15px);
   font-weight: var(--ara-fw-semibold, 600);
   cursor: pointer;
   min-height: var(--ara-touch-min, 44px);
@@ -41,7 +42,7 @@
   border-radius: var(--ara-radius-btn, 12px);
   padding: var(--ara-space-md, 12px) var(--ara-space-lg, 16px);
   font-family: var(--ara-font-family);
-  font-size: var(--ara-font-body, 14px);
+  font-size: var(--ara-font-body, 15px);
   font-weight: var(--ara-fw-medium, 500);
   cursor: pointer;
   min-height: var(--ara-touch-min, 44px);
@@ -85,10 +86,13 @@
 .card {
   background: var(--bg-card, #1E1E2A);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: var(--ara-radius-card, 16px);
+  border-radius: 20px;
   padding: var(--ara-space-lg, 16px);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
-  transition: box-shadow var(--ara-duration-micro, 200ms) ease-out;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: box-shadow var(--ara-duration-micro, 200ms) ease-out,
+              transform var(--ara-duration-micro, 200ms) ease-out;
 }
 .card:hover {
   box-shadow: var(--ara-shadow-elevated);
@@ -105,9 +109,9 @@
 /* === TRACK ITEM ON DESIGN TOKENS === */
 .track-item {
   background: var(--bg-card, #1E1E2A);
-  padding: var(--ara-space-md, 12px) var(--ara-space-md, 14px);
+  padding: 12px;
   margin-bottom: var(--ara-space-sm, 8px);
-  border-radius: var(--ara-radius-card, 16px);
+  border-radius: 16px;
   display: flex;
   align-items: center;
   gap: var(--ara-space-md, 12px);
@@ -119,6 +123,10 @@
 .track-item:hover {
   background: rgba(232, 168, 124, 0.04);
   border-color: rgba(232, 168, 124, 0.1);
+  transform: scale(0.98);
+}
+.track-item:active {
+  transform: scale(0.98);
 }
 .track-item.active {
   background: linear-gradient(
@@ -127,6 +135,13 @@
     rgba(212, 165, 229, 0.08)
   );
   border-color: rgba(232, 168, 124, 0.25);
+}
+
+/* Album cover in track items */
+.track-item .track-cover {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
 }
 
 /* === ICONS === */
