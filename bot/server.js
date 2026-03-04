@@ -452,12 +452,22 @@ app.delete('/tracks/:id', authMiddleware, async (req, res) => {
   });
 app.get('/', (req, res) => res.send('Arabutka API работает'));
 
-// === DEBUG-эндпоинты только для локальной разработки ===
-if (!process.env.RAILWAY_ENVIRONMENT) {
+// =============================================
+// DEBUG-ЭНДПОИНТЫ
+// В production (RAILWAY_ENVIRONMENT) — 403 Forbidden.
+// Локально — полный доступ для диагностики.
+// =============================================
+app.use('/debug', (req, res, next) => {
+  if (process.env.RAILWAY_ENVIRONMENT) {
+    logger.warn(`[Debug] Попытка доступа к debug-эндпоинту в production: ${req.method} ${req.originalUrl}`);
+    return res.status(403).json({
+      error: 'Forbidden',
+      message: 'Debug endpoints отключены в production'
+    });
+  }
+  next();
+});
 
-  // ==============================================
-// ДИАГНОСТИКА ТРЕКОВ (временный endpoint)
-// ==============================================
 app.get('/debug/tracks', async (req, res) => {
   try {
     const result = await pool.query(
@@ -477,12 +487,6 @@ app.get('/debug/tracks', async (req, res) => {
   }
 });
 
-
-
-// ==============================================
-// СТРИМИНГ АУДИО — прокси через сервер
-
-// Временный эндпоинт для диагностики S3 бакета
 app.get('/debug/s3-list', async (req, res) => {
   try {
     const { S3Client, ListObjectsV2Command } = require('@aws-sdk/client-s3');
@@ -513,7 +517,6 @@ app.get('/debug/s3-list', async (req, res) => {
   }
 });
 
-// Временный: удаление орфанных треков (файлы не существуют в S3)
 app.delete('/debug/cleanup-orphans', async (req, res) => {
   try {
     const { S3Client, HeadObjectCommand } = require('@aws-sdk/client-s3');
@@ -549,7 +552,9 @@ app.delete('/debug/cleanup-orphans', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-} // конец if (!RAILWAY_ENVIRONMENT)
+
+// ==============================================
+// СТРИМИНГ АУДИО — прокси через сервер
 // Фронтенд запрашивает /stream/:trackId,
 // сервер берёт s3_key из БД и проксирует файл из S3.
 // Это обходит CORS-ограничения Selectel.
