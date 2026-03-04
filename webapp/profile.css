@@ -1,0 +1,70 @@
+/* ===========================================
+   PROFILE PAGE STYLES
+   =========================================== */
+.profile-section {
+  padding: 16px;
+}
+.profile-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px 20px;
+  text-align: center;
+  box-shadow: var(--shadow-soft);
+  margin-bottom: 16px;
+}
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin: 0 auto 16px;
+  background: var(--gradient-subtle);
+  border: 2px solid var(--border-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: var(--accent);
+}
+.profile-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.profile-name {
+  font-family: var(--font-heading);
+  font-size: var(--ara-font-title, 20px);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.profile-username {
+  font-size: var(--ara-font-body, 14px);
+  color: var(--text-secondary);
+}
+.profile-stats {
+  display: flex;
+  gap: 12px;
+}
+.profile-stat {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 20px 12px;
+  text-align: center;
+  box-shadow: var(--shadow-soft);
+}
+.profile-stat-value {
+  font-family: var(--font-heading);
+  font-size: var(--ara-font-title, 20px);
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+.profile-stat-label {
+  font-size: var(--ara-font-caption, 13px);
+  color: var(--text-secondary);
+  font-weight: 500;
+}

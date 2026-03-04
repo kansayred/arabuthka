@@ -177,7 +177,7 @@ function initSwipeGestures() {
     }, { passive: true });
     trackListEl.addEventListener('touchend', () => {
         if (!currentEl) return;
-        const match = currentEl.style.transform.match(/translateX\(([-\d.]+)px\)/);
+        const match = currentEl.style.transform.match(/translateX\\(([-\\d.]+)px\\)/);
         const dx = match ? parseFloat(match[1]) : 0;
         currentEl.classList.remove('swiping'); currentEl.classList.add('snap-back');
         const tracks = _getState ? _getState().tracks : [];
@@ -190,36 +190,85 @@ function initSwipeGestures() {
 }
 
 // ===========================================
-// BOTTOM NAV
+// BOTTOM NAV — Real tab switching
 // ===========================================
+let _currentTab = 'home';
+
+function switchTab(tab) {
+    if (tab === _currentTab) {
+        // Already on this tab — scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+    }
+    _currentTab = tab;
+
+    // Hide all section-pages, show active one
+    document.querySelectorAll('.section-page[data-tab]').forEach(page => {
+        page.classList.toggle('active', page.getAttribute('data-tab') === tab);
+    });
+
+    // Update nav button active state
+    document.querySelectorAll('.nav-item[data-tab]').forEach(n => {
+        n.classList.toggle('active', n.getAttribute('data-tab') === tab);
+    });
+
+    // Scroll to top on tab change
+    window.scrollTo({ top: 0, behavior: 'instant' });
+
+    // Tab-specific logic
+    if (tab === 'search') {
+        const inp = document.getElementById('globalSearchInput');
+        if (inp) setTimeout(() => inp.focus(), 100);
+    } else if (tab === 'profile') {
+        renderProfile();
+    } else if (tab === 'library') {
+        // Re-render playlists when switching to library
+        const ps = document.getElementById('playlistsSection');
+        if (ps && window.PlaylistManager) window.PlaylistManager.loadAndRender(ps);
+    }
+}
+
+function renderProfile() {
+    const tg = window.Telegram?.WebApp;
+    const user = tg?.initDataUnsafe?.user;
+    const nameEl = document.getElementById('profileName');
+    const usernameEl = document.getElementById('profileUsername');
+    const avatarEl = document.getElementById('profileAvatar');
+    const trackCountEl = document.getElementById('profileTrackCount');
+    const playlistCountEl = document.getElementById('profilePlaylistCount');
+
+    if (user) {
+        const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ');
+        if (nameEl) nameEl.textContent = fullName || 'Пользователь';
+        if (usernameEl) usernameEl.textContent = user.username ? '@' + user.username : '';
+        if (avatarEl && user.photo_url) {
+            avatarEl.innerHTML = '<img src="' + user.photo_url + '" alt="" class="profile-avatar-img">';
+        }
+    }
+
+    if (trackCountEl && _getState) {
+        trackCountEl.textContent = _getState().allTracks.length;
+    }
+    if (playlistCountEl && window.PlaylistManager) {
+        playlistCountEl.textContent = window.PlaylistManager.playlists?.length || 0;
+    }
+}
+
 function initBottomNav() {
     const tg = window.Telegram?.WebApp;
     const navItems = document.querySelectorAll('.nav-item[data-tab]');
     if (!navItems.length) return;
     navItems.forEach(item => {
         item.addEventListener('click', () => {
-            navItems.forEach(n => n.classList.remove('active'));
-            item.classList.add('active');
             const tab = item.getAttribute('data-tab');
-            if (tab === 'home') window.scrollTo({ top: 0, behavior: 'smooth' });
-            else if (tab === 'library') {
-                const tl = document.getElementById('trackList');
-                if (tl) tl.scrollIntoView({ behavior: 'smooth' });
-            } else if (tab === 'playlists') {
-                const pl = document.getElementById('playlistsSection');
-                if (pl) pl.scrollIntoView({ behavior: 'smooth' });
-            } else if (tab === 'search') {
-                const gs = document.querySelector('.global-search-section');
-                if (gs) { gs.scrollIntoView({ behavior: 'smooth' }); const inp = document.getElementById('globalSearchInput'); if (inp) setTimeout(() => inp.focus(), 400); }
-            } else if (tab === 'profile') {
-                const user = tg?.initDataUnsafe?.user;
-                const allCount = _getState ? _getState().allTracks.length : 0;
-                if (user) window.showToast?.(`👤 ${user.first_name || ''} • ${allCount} треков`);
-            }
+            switchTab(tab);
             if (tg?.HapticFeedback) tg.HapticFeedback.selectionChanged();
         });
     });
 }
+
+// Export for external use
+export { switchTab };
 
 // ===========================================
 // KEYBOARD SHORTCUTS
