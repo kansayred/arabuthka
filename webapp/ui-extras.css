@@ -1,0 +1,149 @@
+/* ===========================================
+   ARABUTHKA — SKELETON LOADERS
+   Used by network.js, searchMusic.js
+   =========================================== */
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-card-hover) 50%, var(--bg-secondary) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-xs, 8px);
+}
+.skeleton-text {
+  height: 14px;
+  border-radius: 4px;
+}
+.skeleton-card {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 8px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm, 12px);
+  align-items: center;
+}
+@keyframes skeletonShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ===========================================
+   PLAYLIST UI
+   Used by playlists.js
+   =========================================== */
+.playlist-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.playlist-header h3 {
+  font-family: var(--font-heading);
+  font-size: var(--ara-font-subtitle, 18px);
+  font-weight: 700;
+  color: var(--text-primary);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.playlist-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background var(--transition);
+  border-bottom: 1px solid var(--border);
+}
+.playlist-item:last-child { border-bottom: none; }
+.playlist-item:hover { background: var(--bg-card-hover); }
+.playlist-item:active { background: var(--bg-secondary); }
+.playlist-item-info {
+  flex: 1;
+  min-width: 0;
+}
+.playlist-item-name {
+  font-size: var(--ara-font-body, 14px);
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+.playlist-item-count {
+  font-size: var(--ara-font-caption, 12px);
+  color: var(--text-secondary);
+}
+.playlist-tracks {
+  padding: 8px 0;
+}
+
+/* ===========================================
+   SEARCH RESULTS UI
+   Used by searchMusic.js
+   =========================================== */
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  margin-bottom: 4px;
+  border-radius: var(--radius-sm, 12px);
+  transition: background var(--transition);
+  cursor: pointer;
+}
+.search-result-item:hover { background: var(--bg-card-hover); }
+.search-result-cover {
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-xs, 8px);
+  flex-shrink: 0;
+  background: var(--gradient-subtle);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  object-fit: cover;
+}
+.search-result-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.search-result-cover.no-cover::after {
+  content: '\266B';
+  font-size: 20px;
+  color: var(--accent);
+}
+.search-result-info {
+  flex: 1;
+  min-width: 0;
+}
+.search-result-title {
+  font-size: var(--ara-font-body, 14px);
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+.search-result-artist {
+  font-size: var(--ara-font-caption, 12px);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.search-play-btn,
+.search-queue-btn {
+  flex-shrink: 0;
+}
+
+/* Reduced motion: disable skeleton shimmer */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+}
