@@ -130,7 +130,29 @@ if (fileInput) {
         try {
             const res = await fetch(`${API_URL}/upload`, { method: 'POST', headers: authHeaders, body: formData });
             const data = await res.json();
-            if (data.success) { uploadStatus.textContent = 'Загружено!'; loadTracks(); setTimeout(() => uploadStatus.textContent = '', 2000); }
+            if (data.success) {
+                uploadStatus.textContent = 'Загружено!';
+                loadTracks();
+                setTimeout(() => uploadStatus.textContent = '', 2000);
+                // Стандартизация трека (опционально)
+                if (localStorage.getItem('arabuthka_standardize') === 'true' && window.TrackStandardizer && data.track) {
+                    try {
+                        const std = window.TrackStandardizer.standardize(data.track.name || '', data.track.artist || '');
+                        if (std.name !== (data.track.name || '') || std.artist !== (data.track.artist || '')) {
+                            fetch(`${API_URL}/tracks/${data.track.id}`, {
+                                method: 'PUT',
+                                headers: { ...authHeaders, 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ name: std.name, artist: std.artist })
+                            }).then(r => r.json()).then(upd => {
+                                if (upd.success) {
+                                    loadTracks();
+                                    showToast(window.I18n ? window.I18n.t('settings.standardize_toast') : 'Стандартизировано');
+                                }
+                            }).catch(() => {});
+                        }
+                    } catch (e) { console.warn('Standardize error:', e); }
+                }
+            }
             else uploadStatus.textContent = 'Ошибка: ' + (data.error || 'Неизвестно');
         } catch { uploadStatus.textContent = 'Ошибка загрузки'; }
         fileInput.value = '';
