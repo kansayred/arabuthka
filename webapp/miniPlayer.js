@@ -1,6 +1,7 @@
 /**
  * MiniPlayer — Sticky mini-player + fullscreen overlay
  * Reads queue from window.getCurrentQueueTrack (app.js export)
+ * Fix: hidden by default, only shows on first track play
  */
 (function() {
   'use strict';
@@ -34,6 +35,7 @@
   var isOpen = false;
   var touchStartY = 0, touchDeltaY = 0;
   var fsSeeking = false;
+  var hasEverPlayed = false; // Track whether any track has been played
 
   function safeCover(url) {
     if (!url) return '';
@@ -55,7 +57,12 @@
 
   function updateMiniPlayer() {
     var track = (typeof window.getCurrentQueueTrack === 'function') ? window.getCurrentQueueTrack() : null;
-    if (!track) { miniEl.classList.remove('visible'); return; }
+
+    // Only show mini-player if a track has ever been played
+    if (!track || !hasEverPlayed) {
+      miniEl.classList.remove('visible');
+      return;
+    }
 
     miniEl.classList.add('visible');
     if (miniTitle) miniTitle.textContent = track.name || 'Без названия';
@@ -125,9 +132,10 @@
   }
 
   function openFullscreen() {
+    if (!hasEverPlayed) return; // Don't open if nothing has played
     isOpen = true;
     fsEl.classList.add('open');
-    window.Utils.haptic('medium');
+    if (window.Utils && window.Utils.haptic) window.Utils.haptic('medium');
     document.body.style.overflow = 'hidden';
     syncShuffleRepeatState();
     updateDuration();
@@ -149,7 +157,7 @@
     isOpen = false;
     fsEl.classList.remove('open');
     fsEl.style.transform = '';
-    window.Utils.haptic('light');
+    if (window.Utils && window.Utils.haptic) window.Utils.haptic('light');
     document.body.style.overflow = '';
   }
 
@@ -233,15 +241,21 @@
     else fsEl.style.transform = '';
   }, { passive: true });
 
-  // Audio events
+  // Audio events — mark hasEverPlayed on first play
   if (audio) {
-    audio.addEventListener('play', function() { updateMiniPlayer(); updatePlayIcon(); syncShuffleRepeatState(); });
+    audio.addEventListener('play', function() {
+      hasEverPlayed = true;
+      updateMiniPlayer();
+      updatePlayIcon();
+      syncShuffleRepeatState();
+    });
     audio.addEventListener('pause', function() { updatePlayIcon(); });
     audio.addEventListener('timeupdate', updateProgress);
     audio.addEventListener('loadedmetadata', function() { updateMiniPlayer(); updatePlayIcon(); updateDuration(); });
   }
 
-  setInterval(updateMiniPlayer, 1000);
+  // Poll less frequently — only needed for cover/title sync if track changes
+  setInterval(updateMiniPlayer, 2000);
 
   window.MiniPlayer = { update: updateMiniPlayer, open: openFullscreen, close: closeFullscreen };
 })();
