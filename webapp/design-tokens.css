@@ -1,93 +1,134 @@
 /* ===========================================
-   ARABUTHKA — DESIGN TOKENS v2
-   Dark premium: warm peach + lavender accent
-   Inter font system
+   ARABUTHKA — DESIGN TOKENS v3
+   Light-first. Чистый минимализм.
+   Философия: контент важнее декора.
    =========================================== */
 
+/* === Светлая тема (основная) === */
 :root {
-  /* === Telegram ThemeParams (fallbacks — dark) === */
-  --tg-theme-bg-color: #0D0D0D;
-  --tg-theme-text-color: #F5F5F5;
-  --tg-theme-hint-color: #8A8A9A;
-  --tg-theme-link-color: #E8A87C;
-  --tg-theme-button-color: #E8A87C;
-  --tg-theme-button-text-color: #0D0D0D;
-  --tg-theme-secondary-bg-color: #1A1A1A;
+  /* Поверхности */
+  --ara-bg: #FAFAFA;
+  --ara-bg-secondary: #F2F2F7;
+  --ara-bg-card: #FFFFFF;
+  --ara-bg-card-hover: #F8F8FA;
+  --ara-bg-elevated: #FFFFFF;
+  --ara-bg-input: #F2F2F7;
 
-  /* === Фирменная палитра Арабутки v2 === */
-  --ara-gradient-start: #E8A87C;
-  --ara-gradient-end: #D4A5E5;
-  --ara-accent: #E8A87C;
-  --ara-surface-elevated: rgba(30, 30, 42, 0.92);
+  /* Текст */
+  --ara-text: #1A1A1A;
+  --ara-text-secondary: #6B7280;
+  --ara-text-muted: #9CA3AF;
+  --ara-text-inverse: #FFFFFF;
 
-  /* === Градиентные пресеты === */
-  --ara-preset-default-start: #E8A87C;
-  --ara-preset-default-end: #D4A5E5;
-  --ara-preset-warm-start: #E8A87C;
-  --ara-preset-warm-end: #F7C948;
-  --ara-preset-cold-start: #7B8CDE;
-  --ara-preset-cold-end: #D4A5E5;
-  --ara-preset-neon-start: #06B6D4;
-  --ara-preset-neon-end: #D4A5E5;
-  --ara-preset-sunset-start: #E8A87C;
-  --ara-preset-sunset-end: #FDE68A;
+  /* Акцент — один цвет, никаких градиентов */
+  --ara-accent: #FF6B35;
+  --ara-accent-hover: #E85D2C;
+  --ara-accent-subtle: rgba(255, 107, 53, 0.08);
+  --ara-accent-glow: rgba(255, 107, 53, 0.16);
 
-  /* === Типографика — Inter === */
-  --ara-font-family: 'Inter', -apple-system, 'SF Pro',
-    'Helvetica Neue', sans-serif;
-  --ara-font-heading: 'Inter', -apple-system, 'SF Pro',
-    'Helvetica Neue', sans-serif;
+  /* Границы */
+  --ara-border: rgba(0, 0, 0, 0.06);
+  --ara-border-strong: rgba(0, 0, 0, 0.12);
+  --ara-divider: rgba(0, 0, 0, 0.04);
 
-  /* Масштаб: caption → body → subtitle → title → hero */
-  --ara-font-caption: 13px;
-  --ara-font-body: 15px;
-  --ara-font-subtitle: 16px;
-  --ara-font-title: 18px;
-  --ara-font-hero: 28px;
+  /* Тени — мягкие, не чёрные */
+  --ara-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --ara-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --ara-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --ara-shadow-player: 0 -4px 24px rgba(0, 0, 0, 0.06);
 
-  /* Letter spacing */
-  --ara-ls-hero: -0.02em;
+  /* Типографика */
+  --ara-font: 'Inter', -apple-system, 'SF Pro Text', system-ui, sans-serif;
+  --ara-font-display: 'Inter', -apple-system, 'SF Pro Display', system-ui, sans-serif;
 
-  /* Высота строки */
-  --ara-lh-caption: 1.33;
-  --ara-lh-body: 1.43;
-  --ara-lh-subtitle: 1.5;
-  --ara-lh-title: 1.3;
-  --ara-lh-hero: 1.14;
+  --ara-text-xs: 11px;
+  --ara-text-sm: 13px;
+  --ara-text-base: 15px;
+  --ara-text-md: 16px;
+  --ara-text-lg: 18px;
+  --ara-text-xl: 22px;
+  --ara-text-2xl: 28px;
 
-  /* Насыщенность */
-  --ara-fw-regular: 400;
-  --ara-fw-medium: 500;
-  --ara-fw-semibold: 600;
-  --ara-fw-bold: 700;
-  --ara-fw-extrabold: 800;
+  --ara-leading-tight: 1.2;
+  --ara-leading-normal: 1.4;
+  --ara-leading-relaxed: 1.6;
 
-  /* === Spacing (8px grid) === */
-  --ara-space-compact: 8px;
-  --ara-space-standard: 12px;
-  --ara-space-loose: 16px;
-  --ara-space-xs: 4px;
-  --ara-space-sm: 8px;
-  --ara-space-md: 12px;
-  --ara-space-lg: 16px;
-  --ara-space-xl: 24px;
-  --ara-space-2xl: 32px;
+  --ara-tracking-tight: -0.02em;
+  --ara-tracking-normal: 0;
+  --ara-tracking-wide: 0.02em;
 
-  /* === Скругления (moodboard: generous) === */
-  --ara-radius-btn: 12px;
-  --ara-radius-card: 16px;
-  --ara-radius-modal: 20px;
-  --ara-radius-avatar: 50%;
-  --ara-radius-pill: 50px;
+  --ara-weight-regular: 400;
+  --ara-weight-medium: 500;
+  --ara-weight-semibold: 600;
+  --ara-weight-bold: 700;
 
-  /* === Тени (dark depth) === */
-  --ara-shadow-elevated: 0 4px 24px rgba(0, 0, 0, 0.3);
+  /* Пространство (4px сетка) */
+  --ara-space-1: 4px;
+  --ara-space-2: 8px;
+  --ara-space-3: 12px;
+  --ara-space-4: 16px;
+  --ara-space-5: 20px;
+  --ara-space-6: 24px;
+  --ara-space-8: 32px;
+  --ara-space-10: 40px;
+  --ara-space-section: 32px;
 
-  /* === Touch targets === */
+  /* Скругления */
+  --ara-radius-xs: 6px;
+  --ara-radius-sm: 8px;
+  --ara-radius-md: 12px;
+  --ara-radius-lg: 16px;
+  --ara-radius-xl: 20px;
+  --ara-radius-full: 9999px;
+
+  /* Анимация */
+  --ara-ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ara-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ara-duration-fast: 150ms;
+  --ara-duration-normal: 250ms;
+  --ara-duration-slow: 400ms;
+
+  /* Тач-таргеты */
   --ara-touch-min: 44px;
+  --ara-touch-comfortable: 48px;
 
-  /* === Анимации === */
-  --ara-ease: cubic-bezier(0.4, 0, 0.2, 1);
-  --ara-duration-micro: 200ms;
-  --ara-duration-layout: 350ms;
+  /* Telegram fallbacks */
+  --tg-theme-bg-color: var(--ara-bg);
+  --tg-theme-text-color: var(--ara-text);
+  --tg-theme-hint-color: var(--ara-text-secondary);
+  --tg-theme-link-color: var(--ara-accent);
+  --tg-theme-button-color: var(--ara-accent);
+  --tg-theme-button-text-color: var(--ara-text-inverse);
+  --tg-theme-secondary-bg-color: var(--ara-bg-secondary);
+}
+
+/* === Тёмная тема === */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ara-bg: #111111;
+    --ara-bg-secondary: #1C1C1E;
+    --ara-bg-card: #1C1C1E;
+    --ara-bg-card-hover: #2C2C2E;
+    --ara-bg-elevated: #2C2C2E;
+    --ara-bg-input: #2C2C2E;
+
+    --ara-text: #F5F5F5;
+    --ara-text-secondary: #9CA3AF;
+    --ara-text-muted: #6B7280;
+    --ara-text-inverse: #111111;
+
+    --ara-accent: #FF8A5C;
+    --ara-accent-hover: #FF9B73;
+    --ara-accent-subtle: rgba(255, 138, 92, 0.10);
+    --ara-accent-glow: rgba(255, 138, 92, 0.20);
+
+    --ara-border: rgba(255, 255, 255, 0.08);
+    --ara-border-strong: rgba(255, 255, 255, 0.14);
+    --ara-divider: rgba(255, 255, 255, 0.05);
+
+    --ara-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --ara-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --ara-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --ara-shadow-player: 0 -4px 24px rgba(0, 0, 0, 0.3);
+  }
 }
