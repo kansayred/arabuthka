@@ -1,6 +1,7 @@
 /* ===========================================
    ARABUTHKA — DESIGN TOKENS v2
    Dark premium: warm peach + lavender accent
+   Inter font system
    =========================================== */
 
 :root {
@@ -31,18 +32,21 @@
   --ara-preset-sunset-start: #E8A87C;
   --ara-preset-sunset-end: #FDE68A;
 
-  /* === Типографика === */
+  /* === Типографика — Inter === */
   --ara-font-family: 'Inter', -apple-system, 'SF Pro',
     'Helvetica Neue', sans-serif;
   --ara-font-heading: 'Inter', -apple-system, 'SF Pro',
     'Helvetica Neue', sans-serif;
 
   /* Масштаб: caption → body → subtitle → title → hero */
-  --ara-font-caption: 12px;
-  --ara-font-body: 14px;
+  --ara-font-caption: 13px;
+  --ara-font-body: 15px;
   --ara-font-subtitle: 16px;
-  --ara-font-title: 20px;
+  --ara-font-title: 18px;
   --ara-font-hero: 28px;
+
+  /* Letter spacing */
+  --ara-ls-hero: -0.02em;
 
   /* Высота строки */
   --ara-lh-caption: 1.33;
