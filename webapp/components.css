@@ -1,32 +1,32 @@
 /* ===========================================
-   ARABUTHKA — COMPONENTS v2
-   UI components on design tokens — dark theme
-   Card & component redesign (Task 8)
+   ARABUTHKA — COMPONENTS v3
+   Компоненты на токенах v3. Никакого backdrop-filter.
    =========================================== */
 
-/* === BUTTONS === */
+/* === КНОПКИ === */
 .btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--ara-space-sm, 8px);
-  background: var(--tg-theme-button-color, var(--ara-accent));
-  color: var(--tg-theme-button-text-color, #0D0D0D);
+  gap: var(--ara-space-2);
+  background: var(--ara-accent);
+  color: var(--ara-text-inverse);
   border: none;
-  border-radius: var(--ara-radius-btn, 12px);
-  padding: var(--ara-space-md, 12px) var(--ara-space-lg, 16px);
-  font-family: var(--ara-font-family);
-  font-size: var(--ara-font-body, 15px);
-  font-weight: var(--ara-fw-semibold, 600);
+  border-radius: var(--ara-radius-md);
+  padding: var(--ara-space-3) var(--ara-space-4);
+  font-family: var(--ara-font);
+  font-size: var(--ara-text-base);
+  font-weight: var(--ara-weight-semibold);
   cursor: pointer;
-  min-height: var(--ara-touch-min, 44px);
-  transition: all var(--ara-duration-micro, 200ms) ease-out;
-  box-shadow: var(--ara-shadow-elevated);
+  min-height: var(--ara-touch-min);
+  transition: all var(--ara-duration-fast) var(--ara-ease);
 }
+
 .btn-primary:hover {
-  opacity: 0.9;
+  background: var(--ara-accent-hover);
   transform: translateY(-1px);
 }
+
 .btn-primary:active {
   transform: translateY(0) scale(0.97);
 }
@@ -35,26 +35,26 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--ara-space-sm, 8px);
-  background: var(--tg-theme-secondary-bg-color, #1A1A1A);
-  color: var(--tg-theme-text-color, #F5F5F5);
-  border: 1.5px solid rgba(255, 255, 255, 0.06);
-  border-radius: var(--ara-radius-btn, 12px);
-  padding: var(--ara-space-md, 12px) var(--ara-space-lg, 16px);
-  font-family: var(--ara-font-family);
-  font-size: var(--ara-font-body, 15px);
-  font-weight: var(--ara-fw-medium, 500);
+  gap: var(--ara-space-2);
+  background: transparent;
+  color: var(--ara-text);
+  border: 1.5px solid var(--ara-border-strong);
+  border-radius: var(--ara-radius-md);
+  padding: var(--ara-space-3) var(--ara-space-4);
+  font-family: var(--ara-font);
+  font-size: var(--ara-text-base);
+  font-weight: var(--ara-weight-medium);
   cursor: pointer;
-  min-height: var(--ara-touch-min, 44px);
-  transition: all var(--ara-duration-micro, 200ms) ease-out;
+  min-height: var(--ara-touch-min);
+  transition: all var(--ara-duration-fast) var(--ara-ease);
 }
+
 .btn-secondary:hover {
-  background: rgba(232, 168, 124, 0.06);
-  border-color: rgba(232, 168, 124, 0.2);
+  background: var(--ara-accent-subtle);
+  border-color: var(--ara-accent);
 }
-.btn-secondary:active {
-  transform: scale(0.97);
-}
+
+.btn-secondary:active { transform: scale(0.97); }
 
 .btn-icon {
   display: inline-flex;
@@ -62,101 +62,112 @@
   justify-content: center;
   background: transparent;
   border: none;
-  color: var(--tg-theme-hint-color, #8A8A9A);
-  width: var(--ara-touch-min, 44px);
-  height: var(--ara-touch-min, 44px);
-  border-radius: 50%;
+  color: var(--ara-text-secondary);
+  width: var(--ara-touch-min);
+  height: var(--ara-touch-min);
+  border-radius: var(--ara-radius-full);
   cursor: pointer;
-  transition: all var(--ara-duration-micro, 200ms) ease-out;
-}
-.btn-icon:hover {
-  background: rgba(232, 168, 124, 0.08);
-  color: var(--tg-theme-text-color, #F5F5F5);
-}
-.btn-icon:active {
-  transform: scale(0.9);
-}
-.btn-icon svg {
-  width: 24px;
-  height: 24px;
-  stroke-width: 1.5px;
+  transition: all var(--ara-duration-fast) var(--ara-ease);
 }
 
-/* === CARDS & SURFACES === */
+.btn-icon:hover {
+  background: var(--ara-accent-subtle);
+  color: var(--ara-text);
+}
+
+.btn-icon:active { transform: scale(0.9); }
+.btn-icon svg { width: 22px; height: 22px; stroke-width: 1.5px; }
+
+/* === КАРТОЧКИ === */
 .card {
-  background: var(--bg-card, #1E1E2A);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 20px;
-  padding: var(--ara-space-lg, 16px);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  transition: box-shadow var(--ara-duration-micro, 200ms) ease-out,
-              transform var(--ara-duration-micro, 200ms) ease-out;
+  background: var(--ara-bg-card);
+  border: none;
+  border-radius: var(--ara-radius-lg);
+  padding: var(--ara-space-4);
+  box-shadow: var(--ara-shadow-sm);
+  transition: box-shadow var(--ara-duration-fast) var(--ara-ease);
 }
-.card:hover {
-  box-shadow: var(--ara-shadow-elevated);
-}
+
+.card:hover { box-shadow: var(--ara-shadow-md); }
 
 .surface-elevated {
-  background: var(--ara-surface-elevated, rgba(30, 30, 42, 0.92));
-  border-radius: var(--ara-radius-card, 16px);
-  box-shadow: var(--ara-shadow-elevated);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: var(--ara-bg-elevated);
+  border-radius: var(--ara-radius-lg);
+  box-shadow: var(--ara-shadow-md);
 }
 
-/* === TRACK ITEM ON DESIGN TOKENS === */
+/* === ЭЛЕМЕНТ ТРЕКА === */
 .track-item {
-  background: var(--bg-card, #1E1E2A);
-  padding: 12px;
-  margin-bottom: var(--ara-space-sm, 8px);
-  border-radius: 16px;
+  background: transparent;
+  padding: var(--ara-space-3);
+  margin-bottom: 0;
+  border-radius: var(--ara-radius-md);
   display: flex;
   align-items: center;
-  gap: var(--ara-space-md, 12px);
-  transition: all var(--ara-duration-micro, 200ms) ease-out;
+  gap: var(--ara-space-3);
+  transition: background var(--ara-duration-fast) var(--ara-ease);
   cursor: pointer;
-  border: 1px solid transparent;
-  min-height: var(--ara-touch-min, 44px);
-}
-.track-item:hover {
-  background: rgba(232, 168, 124, 0.04);
-  border-color: rgba(232, 168, 124, 0.1);
-  transform: scale(0.98);
-}
-.track-item:active {
-  transform: scale(0.98);
-}
-.track-item.active {
-  background: linear-gradient(
-    135deg,
-    rgba(232, 168, 124, 0.08),
-    rgba(212, 165, 229, 0.08)
-  );
-  border-color: rgba(232, 168, 124, 0.25);
+  border: none;
+  border-bottom: 0.5px solid var(--ara-divider);
+  min-height: var(--ara-touch-comfortable);
 }
 
-/* Album cover in track items */
+.track-item:last-child { border-bottom: none; }
+
+.track-item:hover {
+  background: var(--ara-accent-subtle);
+}
+
+.track-item:active { transform: scale(0.99); }
+
+.track-item.active {
+  background: var(--ara-accent-subtle);
+}
+
 .track-item .track-cover {
   width: 48px;
   height: 48px;
-  border-radius: 12px;
+  border-radius: var(--ara-radius-sm);
 }
 
-/* === ICONS === */
+/* === ИКОНКИ === */
 .icon-base {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   stroke-width: 1.5px;
   stroke: currentColor;
   fill: none;
 }
 
-/* === TRANSITIONS === */
-.transition-hover {
-  transition: all 200ms ease-out;
+/* === ИНДИКАТОР ЗАГРУЗКИ === */
+.track-loading {
+  position: relative;
 }
-.transition-layout {
-  transition: all 350ms ease-out;
+
+.track-loading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--ara-accent-subtle);
+  border-radius: inherit;
+  animation: loadingPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes loadingPulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+}
+
+/* === СПИННЕР === */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--ara-border);
+  border-top-color: var(--ara-accent);
+  border-radius: var(--ara-radius-full);
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
