@@ -1,189 +1,181 @@
 /**
- * Search Music Module
- * Модуль для поиска и скачивания музыки в Mini App
+ * SearchMusic — Модуль поиска треков
+ * Debounce 400ms, skeleton loader, пустое состояние, play/add-to-queue
  */
+(function initSearchModule() {
+  'use strict';
 
-const API_URL = 'https://arabuthka-production.up.railway.app';
+  const API_URL = (window.Config && window.Config.api && window.Config.api.baseUrl)
+    || 'https://arabuthka-production.up.railway.app';
+  const DEBOUNCE_MS = 400;
+  const MIN_QUERY_LENGTH = 2;
 
-/**
- * Поиск треков (библиотека + внешние источники)
- * @param {string} query - Поисковый запрос
- * @param {string} initData - Telegram InitData для авторизации
- * @param {number} limit - Максимум результатов
- * @returns {Promise<Object>} Результаты поиска
- */
-export async function searchTracks(query, initData, limit = 20) {
-  try {
-    const response = await fetch(
-      `${API_URL}/api/search/all?q=${encodeURIComponent(query)}&limit=${limit}`,
-      {
-        headers: {
-          'X-Telegram-Init-Data': initData
-        }
-      }
-    );
+  const searchInput = document.getElementById('globalSearchInput');
+  const searchBtn = document.getElementById('globalSearchBtn');
+  const resultsContainer = document.getElementById('globalSearchResults');
+  if (!searchInput || !searchBtn || !resultsContainer) return;
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
+  let debounceTimer = null;
+  let searchResults = [];
+
+  // Получение auth-заголовков
+  function getAuthHeaders() {
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if (tg && tg.initData) {
+      return { 'X-Telegram-Init-Data': tg.initData };
     }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Ошибка поиска:', error);
-    return { success: false, error: error.message, tracks: [] };
-  }
-}
-
-/**
- * Скачать трек и добавить в библиотеку
- * @param {Object} track - Данные трека
- * @param {string} initData - Telegram InitData
- * @returns {Promise<Object>} Результат скачивания
- */
-export async function downloadTrack(track, initData) {
-  try {
-    const response = await fetch(`${API_URL}/api/search/download`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Telegram-Init-Data': initData
-      },
-      body: JSON.stringify({
-        previewUrl: track.previewUrl || track.url,
-        title: track.title,
-        artist: track.artist
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Ошибка скачивания:', error);
-    return { success: false, error: error.message };
-  }
-}
-
-/**
- * Класс для управления UI поиска
- */
-export class SearchManager {
-  constructor(options) {
-    this.initData = options.initData;
-    this.onTrackSelect = options.onTrackSelect || (() => {});
-    this.onDownloadComplete = options.onDownloadComplete || (() => {});
-    
-    this.searchResults = [];
-    this.isSearching = false;
-    this.debounceTimer = null;
+    return {};
   }
 
-  /**
-   * Выполнить поиск с debounce
-   */
-  async search(query) {
-    clearTimeout(this.debounceTimer);
-    
-    if (!query || query.trim().length < 2) {
-      this.searchResults = [];
-      this.renderResults();
+  // HTML-экранирование
+  function esc(text) {
+    const d = document.createElement('div');
+    d.textContent = text || '';
+    return d.innerHTML;
+  }
+
+  // Безопасный cover URL
+  function safeCover(url) {
+    if (!url) return '';
+    try {
+      const p = new URL(url);
+      if (p.protocol === 'https:' || p.protocol === 'data:') return url;
+    } catch (e) { /* игнор */ }
+    return '';
+  }
+
+  // Skeleton loader
+  function showSkeleton() {
+    const items = Array.from({ length: 4 }, () =>
+      '<div class="skeleton-card" style="display:flex;gap:12px;padding:12px;margin-bottom:8px;">'
+      + '<div class="skeleton" style="width:46px;height:46px;border-radius:8px;flex-shrink:0;"></div>'
+      + '<div style="flex:1;">'
+      + '<div class="skeleton skeleton-text" style="width:70%;height:14px;margin-bottom:6px;"></div>'
+      + '<div class="skeleton skeleton-text" style="width:45%;height:12px;"></div>'
+      + '</div></div>'
+    ).join('');
+    resultsContainer.innerHTML = items;
+  }
+
+  // Пустое состояние
+  function showEmpty(query) {
+    resultsContainer.innerHTML = query
+      ? '<div class="empty-state">' + esc('🔍 Ничего не найдено по запросу \u00ab' + query + '\u00bb') + '</div>'
+      : '<p>Введите запрос для поиска</p>';
+  }
+
+  // Основной поиск
+  async function performSearch(query) {
+    query = (query || '').trim();
+    if (query.length < MIN_QUERY_LENGTH) {
+      showEmpty('');
+      searchResults = [];
       return;
     }
 
-    this.debounceTimer = setTimeout(async () => {
-      this.isSearching = true;
-      this.renderLoading();
+    showSkeleton();
 
-      const result = await searchTracks(query, this.initData);
-      
-      this.isSearching = false;
-      this.searchResults = result.tracks || [];
-      this.renderResults();
-    }, 300);
-  }
+    try {
+      const res = await fetch(
+        API_URL + '/api/search/all?q=' + encodeURIComponent(query),
+        { headers: getAuthHeaders() }
+      );
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const results = data.results || data.tracks || data || [];
 
-  /**
-   * Скачать выбранный трек
-   */
-  async download(track) {
-    const btn = document.querySelector(`[data-track-id="${track.id}"] .download-btn`);
-    if (btn) {
-      btn.disabled = true;
-      btn.textContent = '⏳';
-    }
-
-    const result = await downloadTrack(track, this.initData);
-    
-    if (result.success) {
-      if (btn) {
-        btn.textContent = '✅';
-        btn.classList.add('downloaded');
+      if (!Array.isArray(results) || results.length === 0) {
+        searchResults = [];
+        showEmpty(query);
+        return;
       }
-      this.onDownloadComplete(result.track);
-    } else {
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = '⬇️';
-      }
-      alert('Ошибка скачивания: ' + (result.error || 'Неизвестная ошибка'));
-    }
 
-    return result;
-  }
-
-  /**
-   * Отрисовка загрузки
-   */
-  renderLoading() {
-    const container = document.getElementById('searchResults');
-    if (container) {
-      container.innerHTML = '<div class="search-loading">🔍 Ищем...</div>';
+      searchResults = results;
+      renderResults(results);
+    } catch (err) {
+      resultsContainer.innerHTML =
+        '<div class="empty-state">❌ Ошибка поиска: '
+        + esc(err.message) + '</div>';
     }
   }
 
-  /**
-   * Отрисовка результатов
-   */
-  renderResults() {
-    const container = document.getElementById('searchResults');
-    if (!container) return;
+  // Рендер результатов
+  function renderResults(results) {
+    resultsContainer.innerHTML = results.map(function(track, i) {
+      var title = esc(track.name || track.title || 'Без названия');
+      var artist = esc(track.artist || 'Неизвестный');
+      var coverUrl = safeCover(track.cover || track.cover_url);
+      var coverHtml = coverUrl
+        ? '<img class="search-result-cover" src="' + esc(coverUrl) + '" alt="" loading="lazy">'
+        : '<div class="search-result-cover no-cover"></div>';
 
-    if (this.searchResults.length === 0) {
-      container.innerHTML = '';
-      return;
+      return '<div class="search-result-item" role="listitem">'
+        + coverHtml
+        + '<div class="search-result-info">'
+        + '<div class="search-result-title">' + title + '</div>'
+        + '<div class="search-result-artist">' + artist + '</div>'
+        + '</div>'
+        + '<button class="btn-icon search-play-btn" '
+        + 'onclick="window._searchPlay(' + i + ')" '
+        + 'aria-label="Воспроизвести ' + title + '">'
+        + '<i data-lucide="play" style="width:16px;height:16px" aria-hidden="true"></i>'
+        + '</button>'
+        + '<button class="btn-icon search-queue-btn" '
+        + 'onclick="window._searchAddQueue(' + i + ')" '
+        + 'aria-label="Добавить в очередь ' + title + '">'
+        + '<i data-lucide="list-plus" style="width:16px;height:16px" aria-hidden="true"></i>'
+        + '</button>'
+        + '</div>';
+    }).join('');
+
+    if (window.lucide) lucide.createIcons();
+  }
+
+  // Debounce
+  function debouncedSearch() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(function() {
+      performSearch(searchInput.value);
+    }, DEBOUNCE_MS);
+  }
+
+  // События
+  searchInput.addEventListener('input', debouncedSearch);
+  searchBtn.addEventListener('click', function() {
+    clearTimeout(debounceTimer);
+    performSearch(searchInput.value);
+  });
+  searchInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      clearTimeout(debounceTimer);
+      performSearch(searchInput.value);
     }
+  });
 
-    container.innerHTML = this.searchResults.map(track => `
-      <div class="search-result-item" data-track-id="${track.id || track.title}">
-        <div class="search-result-cover ${track.cover ? '' : 'no-cover'}" 
-             style="${track.cover ? `background-image: url(${track.cover})` : ''}"></div>
-        <div class="search-result-info">
-          <div class="search-result-title">${this.escapeHtml(track.title)}</div>
-          <div class="search-result-artist">${this.escapeHtml(track.artist || 'Неизвестный')}</div>
-          <div class="search-result-source">${track.isDownloaded ? '📚 В библиотеке' : '🌐 ' + (track.source || 'iTunes')}</div>
-        </div>
-        <div class="search-result-actions">
-          ${track.isDownloaded 
-            ? `<button class="play-btn" onclick="window.searchManager.playTrack('${track.id}')">\u25b6\ufe0f</button>`
-            : `<button class="download-btn" onclick="window.searchManager.download(${JSON.stringify(track).replace(/"/g, '&quot;')})">⬇️</button>`
-          }
-        </div>
-      </div>
-    `).join('');
-  }
+  // Экспорт для кнопок
+  window._searchPlay = function(index) {
+    var track = searchResults[index];
+    if (!track) return;
+    if (typeof window.playSearchResult === 'function') {
+      window._searchResults = searchResults;
+      window.playSearchResult(index);
+    }
+  };
 
-  /**
-   * Воспроизвести трек из библиотеки
-   */
-  playTrack(trackId) {
-    this.onTrackSelect(trackId);
-  }
+  window._searchAddQueue = function(index) {
+    var track = searchResults[index];
+    if (!track) return;
+    if (typeof window.addToQueue === 'function') {
+      window.addToQueue({
+        id: track.id || Date.now(),
+        name: track.name || track.title || 'Без названия',
+        artist: track.artist || '',
+        url: track.url || '',
+        cover_url: track.cover || track.cover_url || ''
+      });
+    }
+  };
 
-  escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
-}
+  window.SearchMusic = { performSearch: performSearch };
+})();
