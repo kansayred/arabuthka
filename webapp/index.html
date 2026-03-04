@@ -158,6 +158,15 @@
                         <div class="profile-stat-label">плейлистов</div>
                     </div>
                 </div>
+                <div class="settings-section">
+                    <h3 data-i18n="settings.title">Настройки</h3>
+                    <label class="toggle-setting">
+                        <span data-i18n="settings.standardize">Стандартизация треков</span>
+                        <input type="checkbox" id="standardizeToggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <p class="settings-hint" data-i18n="settings.standardize_hint">Автоматически применяет правила оформления названий и авторства</p>
+                </div>
             </div>
         </div>
     </div>
@@ -271,10 +280,19 @@
         <script defer src="i18n.js"></script>
     <script defer src="interactive-logo.js"></script>
     <script defer src="onboarding.js"></script>
+    <script defer src="track-standardizer.js"></script>
     <script type="module" src="app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             if (window.lucide) lucide.createIcons();
+            // Standardize toggle init
+            var stdToggle = document.getElementById('standardizeToggle');
+            if (stdToggle) {
+                stdToggle.checked = localStorage.getItem('arabuthka_standardize') === 'true';
+                stdToggle.addEventListener('change', function() {
+                    localStorage.setItem('arabuthka_standardize', this.checked ? 'true' : 'false');
+                });
+            }
         });
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {

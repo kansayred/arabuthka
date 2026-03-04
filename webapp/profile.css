@@ -90,3 +90,74 @@
   color: var(--text-secondary);
   font-weight: 500;
 }
+
+/* ===========================================
+   SETTINGS SECTION — toggle & controls
+   =========================================== */
+.settings-section {
+  margin-top: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 14px);
+  padding: 20px;
+  box-shadow: var(--shadow-soft);
+}
+.settings-section h3 {
+  font-family: var(--font-heading);
+  font-size: var(--ara-font-body, 14px);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 16px 0;
+}
+.toggle-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 4px 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.toggle-setting span:first-child {
+  font-size: var(--ara-font-body, 14px);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.toggle-setting input[type="checkbox"] {
+  display: none;
+}
+.toggle-slider {
+  position: relative;
+  width: 50px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  transition: background 0.3s ease;
+  flex-shrink: 0;
+}
+.toggle-slider::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 24px;
+  height: 24px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+.toggle-setting input[type="checkbox"]:checked + .toggle-slider {
+  background: var(--gradient, linear-gradient(135deg, #7C3AED, #EC4899));
+}
+.toggle-setting input[type="checkbox"]:checked + .toggle-slider::after {
+  transform: translateX(22px);
+}
+.settings-hint {
+  font-size: var(--ara-font-caption, 13px);
+  color: var(--text-secondary);
+  margin: 8px 0 0 0;
+  line-height: 1.4;
+  opacity: 0.7;
+}

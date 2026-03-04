@@ -59,7 +59,10 @@
       'onboarding.next': '\u0414\u0430\u043b\u0435\u0435',
       // Settings
       'settings.language': '\u042f\u0437\u044b\u043a',
-      'settings.title': '\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438'
+      'settings.title': '\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438',
+      'settings.standardize': '\u0421\u0442\u0430\u043d\u0434\u0430\u0440\u0442\u0438\u0437\u0430\u0446\u0438\u044f \u0442\u0440\u0435\u043a\u043e\u0432',
+      'settings.standardize_hint': '\u0410\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0447\u0435\u0441\u043a\u0438 \u043f\u0440\u0438\u043c\u0435\u043d\u044f\u0435\u0442 \u043f\u0440\u0430\u0432\u0438\u043b\u0430 \u043e\u0444\u043e\u0440\u043c\u043b\u0435\u043d\u0438\u044f \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u0439 \u0438 \u0430\u0432\u0442\u043e\u0440\u0441\u0442\u0432\u0430',
+      'settings.standardize_toast': '\u0421\u0442\u0430\u043d\u0434\u0430\u0440\u0442\u0438\u0437\u0438\u0440\u043e\u0432\u0430\u043d\u043e'
     },
     en: {
       'app.name': 'Arabuthka',
@@ -99,7 +102,10 @@
       'onboarding.skip': 'Skip',
       'onboarding.next': 'Next',
       'settings.language': 'Language',
-      'settings.title': 'Settings'
+      'settings.title': 'Settings',
+      'settings.standardize': 'Track standardization',
+      'settings.standardize_hint': 'Automatically applies naming and authorship rules',
+      'settings.standardize_toast': 'Standardized'
     }
   };
 
