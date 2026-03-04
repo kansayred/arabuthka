@@ -4,8 +4,8 @@
   "description": "Музыкальный плеер с поддержкой Telegram Mini App",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#1a1a2e",
-  "theme_color": "#16213e",
+  "background_color": "#0D0D0D",
+  "theme_color": "#0D0D0D",
   "orientation": "portrait",
   "icons": [
     {
