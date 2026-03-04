@@ -1,0 +1,27 @@
+/* ===========================================
+   TG DARK MODE OVERRIDES
+   Applied when body.tg-dark is set by tg-theme.js
+   =========================================== */
+body.tg-dark .bottom-nav {
+  background: rgba(30, 30, 50, 0.88);
+}
+body.tg-dark .upload-btn {
+  box-shadow: 0 4px 20px rgba(0, 201, 167, 0.2);
+}
+body.tg-dark .track-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+body.tg-dark .toast {
+  background: var(--bg-secondary);
+}
+body.tg-dark .brush-decoration {
+  opacity: 0.08;
+}
+body.tg-dark input[type="text"],
+body.tg-dark input[type="range"] {
+  color: var(--text-primary);
+}
+body.tg-dark .dialog-sheet {
+  background: var(--bg-primary);
+  border-color: var(--border);
+}
