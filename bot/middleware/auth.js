@@ -1,6 +1,7 @@
 // ==============================================
 // МОДУЛЬ АВТОРИЗАЦИИ TELEGRAM
 // Проверка и валидация initData от Telegram WebApp
+// + серверная авторизация бот → API (X-Bot-Secret)
 // ==============================================
 
 const crypto = require('crypto');
@@ -30,7 +31,7 @@ function validateInitData(initData, botToken) {
       const authTimestamp = parseInt(authDate, 10);
       const now = Math.floor(Date.now() / 1000);
       if (now - authTimestamp > MAX_AUTH_AGE_SECONDS) {
-            logger.warn('initData устарела (старше 24 часов)');
+        logger.warn('initData устарела (старше 24 часов)');
         return null;
       }
       // Защита от подделки timestamp в будущем (+60с допуск на рассинхрон часов)
@@ -60,6 +61,7 @@ function validateInitData(initData, botToken) {
     // Timing-safe сравнение для защиты от timing-атак
     const calcBuf = Buffer.from(calculatedHash, 'hex');
     const hashBuf = Buffer.from(hash || '', 'hex');
+
     if (calcBuf.length !== hashBuf.length || !crypto.timingSafeEqual(calcBuf, hashBuf)) {
       logger.warn('Неверная подпись initData');
       return null;
@@ -85,25 +87,78 @@ function validateInitData(initData, botToken) {
 }
 
 /**
+ * Проверяет серверный вызов от Telegram-бота.
+ * Бот отправляет X-Bot-Secret (HMAC токена) + X-Telegram-User-Id.
+ * Это позволяет боту вызывать API от имени пользователя.
+ * @param {Object} req - Express request
+ * @param {string} botToken - Токен бота
+ * @returns {Object|null} - { userId } или null
+ */
+function validateBotSecret(req, botToken) {
+  const botSecret = req.headers['x-bot-secret'];
+  const userIdStr = req.headers['x-telegram-user-id'];
+
+  if (!botSecret || !userIdStr || !botToken) return null;
+
+  // Проверяем секрет: HMAC-SHA256 от токена бота с ключом 'BotServerAuth'
+  const expectedSecret = crypto
+    .createHmac('sha256', 'BotServerAuth')
+    .update(botToken)
+    .digest('hex');
+
+  // Timing-safe сравнение
+  try {
+    const secretBuf = Buffer.from(botSecret, 'hex');
+    const expectedBuf = Buffer.from(expectedSecret, 'hex');
+    if (secretBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(secretBuf, expectedBuf)) {
+      logger.warn('Неверный X-Bot-Secret');
+      return null;
+    }
+  } catch (err) {
+    logger.warn('Ошибка проверки X-Bot-Secret', { error: err.message });
+    return null;
+  }
+
+  const userId = parseInt(userIdStr, 10);
+  if (isNaN(userId) || userId < 1) {
+    logger.warn('Неверный X-Telegram-User-Id');
+    return null;
+  }
+
+  return { userId };
+}
+
+/**
  * Middleware для проверки авторизации Telegram
+ * Поддерживает два режима:
+ * 1. WebApp: X-Telegram-Init-Data (подпись от Telegram)
+ * 2. Bot-to-API: X-Bot-Secret + X-Telegram-User-Id (серверный вызов)
  * @param {string} botToken - Токен бота для проверки
  * @returns {Function} Express middleware
  */
 function createAuthMiddleware(botToken) {
   return (req, res, next) => {
-    // Только из заголовка — query string небезопасен (утечка в логи, referer, историю)
+    // Способ 1: WebApp initData
     const initData = req.headers['x-telegram-init-data'];
-
-    const validated = validateInitData(initData, botToken);
-
-    if (!validated) {
-      return res.status(401).json({ error: 'Нет доступа — неверный initData' });
+    if (initData) {
+      const validated = validateInitData(initData, botToken);
+      if (validated) {
+        req.telegramUser = validated.user;
+        req.userId = validated.user.id;
+        return next();
+      }
     }
 
-    req.telegramUser = validated.user;
-    req.userId = validated.user.id;
-    next();
+    // Способ 2: Bot-to-API серверный вызов
+    const botAuth = validateBotSecret(req, botToken);
+    if (botAuth) {
+      req.userId = botAuth.userId;
+      req.telegramUser = { id: botAuth.userId };
+      return next();
+    }
+
+    return res.status(401).json({ error: 'Нет доступа — неверный initData или секрет' });
   };
 }
 
-module.exports = { validateInitData, createAuthMiddleware, MAX_AUTH_AGE_SECONDS };
+module.exports = { validateInitData, validateBotSecret, createAuthMiddleware, MAX_AUTH_AGE_SECONDS };
