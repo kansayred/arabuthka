@@ -163,14 +163,13 @@ if (fileInput) {
 async function playFromQueue() {
     const track = getCurrentQueueTrack(); if (!track) return;
     try {
-        const fetchFn = window.Network?.fetchWithRetry || fetch;
-        const resp = await fetchFn(`${API_URL}/stream/${track.id}`, { headers: authHeaders });
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const blob = await resp.blob();
-        if (currentObjectUrl) { URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null; }
-        currentObjectUrl = URL.createObjectURL(blob);
-        audio.src = currentObjectUrl; audio.play();
-    } catch (err) { console.error('Ошибка:', err); if (trackTitle) trackTitle.textContent = '❌ Ошибка'; return; }
+            // Стриминг: прямой URL вместо blob-загрузки для мгновенного старта
+            if (currentObjectUrl) { URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null; }
+            const streamUrl = `${API_URL}/stream/${track.id}?init_data=${encodeURIComponent(initData)}`;
+            audio.src = streamUrl;
+            audio.load();
+            await audio.play();
+        } catch (err) { console.error('Ошибка:', err); if (trackTitle) trackTitle.textContent = '❌ Ошибка'; return; }
     if (trackTitle) trackTitle.textContent = track.name;
     if (trackArtist) trackArtist.textContent = track.artist || 'Неизвестный исполнитель';
     if (coverArt) {
