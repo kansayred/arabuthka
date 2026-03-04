@@ -1,174 +1,185 @@
 /* ===========================================
-   ARABUTHKA — SKELETON LOADERS v2
-   Dark theme — Used by network.js, searchMusic.js
+   ARABUTHKA — UI EXTRAS v3
+   Скелетоны, плейлисты, поиск, кнопки.
+   Философия: токены, плоский дизайн.
    =========================================== */
+
+/* === СКЕЛЕТОНЫ === */
 .skeleton {
-  background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-card-hover) 50%, var(--bg-secondary) 75%);
+  background: linear-gradient(90deg, var(--ara-bg-secondary) 25%, var(--ara-bg-card) 50%, var(--ara-bg-secondary) 75%);
   background-size: 200% 100%;
   animation: skeletonShimmer 1.5s ease-in-out infinite;
-  border-radius: var(--radius-xs, 10px);
+  border-radius: var(--ara-radius-sm);
 }
+
 .skeleton-text {
   height: 14px;
-  border-radius: 4px;
+  border-radius: var(--ara-radius-xs);
 }
+
 .skeleton-card {
   display: flex;
-  gap: 12px;
-  padding: 12px;
-  margin-bottom: 8px;
-  background: var(--bg-secondary);
-  border-radius: var(--radius-sm, 14px);
+  gap: var(--ara-space-3);
+  padding: var(--ara-space-3);
+  margin-bottom: var(--ara-space-2);
+  background: var(--ara-bg-secondary);
+  border-radius: var(--ara-radius-md);
   align-items: center;
 }
+
 @keyframes skeletonShimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
 
-/* ===========================================
-   PLAYLIST UI v2
-   Used by playlists.js
-   =========================================== */
+/* === ПЛЕЙЛИСТЫ === */
 .playlist-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
+  padding: var(--ara-space-3) var(--ara-space-4);
+  border-bottom: 0.5px solid var(--ara-divider);
 }
+
 .playlist-header h3 {
-  font-family: var(--font-heading);
-  font-size: var(--ara-font-subtitle, 18px);
-  font-weight: 700;
-  color: var(--text-primary);
+  font-family: var(--ara-font-display);
+  font-size: var(--ara-text-lg);
+  font-weight: var(--ara-weight-bold);
+  color: var(--ara-text);
   flex: 1;
   min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .playlist-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: var(--ara-space-3);
+  padding: var(--ara-space-3) var(--ara-space-4);
   cursor: pointer;
-  transition: background var(--transition);
-  border-bottom: 1px solid var(--border);
+  transition: background var(--ara-duration-fast) var(--ara-ease);
+  border-bottom: 0.5px solid var(--ara-divider);
+  min-height: var(--ara-touch-comfortable);
 }
+
 .playlist-item:last-child { border-bottom: none; }
-.playlist-item:hover { background: var(--bg-card-hover); }
-.playlist-item:active { background: var(--bg-secondary); }
+.playlist-item:hover { background: var(--ara-accent-subtle); }
+.playlist-item:active { background: var(--ara-bg-secondary); }
+
 .playlist-item-info {
   flex: 1;
   min-width: 0;
 }
+
 .playlist-item-name {
-  font-size: var(--ara-font-body, 14px);
-  font-weight: 600;
-  color: var(--text-primary);
+  font-size: var(--ara-text-base);
+  font-weight: var(--ara-weight-semibold);
+  color: var(--ara-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   margin-bottom: 2px;
 }
+
 .playlist-item-count {
-  font-size: var(--ara-font-caption, 12px);
-  color: var(--text-secondary);
-}
-.playlist-tracks {
-  padding: 8px 0;
+  font-size: var(--ara-text-sm);
+  color: var(--ara-text-secondary);
 }
 
-/* ===========================================
-   SEARCH RESULTS UI v2
-   Used by searchMusic.js
-   =========================================== */
+.playlist-tracks {
+  padding: var(--ara-space-2) 0;
+}
+
+/* === ПОИСК === */
 .search-result-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  margin-bottom: 4px;
-  border-radius: var(--radius-sm, 14px);
-  transition: background var(--transition);
+  gap: var(--ara-space-3);
+  padding: var(--ara-space-3);
+  margin-bottom: var(--ara-space-1);
+  border-radius: var(--ara-radius-sm);
+  transition: background var(--ara-duration-fast) var(--ara-ease);
   cursor: pointer;
+  min-height: var(--ara-touch-comfortable);
 }
-.search-result-item:hover { background: var(--bg-card-hover); }
+
+.search-result-item:hover { background: var(--ara-accent-subtle); }
+
 .search-result-cover {
   width: 46px;
   height: 46px;
-  border-radius: var(--radius-xs, 10px);
+  border-radius: var(--ara-radius-sm);
   flex-shrink: 0;
-  background: var(--gradient-subtle);
+  background: var(--ara-bg-secondary);
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  object-fit: cover;
 }
-.search-result-cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+
+.search-result-cover img { width: 100%; height: 100%; object-fit: cover; }
+
 .search-result-cover.no-cover::after {
   content: '\266B';
   font-size: 20px;
-  color: var(--accent);
+  color: var(--ara-text-muted);
 }
+
 .search-result-info {
   flex: 1;
   min-width: 0;
 }
+
 .search-result-title {
-  font-size: var(--ara-font-body, 14px);
-  font-weight: 600;
-  color: var(--text-primary);
+  font-size: var(--ara-text-base);
+  font-weight: var(--ara-weight-semibold);
+  color: var(--ara-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   margin-bottom: 2px;
 }
+
 .search-result-artist {
-  font-size: var(--ara-font-caption, 12px);
-  color: var(--text-secondary);
+  font-size: var(--ara-text-sm);
+  color: var(--ara-text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .search-play-btn,
 .search-queue-btn {
   flex-shrink: 0;
 }
 
-/* Reduced motion: disable skeleton shimmer */
-@media (prefers-reduced-motion: reduce) {
-  .skeleton { animation: none; }
-}
-
-/* Load More Button — pagination */
+/* === КНОПКА ЗАГРУЗКИ === */
 .load-more-btn {
   display: block;
   width: 100%;
-  padding: 14px;
-  margin-top: 8px;
-  background: var(--bg-secondary);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--accent);
-  font-family: var(--font-body);
-  font-size: var(--ara-font-body, 14px);
-  font-weight: 600;
+  padding: var(--ara-space-4);
+  margin-top: var(--ara-space-2);
+  background: var(--ara-bg-secondary);
+  border: 1.5px solid var(--ara-border);
+  border-radius: var(--ara-radius-md);
+  color: var(--ara-accent);
+  font-family: var(--ara-font);
+  font-size: var(--ara-text-base);
+  font-weight: var(--ara-weight-semibold);
   cursor: pointer;
-  transition: all var(--transition);
-  min-height: var(--ara-touch-min, 44px);
+  transition: all var(--ara-duration-fast) var(--ara-ease);
+  min-height: var(--ara-touch-min);
 }
+
 .load-more-btn:hover {
-  background: var(--gradient-subtle);
-  border-color: var(--border-accent);
+  background: var(--ara-accent-subtle);
+  border-color: var(--ara-accent);
 }
-.load-more-btn:active {
-  transform: scale(0.98);
+
+.load-more-btn:active { transform: scale(0.98); }
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
 }
