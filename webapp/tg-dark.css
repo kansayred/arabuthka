@@ -1,41 +1,61 @@
 /* ===========================================
-   TG DARK MODE OVERRIDES v2
-   App is dark-mode-first — minimal overrides needed.
-   Applied when body.tg-dark is set by tg-theme.js
+   TG DARK MODE OVERRIDES v3
+   Приложение light-first. Этот файл корректирует
+   мелкие детали когда body.tg-dark активен.
    =========================================== */
 
-/* Dark is already the default — these just reinforce dark colors
-   in case Telegram injects a light theme */
+/* Навигация */
 body.tg-dark .bottom-nav {
-  background: var(--glass-bg);
+  background: var(--ara-bg-card);
+  border-color: var(--ara-divider);
 }
+
+/* Треклист */
 body.tg-dark .track-item:hover {
   background: rgba(255, 255, 255, 0.04);
 }
+
+/* Тост */
 body.tg-dark .toast {
-  background: var(--bg-secondary);
+  background: var(--ara-bg-secondary);
 }
+
+/* Декорации */
 body.tg-dark .brush-decoration {
-  opacity: 0.06;
+  opacity: 0.04;
 }
+
+/* Инпуты */
 body.tg-dark input[type="text"],
 body.tg-dark input[type="range"] {
-  color: var(--text-primary);
+  color: var(--ara-text);
 }
+
+/* Диалоги */
 body.tg-dark .dialog-sheet {
-  background: var(--bg-card);
-  border-color: var(--border);
+  background: var(--ara-bg-card);
+  border-color: var(--ara-border);
 }
+
+/* Контроли */
 body.tg-dark .control-btn {
   border-color: rgba(255, 255, 255, 0.08);
 }
+
 body.tg-dark .fs-prev-btn:hover,
 body.tg-dark .fs-next-btn:hover {
   background: rgba(255, 255, 255, 0.06);
 }
+
 body.tg-dark .sort-btn {
   border-color: rgba(255, 255, 255, 0.08);
 }
-body.tg-dark .card {
-  border-color: rgba(255, 255, 255, 0.06);
+
+/* Тоггл слайдер */
+body.tg-dark .toggle-slider {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+body.tg-dark .toggle-slider::after {
+  background: #fff;
 }
