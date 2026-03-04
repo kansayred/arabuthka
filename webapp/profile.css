@@ -1,163 +1,161 @@
 /* ===========================================
-   PROFILE PAGE STYLES v2 — dark theme
+   ARABUTHKA — PROFILE v3
+   Профиль, статистика, настройки.
+   Философия: плоские карточки, токены, без декора.
    =========================================== */
+
 .profile-section {
-  padding: 16px;
+  padding: var(--ara-space-4);
 }
+
+/* === Карточка === */
 .profile-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius, 20px);
-  padding: 32px 20px;
+  background: var(--ara-bg-card);
+  border: 0.5px solid var(--ara-divider);
+  border-radius: var(--ara-radius-lg);
+  padding: var(--ara-space-8) var(--ara-space-5);
   text-align: center;
-  box-shadow: var(--shadow-soft);
-  margin-bottom: 16px;
+  box-shadow: var(--ara-shadow-sm);
+  margin-bottom: var(--ara-space-4);
   position: relative;
   overflow: hidden;
 }
-.profile-card::before {
-  content: '';
-  position: absolute;
-  top: -60px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 200px;
-  height: 200px;
-  background: var(--gradient);
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.08;
-  pointer-events: none;
-}
+
 .profile-avatar {
   width: 80px;
   height: 80px;
-  border-radius: 50%;
-  margin: 0 auto 16px;
-  background: var(--gradient-subtle);
-  border: 2px solid var(--border-accent);
+  border-radius: var(--ara-radius-full);
+  margin: 0 auto var(--ara-space-4);
+  background: var(--ara-bg-secondary);
+  border: 2px solid var(--ara-accent);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  color: var(--accent);
+  color: var(--ara-accent);
   position: relative;
   z-index: 1;
-}
-.profile-avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-}
-.profile-name {
-  font-family: var(--font-heading);
-  font-size: var(--ara-font-title, 20px);
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-  position: relative;
-  z-index: 1;
-}
-.profile-username {
-  font-size: var(--ara-font-body, 14px);
-  color: var(--text-secondary);
-  position: relative;
-  z-index: 1;
-}
-.profile-stats {
-  display: flex;
-  gap: 12px;
-}
-.profile-stat {
-  flex: 1;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm, 14px);
-  padding: 20px 12px;
-  text-align: center;
-  box-shadow: var(--shadow-soft);
-}
-.profile-stat-value {
-  font-family: var(--font-heading);
-  font-size: var(--ara-font-title, 20px);
-  font-weight: 700;
-  color: var(--accent);
-  margin-bottom: 4px;
-}
-.profile-stat-label {
-  font-size: var(--ara-font-caption, 13px);
-  color: var(--text-secondary);
-  font-weight: 500;
 }
 
-/* ===========================================
-   SETTINGS SECTION — toggle & controls
-   =========================================== */
-.settings-section {
-  margin-top: 16px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm, 14px);
-  padding: 20px;
-  box-shadow: var(--shadow-soft);
+.profile-avatar-img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: var(--ara-radius-full);
 }
+
+.profile-name {
+  font-family: var(--ara-font-display);
+  font-size: var(--ara-text-xl);
+  font-weight: var(--ara-weight-bold);
+  color: var(--ara-text);
+  margin-bottom: var(--ara-space-1);
+}
+
+.profile-username {
+  font-size: var(--ara-text-base);
+  color: var(--ara-text-secondary);
+}
+
+/* === Статистика === */
+.profile-stats {
+  display: flex;
+  gap: var(--ara-space-3);
+}
+
+.profile-stat {
+  flex: 1;
+  background: var(--ara-bg-card);
+  border: 0.5px solid var(--ara-divider);
+  border-radius: var(--ara-radius-md);
+  padding: var(--ara-space-5) var(--ara-space-3);
+  text-align: center;
+  box-shadow: var(--ara-shadow-sm);
+}
+
+.profile-stat-value {
+  font-family: var(--ara-font-display);
+  font-size: var(--ara-text-xl);
+  font-weight: var(--ara-weight-bold);
+  color: var(--ara-accent);
+  margin-bottom: var(--ara-space-1);
+}
+
+.profile-stat-label {
+  font-size: var(--ara-text-sm);
+  color: var(--ara-text-secondary);
+  font-weight: var(--ara-weight-medium);
+}
+
+/* === Настройки === */
+.settings-section {
+  margin-top: var(--ara-space-4);
+  background: var(--ara-bg-card);
+  border: 0.5px solid var(--ara-divider);
+  border-radius: var(--ara-radius-md);
+  padding: var(--ara-space-5);
+  box-shadow: var(--ara-shadow-sm);
+}
+
 .settings-section h3 {
-  font-family: var(--font-heading);
-  font-size: var(--ara-font-body, 14px);
-  font-weight: 600;
-  color: var(--text-secondary);
+  font-family: var(--ara-font-display);
+  font-size: var(--ara-text-sm);
+  font-weight: var(--ara-weight-semibold);
+  color: var(--ara-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin: 0 0 16px 0;
+  margin: 0 0 var(--ara-space-4) 0;
 }
+
 .toggle-setting {
   display: flex;
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
-  padding: 4px 0;
+  padding: var(--ara-space-1) 0;
+  min-height: var(--ara-touch-comfortable);
   -webkit-tap-highlight-color: transparent;
 }
+
 .toggle-setting span:first-child {
-  font-size: var(--ara-font-body, 14px);
-  font-weight: 500;
-  color: var(--text-primary);
+  font-size: var(--ara-text-base);
+  font-weight: var(--ara-weight-medium);
+  color: var(--ara-text);
 }
-.toggle-setting input[type="checkbox"] {
-  display: none;
-}
+
+.toggle-setting input[type="checkbox"] { display: none; }
+
 .toggle-slider {
   position: relative;
   width: 50px;
   height: 28px;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--ara-bg-secondary);
   border-radius: 14px;
-  transition: background 0.3s ease;
+  transition: background var(--ara-duration-normal) var(--ara-ease);
   flex-shrink: 0;
 }
+
 .toggle-slider::after {
   content: '';
   position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 24px;
-  height: 24px;
-  background: #fff;
-  border-radius: 50%;
-  transition: transform 0.3s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  top: 2px; left: 2px;
+  width: 24px; height: 24px;
+  background: var(--ara-bg);
+  border-radius: var(--ara-radius-full);
+  transition: transform var(--ara-duration-normal) var(--ara-ease);
+  box-shadow: var(--ara-shadow-sm);
 }
+
 .toggle-setting input[type="checkbox"]:checked + .toggle-slider {
-  background: var(--gradient, linear-gradient(135deg, #7C3AED, #EC4899));
+  background: var(--ara-accent);
 }
+
 .toggle-setting input[type="checkbox"]:checked + .toggle-slider::after {
   transform: translateX(22px);
 }
+
 .settings-hint {
-  font-size: var(--ara-font-caption, 13px);
-  color: var(--text-secondary);
-  margin: 8px 0 0 0;
+  font-size: var(--ara-text-sm);
+  color: var(--ara-text-muted);
+  margin: var(--ara-space-2) 0 0 0;
   line-height: 1.4;
-  opacity: 0.7;
 }
