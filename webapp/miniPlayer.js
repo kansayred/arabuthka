@@ -132,6 +132,17 @@
     syncShuffleRepeatState();
     updateDuration();
     updateProgress();
+
+    // Set blurred background from cover
+    var track = (typeof window.getCurrentQueueTrack === 'function') ? window.getCurrentQueueTrack() : null;
+    if (track && track.cover_url) {
+      var coverUrl = safeCover(track.cover_url);
+      if (coverUrl) {
+        fsEl.style.backgroundImage = 'url(' + coverUrl + ')';
+        fsEl.style.backgroundSize = 'cover';
+        fsEl.style.backgroundPosition = 'center';
+      }
+    }
   }
 
   function closeFullscreen() {

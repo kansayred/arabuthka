@@ -83,6 +83,20 @@
 }
 .fullscreen-player.open { transform: translateY(0); }
 
+.fullscreen-player::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  z-index: 0;
+}
+.fullscreen-player > * {
+  position: relative;
+  z-index: 1;
+}
+
 .fs-close-bar {
   width: 40px; height: 4px;
   background: var(--text-muted, #9B9BB5);
