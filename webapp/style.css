@@ -1,372 +1,433 @@
 /* ===========================================
-   ARABUTHKA — MAIN STYLES v2
-   Dark premium music player
-   Animations & micro-interactions (Task 10)
+   ARABUTHKA — MAIN STYLES v3
+   Light-first. Чистый минимализм. Никакого стекла.
+   Философия: контент > декор. Пространство > рамки.
    =========================================== */
-:root {
-  --bg-primary: #0D0D0D;
-  --bg-secondary: #1A1A1A;
-  --bg-card: #1E1E2A;
-  --bg-card-hover: #2A2A3A;
-  --bg-elevated: #1A1A2A;
-  --accent: #E8A87C;
-  --accent-dark: #D4966A;
-  --accent-glow: rgba(232, 168, 124, 0.18);
-  --accent-secondary: #D4A5E5;
-  --gradient: linear-gradient(135deg, #E8A87C, #D4A5E5);
-  --gradient-hot: linear-gradient(135deg, #D4A5E5, #E8A87C);
-  --gradient-subtle: linear-gradient(135deg, rgba(232,168,124,0.06), rgba(212,165,229,0.06));
-  --gradient-bg: linear-gradient(180deg, #0D0D0D 0%, #12121E 40%, #0D0D0D 100%);
-  --text-primary: #F5F5F5;
-  --text-secondary: #8A8A9A;
-  --text-muted: #5A5A6A;
-  --border: rgba(255, 255, 255, 0.06);
-  --border-accent: rgba(232, 168, 124, 0.25);
-  --radius: 20px;
-  --radius-sm: 14px;
-  --radius-xs: 10px;
-  --transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
-  --font-heading: 'Inter', -apple-system, sans-serif;
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --shadow-soft: 0 2px 16px rgba(0, 0, 0, 0.2);
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
-  --shadow-neon: 0 4px 20px rgba(232, 168, 124, 0.15);
-  --shadow-neon-strong: 0 6px 30px rgba(232, 168, 124, 0.25);
-  --glass-bg: rgba(30, 30, 42, 0.7);
-  --glass-blur: blur(20px);
-  --accent-gradient: linear-gradient(135deg, #E8A87C, #D4A5E5);
-  --accent-solid: #E8A87C;
-  --border-subtle: rgba(255, 255, 255, 0.06);
-}
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; }
+
 body {
-  font-family: var(--font-body);
-  background: var(--gradient-bg);
-  color: var(--text-primary);
+  font-family: var(--ara-font);
+  background: var(--ara-bg);
+  color: var(--ara-text);
   min-height: 100vh;
   padding: 0;
   padding-bottom: 100px;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
-  font-size: var(--ara-font-body, 15px);
-  line-height: var(--ara-lh-body, 1.43);
+  -moz-osx-font-smoothing: grayscale;
+  font-size: var(--ara-text-base);
+  line-height: var(--ara-leading-normal);
 }
-.container { max-width: 100%; padding: 0 16px; position: relative; z-index: 1; }
 
-/* DECORATIVE BLOBS */
-.brush-decoration {
-  position: fixed;
-  width: 300px;
-  height: 300px;
-  border-radius: 50%;
-  filter: blur(120px);
-  opacity: 0.10;
+.container {
+  max-width: 100%;
+  padding: 0 var(--ara-space-4);
+  position: relative;
+}
+
+/* === ХЕДЕР === */
+.header {
+  text-align: center;
+  padding: var(--ara-space-6) 0 var(--ara-space-4);
+}
+
+.logo {
+  font-family: var(--ara-font-display);
+  font-size: var(--ara-text-2xl);
+  font-weight: var(--ara-weight-bold);
+  color: var(--ara-text);
+  letter-spacing: var(--ara-tracking-tight);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ara-space-2);
+}
+
+.logo-icon-svg {
+  width: 26px;
+  height: 26px;
+  stroke: var(--ara-accent);
+}
+
+/* === СЕКЦИИ — никаких карточек-обёрток === */
+.upload-section,
+.search-section,
+.track-list,
+.global-search-section,
+.playlists-section,
+.settings-section {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  margin-bottom: var(--ara-space-section);
+  box-shadow: none;
+}
+
+/* Плеер — единственный элемент с карточкой */
+.player-section {
+  background: var(--ara-bg-card);
+  border: none;
+  border-radius: var(--ara-radius-xl);
+  margin-bottom: var(--ara-space-section);
+  box-shadow: var(--ara-shadow-md);
+}
+
+/* === ЗАГРУЗКА === */
+.upload-section {
+  padding: var(--ara-space-5);
+  text-align: center;
+}
+
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ara-space-2);
+  background: var(--ara-accent);
+  color: var(--ara-text-inverse);
+  padding: var(--ara-space-3) var(--ara-space-6);
+  border-radius: var(--ara-radius-md);
+  cursor: pointer;
+  font-size: var(--ara-text-base);
+  font-weight: var(--ara-weight-semibold);
+  transition: all var(--ara-duration-fast) var(--ara-ease);
+  border: none;
+  box-shadow: none;
+  min-height: var(--ara-touch-min);
+  -webkit-text-fill-color: var(--ara-text-inverse);
+  text-shadow: none;
+}
+
+.upload-btn:hover {
+  background: var(--ara-accent-hover);
+  transform: translateY(-1px);
+}
+
+.upload-btn:active {
+  transform: scale(0.97);
+}
+
+.upload-btn svg { stroke: var(--ara-text-inverse); }
+
+#uploadStatus {
+  display: block;
+  margin-top: var(--ara-space-2);
+  font-size: var(--ara-text-sm);
+  color: var(--ara-text-secondary);
+}
+
+/* === ПОИСК === */
+.search-section { padding: var(--ara-space-4); }
+
+.search-box { position: relative; margin-bottom: var(--ara-space-3); }
+
+.search-icon-svg {
+  position: absolute;
+  left: var(--ara-space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  stroke: var(--ara-text-muted);
   pointer-events: none;
-  z-index: 0;
 }
-.brush-top { top: -80px; right: -60px; background: var(--accent); }
-.brush-bottom { bottom: 100px; left: -80px; background: var(--accent-secondary); }
 
-.fade-in { animation: fadeInUp 0.5s ease-out both; }
+#searchInput {
+  width: 100%;
+  padding: var(--ara-space-3) var(--ara-space-4) var(--ara-space-3) 44px;
+  background: var(--ara-bg-input);
+  border: 1.5px solid transparent;
+  border-radius: var(--ara-radius-md);
+  color: var(--ara-text);
+  font-family: var(--ara-font);
+  font-size: var(--ara-text-base);
+  outline: none;
+  transition: all var(--ara-duration-fast) var(--ara-ease);
+  min-height: var(--ara-touch-min);
+}
+
+#searchInput::placeholder { color: var(--ara-text-muted); }
+
+#searchInput:focus {
+  border-color: var(--ara-accent);
+  background: var(--ara-bg-card);
+  box-shadow: 0 0 0 3px var(--ara-accent-glow);
+}
+
+.clear-btn {
+  position: absolute;
+  right: var(--ara-space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--ara-text-muted);
+  border: none;
+  color: var(--ara-text-inverse);
+  width: 20px;
+  height: 20px;
+  border-radius: var(--ara-radius-full);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--ara-duration-fast) var(--ara-ease);
+}
+
+.clear-btn:hover { background: var(--ara-accent); }
+.clear-btn svg { stroke: var(--ara-text-inverse); width: 12px; height: 12px; }
+
+.sort-buttons {
+  display: flex;
+  gap: var(--ara-space-2);
+  justify-content: center;
+}
+
+.sort-btn {
+  background: transparent;
+  border: 1.5px solid var(--ara-border-strong);
+  color: var(--ara-text-secondary);
+  padding: var(--ara-space-2) var(--ara-space-4);
+  border-radius: var(--ara-radius-full);
+  cursor: pointer;
+  font-size: var(--ara-text-sm);
+  font-weight: var(--ara-weight-medium);
+  transition: all var(--ara-duration-fast) var(--ara-ease);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ara-space-1);
+  min-height: var(--ara-touch-min);
+}
+
+.sort-btn:hover {
+  color: var(--ara-text);
+  border-color: var(--ara-accent);
+}
+
+.sort-btn.active {
+  background: var(--ara-accent);
+  color: var(--ara-text-inverse);
+  border-color: var(--ara-accent);
+  font-weight: var(--ara-weight-semibold);
+}
+
+.sort-btn.active svg { stroke: var(--ara-text-inverse); }
+.sort-btn svg { stroke: currentColor; }
+
+/* === НАВИГАЦИЯ === */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--ara-bg-card);
+  border-top: 1px solid var(--ara-border);
+  display: flex;
+  justify-content: space-around;
+  padding: var(--ara-space-2) 0 env(safe-area-inset-bottom, 8px);
+  z-index: 1000;
+  box-shadow: var(--ara-shadow-player);
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--ara-space-1) var(--ara-space-3);
+  background: none;
+  border: none;
+  color: var(--ara-text-muted);
+  font-size: var(--ara-text-xs);
+  font-family: var(--ara-font);
+  cursor: pointer;
+  transition: color var(--ara-duration-fast) var(--ara-ease);
+  position: relative;
+  min-width: var(--ara-touch-min);
+  min-height: var(--ara-touch-min);
+}
+
+.nav-icon-svg {
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
+}
+
+.nav-item.active { color: var(--ara-accent); }
+
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 2px;
+  background: var(--ara-accent);
+  border-radius: 0 0 2px 2px;
+}
+
+.nav-item:hover { color: var(--ara-text-secondary); }
+.nav-item span { font-size: var(--ara-text-xs); }
+
+/* === ТОСТ === */
+.toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  background: var(--ara-text);
+  color: var(--ara-bg);
+  padding: var(--ara-space-2) var(--ara-space-5);
+  border-radius: var(--ara-radius-full);
+  font-size: var(--ara-text-sm);
+  font-weight: var(--ara-weight-medium);
+  border: none;
+  box-shadow: var(--ara-shadow-lg);
+  opacity: 0;
+  pointer-events: none;
+  transition: all var(--ara-duration-normal) var(--ara-ease);
+  z-index: 2000;
+}
+
+.toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* === АНИМАЦИИ === */
+.fade-in {
+  animation: fadeInUp var(--ara-duration-slow) var(--ara-ease) both;
+}
+
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* PAGE TRANSITIONS */
 .section-page {
   display: none;
   opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transform: translateY(6px);
+  transition: opacity var(--ara-duration-normal) var(--ara-ease),
+              transform var(--ara-duration-normal) var(--ara-ease);
 }
+
 .section-page.active {
   display: block;
   opacity: 1;
   transform: translateY(0);
 }
 
-/* KEYFRAME ANIMATIONS */
 @keyframes fadeInItem {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
-@keyframes albumPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.02); }
-}
 
-/* ALBUM COVER PULSE — playing state */
-.cover-art.playing {
-  animation: albumPulse 3s ease-in-out infinite;
-}
-
-/* STAGGERED TRACK LIST ANIMATION */
 .track-item {
   opacity: 0;
-  animation: fadeInItem 0.3s ease forwards;
-  animation-delay: calc(var(--i, 0) * 50ms);
+  animation: fadeInItem var(--ara-duration-normal) var(--ara-ease) forwards;
+  animation-delay: calc(var(--i, 0) * 30ms);
 }
 
-/* BUTTON PRESS — all buttons */
 button:active,
 .upload-btn:active,
 .sort-btn:active,
 .nav-item:active {
-  transform: scale(0.96);
+  transform: scale(0.97);
 }
 
-/* HEADER */
-.header { text-align: center; padding: 24px 0 16px; }
-.logo {
-  font-family: var(--font-heading);
-  font-size: var(--ara-font-hero, 28px);
-  font-weight: 700;
-  background: var(--gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: var(--ara-ls-hero, -0.02em);
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-.logo-icon-svg {
-  width: 28px;
-  height: 28px;
-  stroke: var(--accent);
-  -webkit-text-fill-color: initial;
-}
-
-/* SECTIONS — 32px gap between major sections */
-.upload-section, .search-section, .player-section, .track-list,
-.global-search-section, .playlists-section, .settings-section {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  margin-bottom: 32px;
-  box-shadow: var(--shadow-soft);
-}
-
-/* UPLOAD */
-.upload-section { padding: 20px; text-align: center; }
-.upload-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--gradient);
-  color: #fff;
-  padding: 12px 28px;
-  border-radius: 50px;
-  cursor: pointer;
-  font-size: var(--ara-font-body, 15px);
-  font-weight: 700;
-  transition: all var(--transition);
-  border: none;
-  box-shadow: var(--shadow-neon);
-  min-height: var(--ara-touch-min, 44px);
-}
-.upload-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-neon-strong); }
-.upload-btn svg { stroke: #fff; }
-#uploadStatus { display: block; margin-top: 10px; font-size: var(--ara-font-caption, 13px); color: var(--text-secondary); }
-
-/* SEARCH */
-.search-section { padding: 16px; }
-.search-box { position: relative; margin-bottom: 12px; }
-.search-icon-svg {
-  position: absolute;
-  left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 16px;
-  height: 16px;
-  stroke: var(--text-muted);
-  pointer-events: none;
-}
-#searchInput {
-  width: 100%;
-  padding: 12px 16px 12px 44px;
-  background: var(--bg-secondary);
-  border: 1px solid transparent;
-  border-radius: 14px;
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  font-size: var(--ara-font-body, 15px);
-  outline: none;
-  transition: all var(--transition);
-  min-height: var(--ara-touch-min, 44px);
-}
-#searchInput::placeholder { color: var(--text-muted); opacity: 0.6; }
-#searchInput:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
-.clear-btn {
-  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-  background: var(--text-muted); border: none; color: #fff;
-  width: 22px; height: 22px; border-radius: 50%; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: all var(--transition);
-}
-.clear-btn:hover { background: var(--accent); }
-.clear-btn svg { stroke: #fff; }
-.sort-buttons { display: flex; gap: 8px; justify-content: center; }
-.sort-btn {
-  background: var(--bg-secondary); border: 1.5px solid var(--border);
-  color: var(--text-secondary); padding: 8px 16px; border-radius: 50px;
-  cursor: pointer; font-size: var(--ara-font-caption, 13px); font-weight: 500;
-  transition: all var(--transition);
-  display: inline-flex; align-items: center; gap: 6px;
-  min-height: var(--ara-touch-min, 44px);
-}
-.sort-btn:hover { color: var(--text-primary); border-color: var(--border-accent); }
-.sort-btn.active {
-  background: var(--gradient); color: #fff;
-  border-color: transparent; font-weight: 700;
-  box-shadow: var(--shadow-neon);
-}
-.sort-btn.active svg { stroke: #fff; }
-.sort-btn svg { stroke: currentColor; }
-
-/* PROGRESS BAR TRANSITION */
-.progress-bar {
-  transition: width 0.5s ease;
-}
-
-/* BOTTOM NAV */
-.bottom-nav {
-  position: fixed; bottom: 0; left: 0; right: 0;
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
-  border-top: 1px solid var(--border-subtle);
-  display: flex; justify-content: space-around;
-  padding: 8px 0 env(safe-area-inset-bottom, 8px);
-  z-index: 1000;
-  box-shadow: 0 -2px 24px rgba(0,0,0,0.3);
-}
-.nav-item {
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 6px 12px; background: none; border: none;
-  color: var(--text-muted); font-size: 10px; font-family: var(--font-body);
-  cursor: pointer; transition: all 0.2s var(--transition); position: relative;
-  min-width: var(--ara-touch-min, 44px);
-  min-height: var(--ara-touch-min, 44px);
-}
-.nav-icon-svg { width: 24px; height: 24px; stroke: currentColor; }
-.nav-item.active { color: var(--accent-solid); }
-.nav-item.active::after {
-  content: ''; position: absolute; top: -8px; left: 50%;
-  transform: translateX(-50%); width: 20px; height: 3px;
-  background: var(--gradient); border-radius: 0 0 3px 3px;
-}
-.nav-item:hover { color: var(--text-secondary); }
-
-/* TOAST */
-.toast {
-  position: fixed; bottom: 80px; left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  background: var(--bg-card); color: var(--text-primary);
-  padding: 10px 24px; border-radius: 50px;
-  font-size: var(--ara-font-caption, 13px); font-weight: 500;
-  border: 1px solid var(--border-accent);
-  box-shadow: var(--shadow-neon);
-  opacity: 0; pointer-events: none;
-  transition: all 0.3s ease; z-index: 2000;
-}
-.toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-/* UTILITIES */
-.hidden { display: none !important; }
-.header-hidden { display: none !important; }
-.empty-state { text-align: center; color: var(--text-muted); padding: 28px; font-size: var(--ara-font-body, 15px); }
-
-/* ACCESSIBILITY */
-.track-artist-small,
-.time,
-#uploadStatus,
-.empty-state,
-.nav-item {
-  color: #8A8A9A;
-}
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-.nav-item span {
-  font-size: var(--ara-font-caption, 13px);
-}
-
-/* SECTION TITLE */
+/* === НЕДАВНО ИГРАЛИ === */
 .section-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 12px;
-  letter-spacing: -0.01em;
+  font-family: var(--ara-font-display);
+  font-size: var(--ara-text-lg);
+  font-weight: var(--ara-weight-semibold);
+  color: var(--ara-text);
+  margin-bottom: var(--ara-space-3);
+  letter-spacing: var(--ara-tracking-tight);
 }
 
-/* RECENTLY PLAYED */
-.recently-played-section {
-  margin-bottom: 24px;
-}
+.recently-played-section { margin-bottom: var(--ara-space-6); }
+
 .recently-played-scroll {
   display: flex;
-  gap: 12px;
+  gap: var(--ara-space-3);
   overflow-x: auto;
-  padding-bottom: 8px;
+  padding-bottom: var(--ara-space-2);
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
 }
+
 .recently-played-scroll::-webkit-scrollbar { display: none; }
+
 .recently-played-item {
   flex-shrink: 0;
-  width: 120px;
+  width: 110px;
   scroll-snap-align: start;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: transform var(--ara-duration-fast) var(--ara-ease);
 }
-.recently-played-item:active {
-  transform: scale(0.96);
-}
+
+.recently-played-item:active { transform: scale(0.96); }
+
 .recently-played-cover {
-  width: 120px;
-  height: 120px;
-  border-radius: 16px;
-  background: var(--bg-card);
+  width: 110px;
+  height: 110px;
+  border-radius: var(--ara-radius-md);
+  background: var(--ara-bg-secondary);
   overflow: hidden;
-  margin-bottom: 8px;
+  margin-bottom: var(--ara-space-2);
 }
+
 .recently-played-cover img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
+
 .recently-played-name {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-primary);
+  font-size: var(--ara-text-sm);
+  font-weight: var(--ara-weight-medium);
+  color: var(--ara-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .recently-played-artist {
-  font-size: 11px;
-  color: var(--text-secondary);
+  font-size: var(--ara-text-xs);
+  color: var(--ara-text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+/* === УТИЛИТЫ === */
+.hidden { display: none !important; }
+.header-hidden { display: none !important; }
 
-/* Upload button contrast fix — ensure visible text on gradient bg */
-.upload-btn {
-  color: #FFFFFF !important;
-  -webkit-text-fill-color: #FFFFFF !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-.upload-btn svg {
-  stroke: #FFFFFF !important;
+.empty-state {
+  text-align: center;
+  color: var(--ara-text-muted);
+  padding: var(--ara-space-8);
+  font-size: var(--ara-text-base);
 }
 
-/* Reduced motion — disable ALL new animations */
+.progress-bar { transition: width var(--ara-duration-slow) var(--ara-ease); }
+
+/* Доступность */
+.track-artist-small,
+.time,
+#uploadStatus,
+.empty-state,
+.nav-item {
+  color: var(--ara-text-secondary);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ara-accent);
+  outline-offset: 2px;
+}
+
+/* Уменьшенное движение */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -375,12 +436,7 @@ button:active,
     scroll-behavior: auto !important;
   }
   .fade-in { animation: none; opacity: 1; transform: none; }
-  .brush-decoration { display: none; }
-  .equalizer-bar { animation: none; }
-  .cover-art { transition: none; }
-  .cover-art.playing { animation: none; }
   .track-item { animation: none; opacity: 1; transform: none; }
   .section-page { transition: none; }
   .progress-bar { transition: none; }
-  .recently-played-item { transition: none; }
 }
