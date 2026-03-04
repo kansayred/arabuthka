@@ -1,4 +1,5 @@
 // Арабутка — app-ui.js (UI helpers, search, sort, swipe, nav, keyboard)
+// Task 9: Time-of-day greeting + recently played
 
 // --- UTILITIES ---
 export function escapeHtml(text) {
@@ -46,6 +47,88 @@ export function initUI(getState) {
     initSwipeGestures();
     initBottomNav();
     initKeyboardShortcuts();
+    updateGreeting();
+    renderRecentlyPlayed();
+}
+
+// --- GREETING ---
+export function updateGreeting() {
+    const logoEl = document.querySelector('.logo');
+    if (!logoEl) return;
+    const hour = new Date().getHours();
+    let greeting;
+    if (hour < 12) {
+        greeting = 'Доброе утро ☀️';
+    } else if (hour < 17) {
+        greeting = 'Добрый день 🌤';
+    } else if (hour < 22) {
+        greeting = 'Добрый вечер 🌙';
+    } else {
+        greeting = 'Доброй ночи 🌙';
+    }
+    // Keep icon, update text
+    const iconEl = logoEl.querySelector('.logo-icon-svg');
+    const iconHtml = iconEl ? iconEl.outerHTML : '';
+    logoEl.innerHTML = iconHtml + ' ' + escapeHtml(greeting);
+    // Re-init lucide for the icon
+    if (window.lucide && iconEl) lucide.createIcons({ nodes: [logoEl] });
+}
+
+// --- RECENTLY PLAYED ---
+const RECENTLY_PLAYED_KEY = 'ara_recently_played';
+const RECENTLY_PLAYED_MAX = 10;
+
+export function addToRecentlyPlayed(track) {
+    if (!track || !track.id) return;
+    try {
+        let list = JSON.parse(localStorage.getItem(RECENTLY_PLAYED_KEY) || '[]');
+        // Remove existing entry for this track if present
+        list = list.filter(t => t.id !== track.id);
+        // Add to front
+        list.unshift({
+            id: track.id,
+            name: track.name || 'Без названия',
+            artist: track.artist || '',
+            cover_url: track.cover_url || ''
+        });
+        // Keep only last N
+        if (list.length > RECENTLY_PLAYED_MAX) list = list.slice(0, RECENTLY_PLAYED_MAX);
+        localStorage.setItem(RECENTLY_PLAYED_KEY, JSON.stringify(list));
+        renderRecentlyPlayed();
+    } catch (e) {
+        // localStorage unavailable — silently ignore
+    }
+}
+
+export function renderRecentlyPlayed() {
+    const section = document.getElementById('recentlyPlayedSection');
+    const scroll = document.getElementById('recentlyPlayedScroll');
+    if (!section || !scroll) return;
+
+    let list = [];
+    try {
+        list = JSON.parse(localStorage.getItem(RECENTLY_PLAYED_KEY) || '[]');
+    } catch (e) {
+        list = [];
+    }
+
+    if (!list.length) {
+        section.style.display = 'none';
+        return;
+    }
+
+    section.style.display = 'block';
+    scroll.innerHTML = list.map(track => {
+        const coverUrl = sanitizeCoverUrl(track.cover_url);
+        const coverHtml = coverUrl
+            ? `<img src="${coverUrl}" alt="" loading="lazy">`
+            : '';
+        return `<div class="recently-played-item" onclick="playRecentTrack(${Number(track.id)})">
+            <div class="recently-played-cover">${coverHtml}</div>
+            <div class="recently-played-name">${escapeHtml(track.name)}</div>
+            <div class="recently-played-artist">${escapeHtml(track.artist || '')}</div>
+        </div>`;
+    }).join('');
 }
 
 // --- PAGINATION ---
@@ -224,7 +307,10 @@ function switchTab(tab) {
     window.scrollTo({ top: 0, behavior: 'instant' });
 
     // Tab-specific logic
-    if (tab === 'search') {
+    if (tab === 'home') {
+        updateGreeting();
+        renderRecentlyPlayed();
+    } else if (tab === 'search') {
         const inp = document.getElementById('globalSearchInput');
         if (inp) setTimeout(() => inp.focus(), 100);
     } else if (tab === 'profile') {
@@ -280,6 +366,14 @@ export { switchTab };
 
 // Window export for load-more button onclick
 window._loadMoreTracks = loadMoreTracks;
+
+// Window export for recently played item click
+window.playRecentTrack = function(id) {
+    if (!_getState) return;
+    const { allTracks } = _getState();
+    const idx = allTracks.findIndex(t => t.id === id);
+    if (idx >= 0 && typeof window.playTrack === 'function') window.playTrack(idx);
+};
 
 // --- KEYBOARD SHORTCUTS ---
 function initKeyboardShortcuts() {

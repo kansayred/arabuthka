@@ -1,7 +1,7 @@
 /* ===========================================
    ARABUTHKA — MAIN STYLES v2
    Dark premium music player
-   Card & component redesign (Task 8)
+   Layout & spacing refinement + recently played (Task 9)
    =========================================== */
 :root {
   --bg-primary: #0D0D0D;
@@ -52,7 +52,7 @@ body {
   font-size: var(--ara-font-body, 15px);
   line-height: var(--ara-lh-body, 1.43);
 }
-.container { max-width: 100%; padding: 16px; position: relative; z-index: 1; }
+.container { max-width: 100%; padding: 0 16px; position: relative; z-index: 1; }
 
 /* DECORATIVE BLOBS */
 .brush-decoration {
@@ -79,7 +79,7 @@ body {
 .logo {
   font-family: var(--font-heading);
   font-size: var(--ara-font-hero, 28px);
-  font-weight: 800;
+  font-weight: 700;
   background: var(--gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -96,13 +96,13 @@ body {
   -webkit-text-fill-color: initial;
 }
 
-/* SECTIONS */
+/* SECTIONS — 32px gap between major sections */
 .upload-section, .search-section, .player-section, .track-list,
 .global-search-section, .playlists-section, .settings-section {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  margin-bottom: 16px;
+  margin-bottom: 32px;
   box-shadow: var(--shadow-soft);
 }
 
@@ -247,6 +247,67 @@ body {
 }
 .nav-item span {
   font-size: var(--ara-font-caption, 13px);
+}
+
+/* SECTION TITLE */
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  letter-spacing: -0.01em;
+}
+
+/* RECENTLY PLAYED */
+.recently-played-section {
+  margin-bottom: 24px;
+}
+.recently-played-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.recently-played-scroll::-webkit-scrollbar { display: none; }
+.recently-played-item {
+  flex-shrink: 0;
+  width: 120px;
+  scroll-snap-align: start;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+.recently-played-item:active {
+  transform: scale(0.96);
+}
+.recently-played-cover {
+  width: 120px;
+  height: 120px;
+  border-radius: 16px;
+  background: var(--bg-card);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.recently-played-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.recently-played-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.recently-played-artist {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Reduced motion */
