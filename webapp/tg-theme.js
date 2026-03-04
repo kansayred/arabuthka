@@ -84,7 +84,7 @@
         root.style.setProperty('--gradient-bg',
           'linear-gradient(180deg, ' +
           (tp.bg_color || '#1a1a2e') + ' 0%, ' +
-          (tp.secondary_bg_color || '#16213e') + ' 100%)');
+          (tp.secondary_bg_color || '#1e1b3a') + ' 100%)');
         // Softer shadows in dark mode
         root.style.setProperty('--shadow-soft',
           '0 2px 12px rgba(0, 0, 0, 0.2)');

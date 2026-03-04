@@ -1,6 +1,6 @@
 /* ===========================================
-   ARABUTHKA — ONBOARDING
-   2 шага с автоскрытием
+   ARABUTHKA — ONBOARDING v2
+   2 steps with auto-hide
    =========================================== */
 
 .onboarding-overlay {
@@ -25,7 +25,7 @@
 
 .onboarding-card {
   background: var(--bg-card, #fff);
-  border-radius: var(--ara-radius-modal, 16px);
+  border-radius: var(--ara-radius-modal, 20px);
   padding: var(--ara-space-2xl, 32px) var(--ara-space-xl, 24px);
   max-width: 320px;
   width: 90%;
@@ -72,14 +72,14 @@
   transition: background var(--ara-duration-micro, 200ms) ease-out;
 }
 .onboarding-dot.active {
-  background: var(--ara-accent, #00C9A7);
+  background: var(--ara-accent, #7C3AED);
 }
 
 .onboarding-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--gradient, linear-gradient(135deg, #00C9A7, #00B4D8));
+  background: var(--gradient, linear-gradient(135deg, #7C3AED, #A78BFA));
   color: #fff;
   border: none;
   border-radius: var(--ara-radius-pill, 50px);

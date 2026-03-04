@@ -1,6 +1,6 @@
 /* ===========================================
-   ARABUTHKA — MINI PLAYER
-   Sticky bar + full-screen раскрытие
+   ARABUTHKA — MINI PLAYER v2
+   Sticky bar + full-screen overlay
    =========================================== */
 
 /* === Mini-player bar === */
@@ -10,8 +10,8 @@
   left: 0; right: 0;
   height: 64px;
   background: var(--ara-surface-elevated, rgba(255,255,255,0.92));
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border-top: 1px solid rgba(0,0,0,0.06);
   display: flex;
   align-items: center;
@@ -32,14 +32,14 @@
 }
 .mini-player-cover {
   width: 44px; height: 44px;
-  border-radius: var(--ara-radius-btn, 8px);
-  background: var(--gradient-subtle, linear-gradient(135deg,rgba(0,201,167,0.06),rgba(0,180,216,0.06)));
+  border-radius: var(--ara-radius-btn, 12px);
+  background: var(--gradient-subtle, linear-gradient(135deg,rgba(124,58,237,0.06),rgba(167,139,250,0.06)));
   flex-shrink: 0; overflow: hidden;
   display: flex; align-items: center; justify-content: center;
 }
 .mini-player-cover img { width: 100%; height: 100%; object-fit: cover; }
 .mini-player-cover.no-cover::after {
-  content: '\266B'; font-size: 20px; color: var(--accent, #00C9A7);
+  content: '\266B'; font-size: 20px; color: var(--accent, #7C3AED);
 }
 .mini-player-info { flex: 1; min-width: 0; }
 .mini-player-title {
@@ -56,7 +56,7 @@
 .mini-player-play {
   width: var(--ara-touch-min, 44px); height: var(--ara-touch-min, 44px);
   border: none;
-  background: var(--gradient, linear-gradient(135deg,#00C9A7,#00B4D8));
+  background: var(--gradient, linear-gradient(135deg,#7C3AED,#A78BFA));
   border-radius: 50%; color: #fff;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; flex-shrink: 0;
@@ -66,7 +66,7 @@
 .mini-player-play svg { stroke: #fff; fill: #fff; }
 .mini-player-progress {
   position: absolute; bottom: 0; left: 0; height: 2px;
-  background: var(--accent, #00C9A7); transition: width 0.3s linear;
+  background: var(--accent, #7C3AED); transition: width 0.3s linear;
 }
 
 /* === Full-screen player === */
@@ -92,11 +92,11 @@
 }
 .fs-cover {
   width: 280px; max-width: 80vw; aspect-ratio: 1;
-  border-radius: 24px;
+  border-radius: 28px;
   margin: 0 auto var(--ara-space-xl, 24px);
   background: var(--gradient-subtle);
   overflow: hidden;
-  box-shadow: var(--shadow-card, 0 4px 20px rgba(0,0,0,0.06));
+  box-shadow: var(--shadow-card, 0 4px 24px rgba(124,58,237,0.06));
 }
 .fs-cover img { width: 100%; height: 100%; object-fit: cover; }
 .fs-info { text-align: center; margin-bottom: var(--ara-space-xl, 24px); }
@@ -121,20 +121,20 @@
 .fs-progress-bar::-webkit-slider-thumb {
   -webkit-appearance: none; appearance: none;
   width: 16px; height: 16px; border-radius: 50%;
-  background: var(--accent, #00C9A7); cursor: pointer;
-  box-shadow: 0 0 0 3px rgba(0,201,167,0.2);
+  background: var(--accent, #7C3AED); cursor: pointer;
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.2);
   transition: transform var(--ara-duration-micro, 200ms) ease-out;
 }
 .fs-progress-bar:active::-webkit-slider-thumb { transform: scale(1.3); }
 .fs-progress-bar::-moz-range-thumb {
   width: 16px; height: 16px; border-radius: 50%;
-  background: var(--accent, #00C9A7); cursor: pointer;
-  border: none; box-shadow: 0 0 0 3px rgba(0,201,167,0.2);
+  background: var(--accent, #7C3AED); cursor: pointer;
+  border: none; box-shadow: 0 0 0 3px rgba(124,58,237,0.2);
 }
 .fs-progress-bar::-webkit-slider-runnable-track {
   background: linear-gradient(to right,
-    var(--accent, #00C9A7) 0%,
-    var(--accent, #00C9A7) var(--fs-progress, 0%),
+    var(--accent, #7C3AED) 0%,
+    var(--accent, #7C3AED) var(--fs-progress, 0%),
     rgba(0,0,0,0.1) var(--fs-progress, 0%),
     rgba(0,0,0,0.1) 100%);
   height: 4px; border-radius: 2px;
@@ -168,19 +168,19 @@
   width: 38px; height: 38px;
   color: var(--text-secondary, #6B6B8D);
 }
-.fs-shuffle-btn.active, .fs-repeat-btn.active { color: var(--accent, #00C9A7); }
-.fs-prev-btn:hover, .fs-next-btn:hover { background: rgba(0,0,0,0.05); }
+.fs-shuffle-btn.active, .fs-repeat-btn.active { color: var(--accent, #7C3AED); }
+.fs-prev-btn:hover, .fs-next-btn:hover { background: rgba(124,58,237,0.06); }
 .fs-play-btn {
   width: 64px; height: 64px; border: none;
-  background: var(--gradient, linear-gradient(135deg,#00C9A7,#00B4D8));
+  background: var(--gradient, linear-gradient(135deg,#7C3AED,#A78BFA));
   border-radius: 50%; color: #fff;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; flex-shrink: 0;
-  box-shadow: 0 4px 16px rgba(0,201,167,0.35);
+  box-shadow: 0 4px 16px rgba(124,58,237,0.35);
   transition: transform var(--ara-duration-micro, 200ms) ease-out,
               box-shadow var(--ara-duration-micro, 200ms) ease-out;
 }
-.fs-play-btn:active { transform: scale(0.92); box-shadow: 0 2px 8px rgba(0,201,167,0.25); }
+.fs-play-btn:active { transform: scale(0.92); box-shadow: 0 2px 8px rgba(124,58,237,0.25); }
 .fs-play-btn svg { stroke: #fff; fill: #fff; }
 
 /* Reduced motion */

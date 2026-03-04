@@ -1,12 +1,12 @@
 /* ===========================================
-   TG DARK MODE OVERRIDES
+   TG DARK MODE OVERRIDES v2
    Applied when body.tg-dark is set by tg-theme.js
    =========================================== */
 body.tg-dark .bottom-nav {
-  background: rgba(30, 30, 50, 0.88);
+  background: rgba(26, 26, 46, 0.88);
 }
 body.tg-dark .upload-btn {
-  box-shadow: 0 4px 20px rgba(0, 201, 167, 0.2);
+  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.2);
 }
 body.tg-dark .track-item:hover {
   background: rgba(255, 255, 255, 0.05);
@@ -15,7 +15,7 @@ body.tg-dark .toast {
   background: var(--bg-secondary);
 }
 body.tg-dark .brush-decoration {
-  opacity: 0.08;
+  opacity: 0.06;
 }
 body.tg-dark input[type="text"],
 body.tg-dark input[type="range"] {
@@ -24,4 +24,17 @@ body.tg-dark input[type="range"] {
 body.tg-dark .dialog-sheet {
   background: var(--bg-primary);
   border-color: var(--border);
+}
+body.tg-dark .control-btn {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+body.tg-dark .fs-prev-btn:hover,
+body.tg-dark .fs-next-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+body.tg-dark .sort-btn {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+body.tg-dark .card {
+  border-color: rgba(255, 255, 255, 0.06);
 }

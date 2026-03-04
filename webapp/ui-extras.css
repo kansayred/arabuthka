@@ -1,12 +1,12 @@
 /* ===========================================
-   ARABUTHKA — SKELETON LOADERS
+   ARABUTHKA — SKELETON LOADERS v2
    Used by network.js, searchMusic.js
    =========================================== */
 .skeleton {
   background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-card-hover) 50%, var(--bg-secondary) 75%);
   background-size: 200% 100%;
   animation: skeletonShimmer 1.5s ease-in-out infinite;
-  border-radius: var(--radius-xs, 8px);
+  border-radius: var(--radius-xs, 10px);
 }
 .skeleton-text {
   height: 14px;
@@ -18,7 +18,7 @@
   padding: 12px;
   margin-bottom: 8px;
   background: var(--bg-secondary);
-  border-radius: var(--radius-sm, 12px);
+  border-radius: var(--radius-sm, 14px);
   align-items: center;
 }
 @keyframes skeletonShimmer {
@@ -27,7 +27,7 @@
 }
 
 /* ===========================================
-   PLAYLIST UI
+   PLAYLIST UI v2
    Used by playlists.js
    =========================================== */
 .playlist-header {
@@ -82,7 +82,7 @@
 }
 
 /* ===========================================
-   SEARCH RESULTS UI
+   SEARCH RESULTS UI v2
    Used by searchMusic.js
    =========================================== */
 .search-result-item {
@@ -91,7 +91,7 @@
   gap: 12px;
   padding: 10px 12px;
   margin-bottom: 4px;
-  border-radius: var(--radius-sm, 12px);
+  border-radius: var(--radius-sm, 14px);
   transition: background var(--transition);
   cursor: pointer;
 }
@@ -99,7 +99,7 @@
 .search-result-cover {
   width: 46px;
   height: 46px;
-  border-radius: var(--radius-xs, 8px);
+  border-radius: var(--radius-xs, 10px);
   flex-shrink: 0;
   background: var(--gradient-subtle);
   overflow: hidden;
@@ -155,7 +155,7 @@
   padding: 14px;
   margin-top: 8px;
   background: var(--bg-secondary);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--accent);
   font-family: var(--font-body);

@@ -1,5 +1,5 @@
 /* ===========================================
-   PROFILE PAGE STYLES
+   PROFILE PAGE STYLES v2
    =========================================== */
 .profile-section {
   padding: 16px;
@@ -7,11 +7,27 @@
 .profile-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius, 20px);
   padding: 32px 20px;
   text-align: center;
   box-shadow: var(--shadow-soft);
   margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.profile-card::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 200px;
+  background: var(--gradient);
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.08;
+  pointer-events: none;
 }
 .profile-avatar {
   width: 80px;
@@ -25,6 +41,8 @@
   justify-content: center;
   overflow: hidden;
   color: var(--accent);
+  position: relative;
+  z-index: 1;
 }
 .profile-avatar-img {
   width: 100%;
@@ -38,10 +56,14 @@
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 4px;
+  position: relative;
+  z-index: 1;
 }
 .profile-username {
   font-size: var(--ara-font-body, 14px);
   color: var(--text-secondary);
+  position: relative;
+  z-index: 1;
 }
 .profile-stats {
   display: flex;
@@ -51,7 +73,7 @@
   flex: 1;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-sm, 14px);
   padding: 20px 12px;
   text-align: center;
   box-shadow: var(--shadow-soft);
