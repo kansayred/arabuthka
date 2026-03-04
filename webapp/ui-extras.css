@@ -147,3 +147,28 @@
 @media (prefers-reduced-motion: reduce) {
   .skeleton { animation: none; }
 }
+
+/* Load More Button — pagination */
+.load-more-btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  margin-top: 8px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  font-family: var(--font-body);
+  font-size: var(--ara-font-body, 14px);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  min-height: var(--ara-touch-min, 44px);
+}
+.load-more-btn:hover {
+  background: var(--gradient-subtle);
+  border-color: var(--border-accent);
+}
+.load-more-btn:active {
+  transform: scale(0.98);
+}

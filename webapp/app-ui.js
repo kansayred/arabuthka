@@ -1,9 +1,6 @@
 // Арабутка — app-ui.js (UI helpers, search, sort, swipe, nav, keyboard)
-// No imports from app.js — uses window.* or callbacks passed via initUI()
 
-// ===========================================
-// UTILITIES (exported for app.js)
-// ===========================================
+// --- UTILITIES ---
 export function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text; return div.innerHTML;
@@ -21,9 +18,7 @@ export function formatTime(seconds) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-// ===========================================
-// ICON / BUTTON HELPERS
-// ===========================================
+// --- ICON / BUTTON HELPERS ---
 export function setLucideIcon(element, iconName) {
     if (!element) return;
     element.innerHTML = `<i data-lucide="${iconName}"></i>`;
@@ -41,15 +36,9 @@ export function updateCoverAnimation(isPlaying) {
     coverArt.classList.toggle('paused', !isPlaying);
 }
 
-// ===========================================
-// STATE ACCESSORS (set by initUI)
-// ===========================================
-let _getState = null; // injected by app.js
+// --- STATE ACCESSORS ---
+let _getState = null;
 
-/**
- * Called by app.js after module init.
- * getState: () => { tracks, allTracks, searchQuery, sortMode, audio, getActiveTrackId }
- */
 export function initUI(getState) {
     _getState = getState;
     initSearch();
@@ -59,9 +48,20 @@ export function initUI(getState) {
     initKeyboardShortcuts();
 }
 
-// ===========================================
-// SORTING & RENDERING (exported for app.js)
-// ===========================================
+// --- PAGINATION ---
+const PAGE_SIZE = 20;
+let _visibleCount = PAGE_SIZE;
+
+export function resetPagination() { _visibleCount = PAGE_SIZE; }
+export function loadMoreTracks() {
+    if (!_getState) return;
+    const { tracks } = _getState();
+    if (_visibleCount >= tracks.length) return;
+    _visibleCount = Math.min(_visibleCount + PAGE_SIZE, tracks.length);
+    renderTracks();
+}
+
+// --- SORTING & RENDERING ---
 export function applySorting() {
     if (!_getState) return;
     const { tracks, allTracks, searchQuery, sortMode } = _getState();
@@ -78,6 +78,8 @@ export function applySorting() {
     // Mutate shared tracks array in-place
     tracks.length = 0;
     filtered.forEach(t => tracks.push(t));
+    // Reset visible count when re-sorting/filtering
+    _visibleCount = PAGE_SIZE;
 }
 
 export function renderTracks() {
@@ -92,7 +94,9 @@ export function renderTracks() {
         return;
     }
     const activeId = getActiveTrackId();
-    trackList.innerHTML = tracks.map((track, index) => {
+    const visible = tracks.slice(0, _visibleCount);
+    const hasMore = tracks.length > _visibleCount;
+    trackList.innerHTML = visible.map((track, index) => {
         const isActive = track.id === activeId;
         const isPlaying = isActive && !audio.paused;
         const eq = isPlaying
@@ -110,12 +114,16 @@ export function renderTracks() {
             </button>
         </div>`;
     }).join('');
+    if (hasMore) {
+        const remaining = tracks.length - _visibleCount;
+        trackList.innerHTML += `<button class="load-more-btn" onclick="window._loadMoreTracks()">
+            Показать ещё (${remaining})
+        </button>`;
+    }
     if (window.lucide) lucide.createIcons();
 }
 
-// ===========================================
-// LOCAL SEARCH
-// ===========================================
+// --- LOCAL SEARCH ---
 function initSearch() {
     const searchInput = document.getElementById('searchInput');
     const clearSearch = document.getElementById('clearSearch');
@@ -139,9 +147,7 @@ function initSearch() {
     }
 }
 
-// ===========================================
-// SORT BUTTONS
-// ===========================================
+// --- SORT BUTTONS ---
 function initSortButtons() {
     document.querySelectorAll('.sort-btn[data-sort]').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -153,9 +159,7 @@ function initSortButtons() {
     });
 }
 
-// ===========================================
-// SWIPE GESTURES
-// ===========================================
+// --- SWIPE GESTURES ---
 function initSwipeGestures() {
     const trackListEl = document.getElementById('trackList');
     if (!trackListEl) return;
@@ -177,7 +181,7 @@ function initSwipeGestures() {
     }, { passive: true });
     trackListEl.addEventListener('touchend', () => {
         if (!currentEl) return;
-        const match = currentEl.style.transform.match(/translateX\\(([-\\d.]+)px\\)/);
+        const match = currentEl.style.transform.match(/translateX\(([-\d.]+)px\)/);
         const dx = match ? parseFloat(match[1]) : 0;
         currentEl.classList.remove('swiping'); currentEl.classList.add('snap-back');
         const tracks = _getState ? _getState().tracks : [];
@@ -189,9 +193,7 @@ function initSwipeGestures() {
     }, { passive: true });
 }
 
-// ===========================================
-// BOTTOM NAV — Real tab switching
-// ===========================================
+// --- BOTTOM NAV — Real tab switching ---
 let _currentTab = 'home';
 
 function switchTab(tab) {
@@ -270,9 +272,10 @@ function initBottomNav() {
 // Export for external use
 export { switchTab };
 
-// ===========================================
-// KEYBOARD SHORTCUTS
-// ===========================================
+// Window export for load-more button onclick
+window._loadMoreTracks = loadMoreTracks;
+
+// --- KEYBOARD SHORTCUTS ---
 function initKeyboardShortcuts() {
     document.addEventListener('keydown', (e) => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
