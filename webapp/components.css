@@ -1,0 +1,147 @@
+/* ===========================================
+   ARABUTHKA — COMPONENTS
+   Компоненты UI на основе design tokens
+   =========================================== */
+
+/* === КНОПКИ === */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ara-space-sm, 8px);
+  background: var(--tg-theme-button-color, var(--ara-accent));
+  color: var(--tg-theme-button-text-color, #fff);
+  border: none;
+  border-radius: var(--ara-radius-btn, 8px);
+  padding: var(--ara-space-md, 12px) var(--ara-space-lg, 16px);
+  font-family: var(--ara-font-family);
+  font-size: var(--ara-font-body, 14px);
+  font-weight: var(--ara-fw-semibold, 600);
+  cursor: pointer;
+  min-height: var(--ara-touch-min, 44px);
+  transition: all var(--ara-duration-micro, 200ms) ease-out;
+  box-shadow: var(--ara-shadow-elevated);
+}
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+.btn-primary:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ara-space-sm, 8px);
+  background: var(--tg-theme-secondary-bg-color, #F5F5FA);
+  color: var(--tg-theme-text-color, #1A1A2E);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: var(--ara-radius-btn, 8px);
+  padding: var(--ara-space-md, 12px) var(--ara-space-lg, 16px);
+  font-family: var(--ara-font-family);
+  font-size: var(--ara-font-body, 14px);
+  font-weight: var(--ara-fw-medium, 500);
+  cursor: pointer;
+  min-height: var(--ara-touch-min, 44px);
+  transition: all var(--ara-duration-micro, 200ms) ease-out;
+}
+.btn-secondary:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+.btn-secondary:active {
+  transform: scale(0.97);
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--tg-theme-hint-color, #6B6B8D);
+  width: var(--ara-touch-min, 44px);
+  height: var(--ara-touch-min, 44px);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all var(--ara-duration-micro, 200ms) ease-out;
+}
+.btn-icon:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--tg-theme-text-color, #1A1A2E);
+}
+.btn-icon:active {
+  transform: scale(0.9);
+}
+.btn-icon svg {
+  width: 24px;
+  height: 24px;
+  stroke-width: 1.5px;
+}
+
+/* === КАРТОЧКИ И ПОВЕРХНОСТИ === */
+.card {
+  background: var(--tg-theme-bg-color, #fff);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: var(--ara-radius-card, 12px);
+  padding: var(--ara-space-lg, 16px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: box-shadow var(--ara-duration-micro, 200ms) ease-out;
+}
+.card:hover {
+  box-shadow: var(--ara-shadow-elevated);
+}
+
+.surface-elevated {
+  background: var(--ara-surface-elevated, rgba(255, 255, 255, 0.92));
+  border-radius: var(--ara-radius-card, 12px);
+  box-shadow: var(--ara-shadow-elevated);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* === ТРЕК-АЙТЕМ НА DESIGN TOKENS === */
+.track-item {
+  background: var(--tg-theme-secondary-bg-color, #F5F5FA);
+  padding: var(--ara-space-md, 12px) var(--ara-space-md, 14px);
+  margin-bottom: var(--ara-space-sm, 8px);
+  border-radius: var(--ara-radius-card, 12px);
+  display: flex;
+  align-items: center;
+  gap: var(--ara-space-md, 12px);
+  transition: all var(--ara-duration-micro, 200ms) ease-out;
+  cursor: pointer;
+  border: 1px solid transparent;
+  min-height: var(--ara-touch-min, 44px);
+}
+.track-item:hover {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.06);
+}
+.track-item.active {
+  background: linear-gradient(
+    135deg,
+    rgba(var(--ara-gradient-start, 0, 201, 167), 0.06),
+    rgba(var(--ara-gradient-end, 0, 180, 216), 0.06)
+  );
+  border-color: rgba(0, 201, 167, 0.25);
+}
+
+/* === ИКОНКИ === */
+.icon-base {
+  width: 24px;
+  height: 24px;
+  stroke-width: 1.5px;
+  stroke: currentColor;
+  fill: none;
+}
+
+/* === ПЕРЕХОДЫ === */
+.transition-hover {
+  transition: all 200ms ease-out;
+}
+.transition-layout {
+  transition: all 350ms ease-out;
+}
