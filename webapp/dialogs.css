@@ -26,7 +26,7 @@
     border-radius: 24px 24px 0 0;
     padding: 24px 20px 32px;
     box-shadow: 0 -8px 40px rgba(124, 58, 237, 0.1);
-    animation: sheetSlideUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: sheetSlideUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 
 @keyframes sheetSlideUp {
@@ -97,4 +97,38 @@
     background: var(--gradient);
     color: #fff;
     box-shadow: var(--shadow-neon);
+}
+
+/* === Add Track to Playlist === */
+.add-track-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.add-track-item:hover {
+    background: var(--bg-secondary, #F3F0FF);
+}
+.add-track-item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--accent, #7C3AED);
+    flex-shrink: 0;
+}
+.add-track-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary, #1A1A2E);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.add-track-artist {
+    font-size: 12px;
+    color: var(--text-secondary, #6B6B8D);
+    flex-shrink: 0;
 }

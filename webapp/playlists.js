@@ -99,7 +99,10 @@
     var html = '<div class="playlist-header">'
       + '<button class="btn-icon" onclick="window.PlaylistManager.loadAndRender()" aria-label="Назад">'
       + '<i data-lucide="arrow-left" style="width:20px;height:20px" aria-hidden="true"></i></button>'
-      + '<h3>' + esc(pl.name) + '</h3></div>';
+      + '<h3>' + esc(pl.name) + '</h3>'
+      + '<button class="btn-icon" onclick="window.PlaylistManager.showAddTracksDialog()" aria-label="Добавить трек">'
+      + '<i data-lucide="plus" style="width:20px;height:20px" aria-hidden="true"></i></button>'
+      + '</div>';
     if (tracks.length === 0) {
       html += '<div class="empty-state">В плейлисте пока нет треков</div>';
     } else {
@@ -117,6 +120,77 @@
     this.container.innerHTML = html;
     if (window.lucide) lucide.createIcons();
     this.initDragDrop();
+  };
+
+  // --- Show "Add tracks" dialog ---
+  PlaylistManager.prototype.showAddTracksDialog = function() {
+    var self = this;
+    var dialog = document.getElementById('addTracksDialog');
+    var listContainer = document.getElementById('addTracksListContainer');
+    var okBtn = document.getElementById('addTracksDialogOk');
+    var cancelBtn = document.getElementById('addTracksDialogCancel');
+    if (!dialog || !listContainer) return;
+
+    // Fetch all tracks from API
+    listContainer.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-secondary)">Загрузка...</div>';
+    dialog.style.display = 'flex';
+
+    fetch(API_URL + '/tracks', { headers: getAuth() })
+      .then(function(res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function(data) {
+        var tracks = Array.isArray(data) ? data : (data.tracks || []);
+        if (tracks.length === 0) {
+          listContainer.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-secondary)">Нет доступных треков</div>';
+          return;
+        }
+        listContainer.innerHTML = tracks.map(function(t) {
+          return '<label class="add-track-item">'
+            + '<input type="checkbox" value="' + t.id + '">'
+            + '<span class="add-track-name">' + esc(t.name) + '</span>'
+            + '<span class="add-track-artist">' + esc(t.artist || 'Неизвестный') + '</span>'
+            + '</label>';
+        }).join('');
+      })
+      .catch(function(err) {
+        listContainer.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-secondary)">\u274c ' + esc(err.message) + '</div>';
+      });
+
+    function close() {
+      dialog.style.display = 'none';
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', close);
+    }
+
+    function onOk() {
+      var checked = listContainer.querySelectorAll('input[type="checkbox"]:checked');
+      if (!checked.length) { close(); return; }
+
+      var plId = self.currentPlaylist
+        ? (self.currentPlaylist.id || (self.currentPlaylist.playlist && self.currentPlaylist.playlist.id))
+        : null;
+      if (!plId) { close(); return; }
+
+      close();
+
+      var trackIds = Array.prototype.slice.call(checked).map(function(cb) { return cb.value; });
+      var promises = trackIds.map(function(trackId) {
+        return self.addTrack(plId, trackId).catch(function() { /* ignore individual errors */ });
+      });
+
+      Promise.all(promises).then(function() {
+        toast('\u2705 Треки добавлены');
+        if (window.Utils && typeof window.Utils.haptic === 'function') window.Utils.haptic('light');
+        self.openPlaylist(plId);
+      }).catch(function(err) {
+        toast('\u274c Ошибка: ' + err.message);
+      });
+    }
+
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', close);
   };
 
   // --- Drag & Drop (unchanged) ---
